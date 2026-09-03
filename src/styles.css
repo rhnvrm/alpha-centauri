@@ -1221,3 +1221,69 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .secondary-actions { justify-content: flex-start; }
   .time-controls { border-left: 0; }
 }
+
+/* Interaction pass: simulation is docked in the command deck, not laid over the
+   colony. Native titles remain available to assistive technology; the matching
+   visual tooltip also appears on keyboard focus. */
+@media (min-width: 1101px) {
+  .bottom-deck { grid-template-columns: minmax(280px, 1fr) minmax(390px, 1.25fr) minmax(330px, .9fr); }
+  .time-controls {
+    position: static;
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    padding: 13px 14px;
+    border-left: 1px solid #4d4230;
+    background: #10110e;
+    align-content: flex-start;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .time-controls .time-label { display: flex; width: 100%; }
+  .time-controls .event-cluster { flex: 1 1 100%; flex-wrap: wrap; }
+}
+
+.map-entity-tooltip {
+  position: absolute;
+  z-index: 7;
+  left: 14px;
+  bottom: 64px;
+  max-width: min(420px, calc(100% - 28px));
+  padding: 8px 10px;
+  border: 1px solid #a47b42;
+  border-left: 3px solid #d3a45c;
+  background: rgba(12, 13, 10, .94);
+  color: #e6d2a7;
+  font: 10px/1.4 'DM Mono', monospace;
+  letter-spacing: .035em;
+  pointer-events: none;
+}
+.build-tools button[title], .time-controls button[title], .map-status[title] { position: relative; }
+.build-tools button[title]::after, .time-controls button[title]::after, .map-status[title]::after {
+  content: attr(title);
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: min(300px, 75vw);
+  padding: 7px 8px;
+  border: 1px solid #8b7043;
+  background: #11120e;
+  color: #ead8b1;
+  font: 9px/1.35 Manrope, system-ui, sans-serif;
+  letter-spacing: normal;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 3px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.build-tools button[title]:hover::after, .build-tools button[title]:focus-visible::after,
+.time-controls button[title]:hover::after, .time-controls button[title]:focus-visible::after,
+.map-status[title]:hover::after, .map-status[title]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .build-tools button[title]::after, .time-controls button[title]::after, .map-status[title]::after { transition: none; } }

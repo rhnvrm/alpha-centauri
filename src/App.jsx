@@ -181,6 +181,7 @@ export default function App({ store }) {
   const [interactionMode, setInteractionMode] = useState("select");
   const [roadStart, setRoadStart] = useState(null);
   const [moveRobotId, setMoveRobotId] = useState(null);
+  const [hoveredMapEntity, setHoveredMapEntity] = useState(null);
   const [showDoctrine, setShowDoctrine] = useState(false);
   const [showDaneelPrompt, setShowDaneelPrompt] = useState(false);
   const [toast, setToast] = useState(null);
@@ -211,6 +212,10 @@ export default function App({ store }) {
   const nextOutbound = outboundPackets[0];
   const nextLocalBoundary = nextSimulationBoundaryDay(state);
   const nextEarthBoundary = nextEarthArrivalDay(state);
+  const superposition = state.superposition || { passes: 0, activeUntilMs: 0, lastActivatedAtMs: 0 };
+  const superpositionActive = superpositionClock.activeUntil > superpositionClock.now;
+  const superpositionSeconds = Math.max(0, Math.ceil((superpositionClock.activeUntil - superpositionClock.now) / 1000));
+  const superpositionCooldown = Math.max(0, Math.ceil((superpositionClock.cooldownUntil - superpositionClock.now) / 1000));
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
   const receivedRobots = state.observedWorld?.robots || [];
@@ -228,10 +233,23 @@ export default function App({ store }) {
   const selectedFacilityStatus = selectedBuilding ? receivedFacilityStatus(state, selectedBuilding) : null;
   const placement = useMemo(() => receivedPlacement(state, selectedTile ? selected : null, buildType), [state, selected, selectedTile, buildType]);
   const timeScale = [1, 2, 5, 10].includes(state.timeScale) ? state.timeScale : 1;
-  const superposition = state.superposition || { passes: 0, activeUntilMs: 0, lastActivatedAtMs: 0 };
-  const superpositionActive = superpositionClock.activeUntil > superpositionClock.now;
-  const superpositionSeconds = Math.max(0, Math.ceil((superpositionClock.activeUntil - superpositionClock.now) / 1000));
-  const superpositionCooldown = Math.max(0, Math.ceil((superpositionClock.cooldownUntil - superpositionClock.now) / 1000));
+  const hoveredMapTooltip = useMemo(() => {
+    if (!hoveredMapEntity) return null;
+    const visibleBuildings = superpositionActive ? state.buildings : receivedBuildings;
+    const visibleRobots = superpositionActive ? state.robots : receivedRobots;
+    if (hoveredMapEntity.kind === "building") {
+      const building = visibleBuildings.find((item) => item.id === hoveredMapEntity.id);
+      if (!building) return null;
+      const spec = BUILDINGS[building.type];
+      return `${spec?.label || building.type} · ${building.status || "complete"}${building.health != null ? ` · ${Math.round(building.health)}% integrity` : ""}${spec ? ` · ${spec.cost} material · ${spec.days} local days` : ""}`;
+    }
+    if (hoveredMapEntity.kind === "robot") {
+      const robot = visibleRobots.find((item) => item.id === hoveredMapEntity.id);
+      return robot ? `${robot.type} · ${(robot.lifecycle || robot.status || "idle").toUpperCase()}${robot.purpose ? ` · ${robot.purpose}` : ""}` : null;
+    }
+    const tile = state.tiles.find((item) => item.x === hoveredMapEntity.x && item.y === hoveredMapEntity.y);
+    return tile ? `${tile.terrain.toUpperCase()} · tile ${tile.x},${tile.y}${tile.protected ? " · protected habitat" : ""}${interactionMode === "build" ? ` · ${BUILDINGS[buildType].cost} material build candidate` : ""}` : null;
+  }, [hoveredMapEntity, superpositionActive, state, receivedBuildings, receivedRobots, interactionMode, buildType]);
   useEffect(() => {
     const now = monotonicNow();
     setSuperpositionClock({ now, ...runtimeDeadlines(superposition, Date.now(), now) });
@@ -912,10 +930,12 @@ export default function App({ store }) {
           <ColonyScene
             state={state}
             onSelect={missionConfirmed ? undefined : onSelectTile}
+            onHover={setHoveredMapEntity}
             viewMode={superpositionActive ? "local" : "earth"}
             readOnly={superpositionActive || missionConfirmed}
             previewBuild={interactionMode === "build" && selectedTile && !superpositionActive && !missionConfirmed ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
           />
+          {hoveredMapTooltip && <div className="map-entity-tooltip" role="tooltip" aria-live="polite">{hoveredMapTooltip}</div>}
           {missionConfirmed ? (
             <div className="map-status terminal-map-status" role="status" style={{ top: 54 }}>
               <span className="status-dot teal" /> TERMINAL RESULT · EARTH VIEW · READ ONLY

@@ -389,10 +389,10 @@ function viewBoundaryMarker(viewMode) {
   return group;
 }
 
-export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFactory = createColonyRenderer, viewMode = 'earth', readOnly = false, previewBuild = null }) {
+export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, rendererFactory = createColonyRenderer, viewMode = 'earth', readOnly = false, previewBuild = null }) {
   const host = useRef(null); const sceneRef = useRef(null);
-  const latest = useRef({ state, onSelect, reducedMotion, viewMode, readOnly, previewBuild });
-  latest.current = { state, onSelect, reducedMotion, viewMode, readOnly, previewBuild };
+  const latest = useRef({ state, onSelect, onHover, reducedMotion, viewMode, readOnly, previewBuild });
+  latest.current = { state, onSelect, onHover, reducedMotion, viewMode, readOnly, previewBuild };
   const [glError, setGlError] = useState(null); const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (!host.current) return undefined;
@@ -632,8 +632,7 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
     mm.addEventListener('click', mmClick);
 
     const resize = () => { const w = el.clientWidth || 800, h = el.clientHeight || 500, aspect = w / h; camera.left = -18 * aspect; camera.right = 18 * aspect; camera.top = 18; camera.bottom = -18; camera.updateProjectionMatrix(); renderer.setSize(w, h, false); renderer.render(scene, camera); }; resize(); window.addEventListener('resize', resize);
-    const click = (e) => {
-      if (latest.current.readOnly) return;
+    const pick = (e) => {
       const rect = renderer.domElement.getBoundingClientRect(); pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1; pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1; raycaster.setFromCamera(pointer, camera);
       // Skip decorative/selection meshes. A tile's transparent pick box spans the whole
       // cell and otherwise wins the distance-sorted raycast over a rover or facility
@@ -645,15 +644,28 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       }).filter(Boolean)
         .filter((object) => priority[object.userData.kind] && (latest.current.viewMode === 'local' || surveyedCell(surveyed(), object.userData.x, object.userData.y)))
         .sort((a, b) => priority[b.userData.kind] - priority[a.userData.kind])[0];
+      return selectable?.userData || null;
+    };
+    const click = (e) => {
+      if (latest.current.readOnly) return;
+      const selectable = pick(e);
       if (selectable) {
-        tacticalSelection = selectable.userData;
+        tacticalSelection = selectable;
         renderWorld(); drawMinimap(); resize();
-        latest.current.onSelect?.(selectable.userData);
+        latest.current.onSelect?.(selectable);
       }
     };
+    let hoveredId = null;
+    const hover = (e) => {
+      const selectable = pick(e); const id = selectable?.id || null;
+      if (id === hoveredId) return;
+      hoveredId = id; renderer.domElement.style.cursor = selectable ? 'pointer' : 'crosshair';
+      latest.current.onHover?.(selectable);
+    };
+    const leave = () => { hoveredId = null; renderer.domElement.style.cursor = 'crosshair'; latest.current.onHover?.(null); };
     const wheel = (e) => { camera.zoom = Math.max(.7, Math.min(2.3, camera.zoom - e.deltaY * .001)); camera.updateProjectionMatrix(); resize(); };
     const key = (e) => { if (e.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return; if (e.key.toLowerCase() === 'q' || e.key.toLowerCase() === 'e') { azimuth += e.key.toLowerCase() === 'q' ? -1 : 1; placeCamera(); resize(); } };
-    renderer.domElement.addEventListener('click', click); renderer.domElement.addEventListener('wheel', wheel, { passive: true }); window.addEventListener('keydown', key);
+    renderer.domElement.addEventListener('click', click); renderer.domElement.addEventListener('pointermove', hover); renderer.domElement.addEventListener('pointerleave', leave); renderer.domElement.addEventListener('wheel', wheel, { passive: true }); window.addEventListener('keydown', key);
     let contextLost = false;
     const lost = (event) => { event.preventDefault(); contextLost = true; setGlError('The browser lost the WebGL 2 context. Close duplicate game tabs and retry the 3D view.'); };
     const restored = () => { contextLost = false; setGlError(null); resize(); };
@@ -682,7 +694,7 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       renderer.render(scene, camera); };
     animate(); let renderedState = latest.current.state; let renderedViewMode = latest.current.viewMode; let renderedPreview = latest.current.previewBuild;
     sceneRef.current = { scene, renderer, update: () => { if (renderedState === latest.current.state && renderedViewMode === latest.current.viewMode && renderedPreview === latest.current.previewBuild) return; renderedState = latest.current.state; renderedViewMode = latest.current.viewMode; renderedPreview = latest.current.previewBuild; renderWorld(); drawMinimap(); if (!contextLost) resize(); } };
-    return () => { cancelAnimationFrame(raf); observer?.disconnect(); mm.removeEventListener('click', mmClick); mm.remove(); renderer.domElement.removeEventListener('click', click); renderer.domElement.removeEventListener('wheel', wheel); renderer.domElement.removeEventListener('webglcontextlost', lost); renderer.domElement.removeEventListener('webglcontextrestored', restored); window.removeEventListener('resize', resize); window.removeEventListener('keydown', key); disposeObjectTree(scene); texturesByUrl.forEach((texture) => texture.dispose()); sun.shadow.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); sceneRef.current = null; };
+    return () => { cancelAnimationFrame(raf); observer?.disconnect(); mm.removeEventListener('click', mmClick); mm.remove(); renderer.domElement.removeEventListener('click', click); renderer.domElement.removeEventListener('pointermove', hover); renderer.domElement.removeEventListener('pointerleave', leave); renderer.domElement.removeEventListener('wheel', wheel); renderer.domElement.removeEventListener('webglcontextlost', lost); renderer.domElement.removeEventListener('webglcontextrestored', restored); window.removeEventListener('resize', resize); window.removeEventListener('keydown', key); disposeObjectTree(scene); texturesByUrl.forEach((texture) => texture.dispose()); sun.shadow.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); sceneRef.current = null; };
   }, [retry, rendererFactory]);
   useEffect(() => { sceneRef.current?.update(); }, [state, viewMode, previewBuild]);
   return <><div className="scene-shell" ref={host} aria-label="Isometric colony map" />{glError && <div className="scene-fallback" role="alert"><strong>3D view unavailable</strong><p>The browser could not keep a WebGL 2 renderer running. Close duplicate game tabs, then retry. Your colony save is unchanged.</p><button className="primary" onClick={() => { setGlError(null); setRetry((value) => value + 1); }}>Retry 3D view</button><details><summary>Graphics error details</summary><pre>{glError}</pre></details></div>}</>;
