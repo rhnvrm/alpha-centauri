@@ -30,10 +30,10 @@ export function createStore({ storage = globalThis.localStorage } = {}) {
   return {
     getState: () => state, subscribe: (fn) => (listeners.add(fn), () => listeners.delete(fn)), commit: publish, nextEarthArrivalDay: () => nextEarthArrivalDay(state),
     newGame: (missionId) => publish({ ...createGame(missionId), launched: true }), advance, nextEvent: () => publish(advanceToNextEvent(state)),
-    // A speed label must describe the simulation rate.  Earlier adaptive "demo"
-    // strides silently leapt 120 colony days at 1×, making a live Daneel session
-    // impossible to follow.  Use Next Event / Earth Event for intentional jumps.
-    demoStep: () => publish(integrate(state, 1)),
+    // The browser playback is calendar-time compression, not an event jump.  The
+    // caller supplies the visible pace multiplier; integration still processes every
+    // boundary in order, so Daneel's work remains legible in Superposition.
+    demoStep: (days = 1) => publish(integrate(state, Math.max(1, Math.floor(days)))),
     nextEarthEvent: () => { const arrival = nextEarthArrivalDay(state); return publish(integrate(state, arrival === null ? 1 : arrival - state.localDay)); },
     toggleCoast: () => publish({ ...state, earthCoast: !state.earthCoast }),
     toggleDemoPace: () => publish({ ...state, demoPace: !state.demoPace }),

@@ -26,7 +26,7 @@ test('confirmed command desk switches to a terminal read-only state', () => {
   assert.match(app, /screen !== "play" \|\| missionConfirmed/);
 
   const correspondenceStart = app.indexOf('aria-label="Confirmed mission result"');
-  const correspondenceEnd = app.indexOf(') : <div className="composer">', correspondenceStart);
+  const correspondenceEnd = app.indexOf(') : <div className="composer composer-orders">', correspondenceStart);
   const correspondenceTerminal = app.slice(correspondenceStart, correspondenceEnd);
   assert.doesNotMatch(correspondenceTerminal, /<button/);
   const commandStart = app.indexOf('aria-label="Mission terminal status"');

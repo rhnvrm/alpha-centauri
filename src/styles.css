@@ -1353,3 +1353,50 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .time-controls button[title]:hover::after, .time-controls button[title]:focus-visible::after,
 .map-status[title]:hover::after, .map-status[title]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
 @media (prefers-reduced-motion: reduce) { .build-tools button[title]::after, .time-controls button[title]::after, .map-status[title]::after { transition: none; } }
+
+/* Correspondence is three separate jobs, not one permanently cramped scroll area.
+   Telemetry gets the rail's full height; composition gets its own calm workspace. */
+.relay-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.correspondence > .composer-orders {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 19px;
+  border-top: 0;
+}
+.composer-orders textarea { min-height: min(230px, 30vh); }
+.composer-orders .signal-route { margin-block: 16px; }
+.correspondence > .letters[hidden] { display: none; }
+.directive-slate {
+  margin: 0 0 18px;
+  padding: 12px 13px;
+  border: 1px solid #6d5937;
+  border-left: 3px solid #c2944d;
+  background: rgba(53, 41, 23, .44);
+}
+.directive-slate .section-label { display: block; margin-bottom: 7px; color: #c8a565; }
+.directive-slate .section-label b { display: block; margin-top: 4px; color: #9fc7b7; font-weight: 500; }
+.directive-slate p { margin: 0; color: #e2d4b4; font: 13px/1.5 Manrope, system-ui, sans-serif; }
+.directive-slate small { display: block; margin-top: 9px; color: #9b947f; font: 9px/1.4 'DM Mono', monospace; }
+
+/* Playback is the primary time interaction. Deliberate jumps stay available to
+   keyboard/power users in the DOM, but no longer invite a first-time player to
+   spam days or events to make the game progress. */
+.time-controls .skip-control { display: none; }
+.time-controls .clock-cluster { order: 1; }
+.time-controls .speed-cluster { order: 2; }
+.time-controls .event-cluster { order: 3; flex: 0 1 auto; }
+.time-controls .event-cluster > button { min-width: 184px; }
+.time-controls .reset-control { order: 4; }
+@media (min-width: 1101px) {
+  .bottom-deck { grid-template-columns: minmax(280px, 1fr) minmax(390px, 1.25fr) minmax(330px, .9fr); }
+  .time-controls {
+    min-height: 92px;
+    align-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .time-controls .time-label { display: none; }
+}

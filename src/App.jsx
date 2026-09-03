@@ -211,6 +211,9 @@ export default function App({ store }) {
   const outboundPackets = state.packets
     .filter((p) => p.direction === "uplink" && p.status !== "delivered")
     .sort((a, b) => a.arrivalDay - b.arrivalDay);
+  const latestEarthIntent = [...state.packets]
+    .filter((packet) => packet.direction === "uplink" && packet.kind === "intent")
+    .sort((a, b) => b.departureDay - a.departureDay)[0];
   const nextOutbound = outboundPackets[0];
   const earthDirectiveInFlight = projection.packets.some((packet) => packet.direction === "uplink" && packet.kind === "intent" && packet.status === "in-transit");
   const earthDirectiveDelivered = projection.packets.some((packet) => packet.direction === "uplink" && packet.kind === "intent" && packet.status === "delivered");
@@ -302,11 +305,12 @@ export default function App({ store }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [showDoctrine]);
-  // Demo pace is presentation-only: each tick calls the same bounded, deterministic
-  // store step that manual controls use, so no event or lightspeed arrival is skipped.
+  // Playback compresses calendar time, never skips simulation boundaries. At 1× the
+  // desk remains readable; higher speeds make the lightspeed wait watchable without
+  // turning normal play into a sequence of +30-day clicks.
   useEffect(() => {
     if (screen !== "play" || missionConfirmed || !state.demoPace || state.paused || superpositionActive) return undefined;
-    const timer = window.setInterval(() => store.demoStep(), 1000 / timeScale);
+    const timer = window.setInterval(() => store.demoStep(3 * timeScale), 1000);
     return () => window.clearInterval(timer);
   }, [screen, missionConfirmed, state.demoPace, state.paused, store, superpositionActive, timeScale]);
   // Escape is the reliable, non-destructive route from an active correspondence desk
@@ -1115,6 +1119,7 @@ export default function App({ store }) {
           </section>
           <nav className="relay-tabs" aria-label="Colony relay panels">
             <button className={relayTab === "relay" ? "active" : ""} onClick={() => setRelayTab("relay")}>RELAY</button>
+            <button className={relayTab === "orders" ? "active" : ""} onClick={() => setRelayTab("orders")}>ORDERS</button>
             <button className={relayTab === "briefing" ? "active" : ""} onClick={() => setRelayTab("briefing")}>BRIEFING</button>
           </nav>
           {relayTab === "briefing" && <>
@@ -1138,8 +1143,8 @@ export default function App({ store }) {
             {demoGuide.action === "answer" && <small>Use the authority controls at the top of this desk.</small>}
           </section>
           </>}
-          {relayTab === "relay" && <>
-          <div className="letters">
+          {(relayTab === "relay" || relayTab === "orders") && <>
+          <div className="letters" hidden={relayTab !== "relay"}>
             <div className="section-label">
               RECEIVED TELEMETRY <span>{relayHero ? `LATEST: ${relayHero.kind.replaceAll("-", " ").toUpperCase()}` : projection.observationLabel}</span>
             </div>
@@ -1195,14 +1200,24 @@ export default function App({ store }) {
               </div>
             )}
           </div>
-          {missionConfirmed ? (
+          {relayTab === "orders" && (missionConfirmed ? (
             <section className="terminal-panel" aria-label="Confirmed mission result">
               <div className="section-label">MISSION TERMINAL · READ ONLY</div>
               <strong>Earth received the confirmed outcome.</strong>
               <p>{reportSummary(relayHero)}</p>
               <small>Relay history is retained above as the complete Earth-side evidence record. No later order can change this mission. Use the confirmation banner above to review the debrief or choose another mission.</small>
             </section>
-          ) : <div className="composer">
+          ) : <div className="composer composer-orders">
+            {latestEarthIntent && (
+              <section className="directive-slate" aria-label="Latest Earth directive">
+                <div className="section-label">
+                  <span>LAST EARTH DIRECTIVE</span>
+                  <b>{latestEarthIntent.status === "delivered" ? "DELIVERED · AWAITING DANEEL REPORT" : `IN FLIGHT · DAY ${latestEarthIntent.arrivalDay}`}</b>
+                </div>
+                <p>{latestEarthIntent.payload?.text || "No readable intent payload."}</p>
+                <small>Earth’s words are the local decision boundary. Daneel’s interpretation returns as a delayed plan report.</small>
+              </section>
+            )}
             <div className="section-label">
               WRITE AN INTENT{" "}
               <span>
@@ -1254,7 +1269,7 @@ export default function App({ store }) {
             >
               <Send size={15} /> TRANSMIT INTENT <kbd>CTRL/⌘↵</kbd>
             </button>
-          </div>}
+          </div>)}
           </>}
         </aside>
         <section className="bottom-deck">
@@ -1429,8 +1444,8 @@ export default function App({ store }) {
               {state.paused ? <Play size={15} /> : <Pause size={15} />}
               {state.paused ? "RESUME" : "PAUSE"}
             </button>
-            <button onClick={() => store.advance(1)}>+1 DAY</button>
-            <button onClick={() => store.advance(30)}>+30 DAYS</button>
+            <button className="skip-control" onClick={() => store.advance(1)}>+1 DAY</button>
+            <button className="skip-control" onClick={() => store.advance(30)}>+30 DAYS</button>
           </div>
           <div className="time-cluster speed-cluster" role="group" aria-label="Simulation speed">
             <span className="time-cluster-label">PACE</span>
@@ -1450,17 +1465,17 @@ export default function App({ store }) {
           </div>
           <div className="time-cluster event-cluster" aria-label="Event controls">
             <span className="time-cluster-label">EVENTS</span>
-            <button onClick={() => store.nextEvent()}>
+            <button className="skip-control" onClick={() => store.nextEvent()}>
               <FastForward size={15} /> {nextEventButton}
             </button>
             <button
               onClick={() => store.nextEarthEvent()}
               title="Advance to the next Earth-visible arrival"
             >
-              <Radio size={15} /> {earthEventButton} <kbd>N</kbd>
+              <Radio size={15} /> WATCH NEXT EARTH RECEIPT <kbd>N</kbd>
             </button>
             <button
-              className={state.earthCoast ? "road-active" : ""}
+              className={`skip-control ${state.earthCoast ? "road-active" : ""}`}
               onClick={() => store.toggleCoast()}
               title="Stop time at the next Earth-visible arrival"
             >
@@ -1468,6 +1483,7 @@ export default function App({ store }) {
             </button>
           </div>
           <button
+            className="reset-control"
             onClick={() => {
               store.pause();
               setScreen(state.mission.earthOutcome ? "debrief" : "onboard");
