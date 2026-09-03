@@ -8,7 +8,7 @@ You are Earth. A colony is growing four light-years away. Every command you send
 
 By the time Earth learns what happened, another 4.37 years have passed.
 
-![The Intent Horizon main-play visual direction](docs/concepts/main-play-v1.png)
+![The Intent Horizon live command desk](docs/playtest-captures/command-desk-docked-live.png)
 
 *Visual direction: the human sees a reconstructed colony; amber ghosts mark instructions still in transit.*
 
