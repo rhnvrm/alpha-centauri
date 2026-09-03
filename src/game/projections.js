@@ -17,6 +17,18 @@ export const earthProjection = (state) => ({
     .map(({ id, kind, direction, bits, windows, bytes, createdDay, departureDay, arrivalDay, status }) => ({ id, kind, direction, bits, windows, bytes, createdDay, departureDay, arrivalDay, status })),
 });
 
+/** The newest packet Earth can actually read, including the confirming result. */
+export const earthRelayHero = (state) => {
+  const reports = (state.reports || [])
+    .filter((report) => report.receivedDay <= state.localDay)
+    .map((report) => ({ ...report, earthReceivedDay: report.receivedDay }));
+  const missionResults = (state.packets || [])
+    .filter((packet) => packet.direction === 'downlink' && packet.kind === 'mission-result' && packet.arrivalDay <= state.localDay)
+    .map((packet) => ({ ...packet, receivedDay: packet.arrivalDay, earthReceivedDay: packet.arrivalDay }));
+  return [...reports, ...missionResults]
+    .sort((a, b) => b.earthReceivedDay - a.earthReceivedDay || String(b.id).localeCompare(String(a.id)))[0] || null;
+};
+
 /**
  * A deliberately conservative play guide.  Every branch is based on facts on
  * the Earth desk: the charter, this browser's Daneel connection, packets that

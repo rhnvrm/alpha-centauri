@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/game/state.js';
 import { integrate, queueHumanIntent, sendReport, queueLocalCargo } from '../src/game/engine.js';
-import { earthProjection } from '../src/game/projections.js';
+import { earthProjection, earthRelayHero } from '../src/game/projections.js';
 import { bitsForPayload, windowsFor, LIGHT_DELAY_DAYS, WINDOW_BITS, ENVELOPE_BITS } from '../src/game/constants.js';
 import { buildLocal } from './helpers.js';
 
@@ -78,6 +78,27 @@ test('confirmation packet is a normal downlink packet with the own return delay'
   assert.ok(confirm); assert.equal(confirm.direction, 'downlink');
   assert.equal(confirm.arrivalDay, s.mission.interruption.endAt + LIGHT_DELAY_DAYS);
   assert.equal(confirm.departureDay + LIGHT_DELAY_DAYS, confirm.arrivalDay);
+});
+
+test('relay hero changes from bootstrap to the newest received mission result', () => {
+  let s = buildWinFixture(); s = integrate(s, 361);
+  const result = s.packets.find((p) => p.kind === 'mission-result');
+  assert.equal(earthRelayHero(s), null, 'the unreceived result cannot appear on Earth');
+  s = integrate(s, result.arrivalDay - s.localDay);
+  const hero = earthRelayHero(s);
+  assert.equal(hero.kind, 'mission-result');
+  assert.equal(hero.payload.capturedDay, result.createdDay);
+  assert.equal(hero.earthReceivedDay, result.arrivalDay);
+});
+
+test('relay hero selects the latest Earth receipt, not report insertion order', () => {
+  let s = createGame();
+  s.localDay = 20;
+  s.reports.push(
+    { id: 'older', kind: 'daneel-report', receivedDay: 5, payload: { text: 'old' } },
+    { id: 'newer', kind: 'daneel-report', receivedDay: 20, payload: { text: 'new' } },
+  );
+  assert.equal(earthRelayHero(s).id, 'newer');
 });
 
 test('cargo launch reserves iridium at queue time and exports only at job completion', () => {

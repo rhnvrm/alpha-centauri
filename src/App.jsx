@@ -26,7 +26,8 @@ import {
   WINDOW_BITS,
   RESILIENCE_24,
 } from "./game/constants.js";
-import { earthDemoGuide, earthMissionStatus, earthProjection } from "./game/projections.js";
+import { earthDemoGuide, earthMissionStatus, earthProjection, earthRelayHero } from "./game/projections.js";
+import { nextSimulationBoundaryDay, nextEarthArrivalDay } from "./game/engine.js";
 import { createStartupPrompt } from "./webmcp/prompt.js";
 import { createToolSet } from "./webmcp/tools.js";
 import { registerNativeTools } from "./webmcp/register.js";
@@ -53,6 +54,9 @@ const reserveLabel = (units, dailyUse) => {
 // prose message (words cost bits, and therefore transmission time). Turn that
 // payload into a readable Earth-side summary without changing the packet itself.
 const reportSummary = (report) => {
+  if (report.kind === "mission-result") {
+    return `${report.payload?.outcome ? report.payload.outcome.replaceAll("-", " ").toUpperCase() : "MISSION RESULT"} · ${OUTCOME_COPY[report.payload?.outcome]?.[0] || "Mission result received."}`;
+  }
   if (report.payload?.text) return report.payload.text;
   const resources = report.payload?.observedResources;
   if (!resources) return "A compact packet arrived, but it contains no narrative report.";
@@ -63,13 +67,27 @@ const reportSummary = (report) => {
 };
 const reportTiming = (report) => {
   const captured = report.payload?.capturedDay;
-  const received = report.receivedDay;
+  const received = report.receivedDay ?? report.earthReceivedDay;
   const transit = Number.isFinite(captured) && Number.isFinite(received) ? Math.max(0, received - captured) : null;
   return {
     captured: Number.isFinite(captured) ? captured : "—",
     received: Number.isFinite(received) ? received : "—",
     transit: transit === null ? null : `${transit} DAYS / ${(transit / 365).toFixed(2)} Y IN FLIGHT`,
   };
+};
+const eventBoundaryLabel = (state, day) => {
+  const packet = state.packets.find((candidate) => candidate.status === "in-transit" && candidate.arrivalDay === day);
+  if (packet) {
+    const names = { "mission-result": "MISSION RESULT RECEIPT", telemetry: "TELEMETRY RECEIPT", "cargo-order": "CARGO ORDER ARRIVAL", intent: "INTENT ARRIVAL" };
+    return names[packet.kind] || `${packet.kind.toUpperCase()} ARRIVAL`;
+  }
+  const job = state.jobs.find((candidate) => ["queued", "active", "awaiting-labor"].includes(candidate.status) && candidate.completeDay === day);
+  if (job) return ({ cargo: "CARGO LAUNCH", survey: "SURVEY COMPLETE", construct: "CONSTRUCTION COMPLETE", road: "ROAD COMPLETE" }[job.type] || `${job.type.toUpperCase()} COMPLETE`);
+  const authored = state.pendingEvents.find((candidate) => candidate.day === day);
+  if (authored) return ({ "survey-discovery": "SURVEY DISCOVERY", "power-outage": "POWER INTERRUPTION", flood: "FLOOD WINDOW", drought: "DROUGHT WINDOW", "equipment-fault": "EQUIPMENT FAULT", "life-support-fault": "LIFE-SUPPORT FAULT" }[authored.type] || authored.type.toUpperCase());
+  if (state.mission.deadlineDay === day) return "MISSION DEADLINE";
+  if (state.mission.sustainDays === day) return "RESERVE CHECK";
+  return "NEXT LOCAL BOUNDARY";
 };
 const observedPowerPercent = (resources) => Math.round(100 * (resources.power || 0) / Math.max(1, resources.powerCapacity || 0));
 const missionTarget = (missionId, resources) => {
@@ -184,6 +202,7 @@ export default function App({ store }) {
   const [relayTab, setRelayTab] = useState("relay");
   const scenario = SCENARIOS[state.missionId];
   const projection = useMemo(() => earthProjection(state), [state]);
+  const relayHero = useMemo(() => earthRelayHero(state), [state]);
   const missionStatus = useMemo(() => earthMissionStatus(state), [state]);
   const demoGuide = useMemo(() => earthDemoGuide(state), [state]);
   const prompt = useMemo(
@@ -196,6 +215,12 @@ export default function App({ store }) {
     .filter((p) => p.direction === "uplink" && p.status !== "delivered")
     .sort((a, b) => a.arrivalDay - b.arrivalDay);
   const nextOutbound = outboundPackets[0];
+  const nextLocalBoundary = nextSimulationBoundaryDay(state);
+  const nextEarthBoundary = nextEarthArrivalDay(state);
+  const nextEventButton = `NEXT: ${eventBoundaryLabel(state, nextLocalBoundary)} · DAY ${nextLocalBoundary}`;
+  const earthEventButton = nextEarthBoundary === null
+    ? "EARTH: NO RECEIPT AHEAD"
+    : `RECEIVE: ${eventBoundaryLabel(state, nextEarthBoundary)} · DAY ${nextEarthBoundary}`;
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
   const selectedBuilding = selected?.kind === "building" ? receivedBuildings.find((building) => building.id === selected.id) : null;
@@ -852,15 +877,15 @@ export default function App({ store }) {
           {relayTab === "relay" && <>
           <div className="letters">
             <div className="section-label">
-              RECEIVED TELEMETRY <span>{projection.observationLabel}</span>
+              RECEIVED TELEMETRY <span>{relayHero ? `LATEST: ${relayHero.kind.replaceAll("-", " ").toUpperCase()}` : projection.observationLabel}</span>
             </div>
-            {projection.reports.length ? (
-              projection.reports.slice(-2).map((r) => (
+            {relayHero ? (
+              [relayHero, ...projection.reports.filter((report) => report.id !== relayHero.id).slice(-2).reverse()].map((r, index) => (
                 <article className="letter" key={r.id}>
-                  <div className="report-kind">{r.kind === "telemetry" ? "AUTONOMY TELEMETRY" : "DANEEL REPORT"}</div>
+                  <div className="report-kind">{index === 0 ? "NEWEST RECEIVED · " : ""}{r.kind === "mission-result" ? "MISSION RESULT" : r.kind === "telemetry" ? "AUTONOMY TELEMETRY" : "DANEEL REPORT"}</div>
                   <p>{reportSummary(r)}</p>
                   <small>
-                    COLONY SNAPSHOT · DAY {reportTiming(r).captured} · EARTH RECEIPT · DAY {reportTiming(r).received}
+                    CAPTURED ON COLONY · DAY {reportTiming(r).captured} · RECEIVED ON EARTH · DAY {reportTiming(r).received}
                   </small>
                   {reportTiming(r).transit && <small className="report-transit">{reportTiming(r).transit}</small>}
                 </article>
@@ -1113,13 +1138,13 @@ export default function App({ store }) {
             ))}
           </div>
           <button onClick={() => store.nextEvent()}>
-            <FastForward size={15} /> NEXT EVENT
+            <FastForward size={15} /> {nextEventButton}
           </button>
           <button
             onClick={() => store.nextEarthEvent()}
             title="Advance to the next Earth-visible arrival"
           >
-            <Radio size={15} /> EARTH <kbd>N</kbd>
+            <Radio size={15} /> {earthEventButton} <kbd>N</kbd>
           </button>
           <button
             className={state.earthCoast ? "road-active" : ""}
