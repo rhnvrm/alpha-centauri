@@ -707,15 +707,19 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 
 /* Constrained desktop correction: the command rail must reflow before the
    no-scrollbar console has a chance to hide a control or receipt label. */
-@media (min-width: 1101px) and (max-width: 1600px) {
+/* The in-app browser's effective CSS surface is 1446px wide even when its
+   screenshot raster is wider. Give that embedded/laptop range a denser rail
+   before absolute controls compete for the right edge. */
+@media (min-width: 1101px) and (max-width: 1470px) {
+  .game-shell { --correspondence-width: clamp(332px, 24vw, 360px); }
   .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
-  .dates { gap: 12px; overflow: visible; white-space: nowrap; }
+  .dates { gap: 10px; overflow: visible; white-space: nowrap; }
   .dates > span { white-space: nowrap; }
 
   .play-body { grid-template-columns: minmax(0, 1fr) var(--correspondence-width); }
-  .aside-head { align-items: flex-start; gap: 10px; }
+  .aside-head { align-items: flex-start; gap: 10px; padding-inline: 14px; }
   .aside-head > div { min-width: 0; flex: 1 1 auto; }
-  .aside-head h2 { font-size: 21px; line-height: 1.08; overflow-wrap: normal; }
+  .aside-head h2 { font-size: 20px; line-height: 1.08; overflow-wrap: normal; }
   .aside-head > .connected, .aside-head > .disconnected { flex: 0 0 auto; white-space: nowrap; }
 
   .time-controls {
@@ -732,6 +736,11 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .time-controls button { white-space: normal; line-height: 1.15; }
   .time-controls > button:nth-of-type(5),
   .time-controls > button:nth-of-type(6) { max-width: 220px; }
+
+  .letters, .composer { padding-inline: 14px; }
+  .composer textarea { min-height: 96px; }
+  .bottom-deck { min-height: 148px; }
+  .selection, .build-tools, .time-controls { padding-inline: 14px; }
 }
 
 /* Title screen: compose the hero, relay fiction, and mission choices as one
