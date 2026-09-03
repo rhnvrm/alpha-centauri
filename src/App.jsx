@@ -178,7 +178,7 @@ export default function App({ store }) {
   const [selected, setSelected] = useState(null);
   const [draft, setDraft] = useState("");
   const [buildType, setBuildType] = useState("habitat");
-  const [roadMode, setRoadMode] = useState(false);
+  const [interactionMode, setInteractionMode] = useState("select");
   const [roadStart, setRoadStart] = useState(null);
   const [moveRobotId, setMoveRobotId] = useState(null);
   const [showDoctrine, setShowDoctrine] = useState(false);
@@ -275,6 +275,14 @@ export default function App({ store }) {
   // back to mission selection. Starting a mission there creates a fresh local session.
   useEffect(() => {
     const onKey = (e) => {
+      if (e.key === "Escape" && screen === "play" && !showDoctrine && interactionMode !== "select") {
+        e.preventDefault();
+        setInteractionMode("select");
+        setRoadStart(null);
+        setMoveRobotId(null);
+        setToast("SELECT MODE · COMMAND CANCELLED.");
+        return;
+      }
       if (e.key === "Escape" && screen === "play" && !showDoctrine) {
         store.pause();
         setScreen("title");
@@ -298,7 +306,7 @@ export default function App({ store }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [screen, missionConfirmed, showDoctrine, store]);
+  }, [screen, missionConfirmed, showDoctrine, store, interactionMode]);
   const deliveredRef = useRef(0);
   useEffect(() => {
     const delivered = state.packets.filter(
@@ -321,6 +329,8 @@ export default function App({ store }) {
     store.newGame(missionId);
     setScreen("onboard");
     setSelected(null);
+    setInteractionMode("select");
+    setRoadStart(null);
     setMoveRobotId(null);
     setCopied(false);
   };
@@ -341,7 +351,7 @@ export default function App({ store }) {
     transmitChirp();
   };
   const sendBuild = () => {
-    if (!selectedTile || !placement.valid) {
+    if (interactionMode !== "build" || !selectedTile || !placement.valid) {
       setToast(placement.reason);
       return;
     }
@@ -372,7 +382,7 @@ export default function App({ store }) {
       return;
     }
     setRoadStart(null);
-    setRoadMode(false);
+    setInteractionMode("select");
     const transmittedPath = path.slice(0, 32);
     store.road(transmittedPath);
     setToast(
@@ -383,15 +393,16 @@ export default function App({ store }) {
   };
   const onSelectTile = (obj) => {
     if (missionConfirmed) return;
-    if (moveRobotId && obj.kind === "tile") {
+    if (interactionMode === "move" && moveRobotId && obj.kind === "tile") {
       store.moveRobot(moveRobotId, obj.x, obj.y);
       setToast(`ROVER ORDER QUEUED · ${moveRobotId} → ${obj.x},${obj.y} · arrives in ${LIGHT_DELAY_YEARS}Y.`);
       setMoveRobotId(null);
+      setInteractionMode("select");
       setSelected(obj);
       return;
     }
     setSelected(obj);
-    if (roadMode && obj.kind === "tile") pickRoadTile(obj);
+    if (interactionMode === "road" && obj.kind === "tile") pickRoadTile(obj);
   };
   const sendProtocol = () => {
     store.protocol({
@@ -885,7 +896,7 @@ export default function App({ store }) {
             onSelect={missionConfirmed ? undefined : onSelectTile}
             viewMode={superpositionActive ? "local" : "earth"}
             readOnly={superpositionActive || missionConfirmed}
-            previewBuild={selectedTile && !superpositionActive && !missionConfirmed ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
+            previewBuild={interactionMode === "build" && selectedTile && !superpositionActive && !missionConfirmed ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
           />
           {missionConfirmed ? (
             <div className="map-status terminal-map-status" role="status" style={{ top: 54 }}>
@@ -923,19 +934,17 @@ export default function App({ store }) {
             {missionConfirmed ? (
               <span>FINAL RECEIVED WORLD · INSPECTION ONLY</span>
             ) : <>
-              <span>LEFT CLICK SELECT</span>
+              <span>MODE: {interactionMode.toUpperCase()}</span>
+              <span>{interactionMode === "select" ? "LEFT CLICK INSPECT" : interactionMode === "build" ? "CLICK A RECEIVED TILE TO PREVIEW" : interactionMode === "road" ? "ROAD: CLICK START … CLICK END" : "ROVER MOVE: CLICK A RECEIVED TILE"}</span>
               <span>Q / E ROTATE</span>
               <span>SCROLL ZOOM</span>
             </>}
-            {roadMode && !missionConfirmed && (
-              <span className="road-hint">ROAD: CLICK START … CLICK END</span>
+            {interactionMode === "build" && !missionConfirmed && (
+              <span className="road-hint">BUILD MODE: ESC TO CANCEL</span>
             )}
-            {moveRobotId && !missionConfirmed && (
-              <span className="road-hint">ROVER MOVE: CLICK A RECEIVED TILE</span>
-            )}
-            {!missionConfirmed && state.packets.length === 0 && !roadMode && (
+            {!missionConfirmed && state.packets.length === 0 && interactionMode === "select" && (
               <span className="road-hint">
-                SELECT A TILE · QUEUE A BUILD → ARRIVES IN {LIGHT_DELAY_YEARS}Y
+                SELECT MODE · INSPECT RECEIVED WORLD
               </span>
             )}
           </div>
@@ -1154,9 +1163,10 @@ export default function App({ store }) {
                   <button
                     className={moveRobotId === selected.id ? "command-active" : ""}
                     onClick={() => {
-                      setRoadMode(false);
                       setRoadStart(null);
-                      setMoveRobotId(moveRobotId === selected.id ? null : selected.id);
+                      const cancelling = moveRobotId === selected.id;
+                      setMoveRobotId(cancelling ? null : selected.id);
+                      setInteractionMode(cancelling ? "select" : "move");
                       setToast(moveRobotId === selected.id ? "ROVER MOVE CANCELLED." : `MOVE ORDER ARMED · choose a received destination for ${selected.id}.`);
                     }}
                   >
@@ -1186,8 +1196,15 @@ export default function App({ store }) {
           <button onClick={() => setScreen("debrief")}>OPEN DEBRIEF <ChevronRight size={14} /></button>
         </div> : <div className="build-tools">
           <div className="section-label">
-            EARTH ORDER · {selectedTile ? "TARGET LOCKED" : "TARGET REQUIRED"}
+            EARTH ORDER · MODE: {interactionMode.toUpperCase()}
           </div>
+          {interactionMode === "build" ? (
+            <button className="command-active" onClick={() => { setInteractionMode("select"); setSelected(null); }}><Eye size={15} /> CANCEL BUILD MODE <kbd>ESC</kbd></button>
+          ) : (
+            <button onClick={() => { setInteractionMode("build"); setRoadStart(null); setMoveRobotId(null); setToast("BUILD MODE ARMED · choose a received tile to preview."); }}>
+              <Hammer size={15} /> ENTER BUILD MODE
+            </button>
+          )}
           <select
             value={buildType}
             onChange={(e) => setBuildType(e.target.value)}
@@ -1203,16 +1220,16 @@ export default function App({ store }) {
             <strong>{projectImpact.production}</strong>
             <span>{projectImpact.completion}</span>
             <small>{projectImpact.network}</small>
-            <em className={placement.valid ? "site-valid" : "site-blocked"}>{placement.reason}</em>
+            <em className={interactionMode === "build" ? (placement.valid ? "site-valid" : "site-blocked") : "site-blocked"}>{interactionMode === "build" ? placement.reason : "SELECT MODE · ENTER BUILD MODE TO ASSESS A SITE."}</em>
           </div>
           <button
             className="queue-build"
-            disabled={!selectedTile || !placement.valid}
+            disabled={interactionMode !== "build" || !selectedTile || !placement.valid}
             onClick={sendBuild}
             title={
-              selectedTile && placement.valid
+              interactionMode === "build" && selectedTile && placement.valid
                 ? `Queue construction at tile ${selected.x}, ${selected.y}`
-                : placement.reason
+                : interactionMode !== "build" ? "Enter Build mode first" : placement.reason
             }
           >
             <Hammer size={15} /> QUEUE BUILD AT{" "}
@@ -1221,15 +1238,16 @@ export default function App({ store }) {
               : "SELECTED TILE"}
           </button>
           <button
-            className={roadMode ? "road-active" : ""}
+            className={interactionMode === "road" ? "road-active" : ""}
             onClick={() => {
-              setRoadMode(!roadMode);
+              const activating = interactionMode !== "road";
+              setInteractionMode(activating ? "road" : "select");
               setRoadStart(null);
-              if (roadMode) setRoadStart(null);
+              setMoveRobotId(null);
             }}
           >
             <Hammer size={15} />{" "}
-            {roadMode ? "CANCEL ROAD MODE" : "QUEUE ROAD CORRIDOR"}
+            {interactionMode === "road" ? "CANCEL ROAD MODE" : "QUEUE ROAD CORRIDOR"}
           </button>
           {state.missionId === "rightToDecide" &&
             !state.doctrine.authority.exports && (
