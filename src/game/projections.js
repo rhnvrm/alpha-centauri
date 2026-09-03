@@ -62,6 +62,37 @@ export const earthRelayHero = (state) => {
     .sort((a, b) => b.earthReceivedDay - a.earthReceivedDay || String(b.id).localeCompare(String(a.id)))[0] || null;
 };
 
+/** The confirmed result is the only Earth-authorized source for the terminal debrief. */
+export const earthMissionDebrief = (state) => {
+  const result = earthRelayHero(state);
+  if (!result || result.kind !== 'mission-result' || !result.payload?.evidence) return null;
+  const { missionId, evidence } = result.payload;
+  const goals = missionId === 'firstLight'
+    ? [
+        ['capacity', evidence.capacity >= 100, `${Math.round(evidence.capacity)}/100 residents of life-support capacity`],
+        ['independentPower', evidence.independentPower >= 2, `${evidence.independentPower} independent power sources`],
+        ['interruption', evidence.interruptionDays >= 180, evidence.interruptionDays >= 180 ? `${evidence.interruptionDays}-day interruption survived` : 'Interruption not survived'],
+      ]
+    : missionId === 'enough'
+      ? [
+          ['foodReserve', evidence.foodMonths >= 24, `${evidence.foodMonths.toFixed(1)} months of food reserve`],
+          ['powerReserve', evidence.powerPercent >= 20, `${Math.round(evidence.powerPercent)}% power reserve`],
+          ['protectedWetlands', evidence.protectedWetlandLoss === 0, `${evidence.protectedWetlandLoss} protected wetland cells lost`],
+        ]
+      : [
+          ['export', evidence.exported >= 1000, `${Math.round(evidence.exported)} t iridium exported`],
+          ['lifeSupport', evidence.lifeSupport, evidence.lifeSupport ? 'Life support remained online' : 'Life support collapsed'],
+          ['habitat', evidence.protectedHabitatLoss === 0, `${evidence.protectedHabitatLoss} protected habitat cells lost`],
+        ];
+  return {
+    outcome: result.payload.outcome,
+    capturedDay: result.payload.capturedDay,
+    receivedDay: result.arrivalDay ?? result.receivedDay,
+    snapshot: result.payload.snapshot || null,
+    goals: goals.map(([id, achieved, value]) => ({ id, achieved, value })),
+  };
+};
+
 /**
  * A deliberately conservative play guide.  Every branch is based on facts on
  * the Earth desk: the charter, this browser's Daneel connection, packets that

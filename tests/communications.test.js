@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/game/state.js';
 import { integrate, queueHumanIntent, sendReport, queueLocalCargo } from '../src/game/engine.js';
-import { earthProjection, earthRelayHero } from '../src/game/projections.js';
+import { earthMissionDebrief, earthProjection, earthRelayHero } from '../src/game/projections.js';
 import { bitsForPayload, windowsFor, LIGHT_DELAY_DAYS, WINDOW_BITS, ENVELOPE_BITS } from '../src/game/constants.js';
 import { buildLocal } from './helpers.js';
 
@@ -89,6 +89,19 @@ test('relay hero changes from bootstrap to the newest received mission result', 
   assert.equal(hero.kind, 'mission-result');
   assert.equal(hero.payload.capturedDay, result.createdDay);
   assert.equal(hero.earthReceivedDay, result.arrivalDay);
+});
+
+test('confirmed mission debrief carries goal evidence and a distinctly received snapshot', () => {
+  let s = buildWinFixture(); s = integrate(s, 361);
+  const result = s.packets.find((p) => p.kind === 'mission-result');
+  assert.equal(earthMissionDebrief(s), null, 'Earth cannot debrief an unreceived result');
+  s = integrate(s, result.arrivalDay - s.localDay);
+  const debrief = earthMissionDebrief(s);
+  assert.deepEqual(debrief.goals.map((goal) => goal.id), ['capacity', 'independentPower', 'interruption']);
+  assert.ok(debrief.goals.every((goal) => goal.achieved));
+  assert.equal(debrief.snapshot.capacity, 100);
+  assert.equal(debrief.capturedDay, result.createdDay);
+  assert.equal(debrief.receivedDay, result.arrivalDay);
 });
 
 test('relay hero selects the latest Earth receipt, not report insertion order', () => {

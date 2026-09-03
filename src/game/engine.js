@@ -162,7 +162,13 @@ export function integrate(state, days = 0) {
 function finalizeMission(state, outcome) {
   if (state.mission.status !== 'active') return;
   state.mission.status = 'pending-confirmation'; state.mission.outcome = outcome; state.mission.progressLabel = outcome;
-  packet(state, 'mission-result', { outcome, capturedDay: state.localDay }, 'downlink', state.localDay, 'daneel');
+  const r = state.resources;
+  const evidence = state.missionId === 'firstLight'
+    ? { capacity: r.capacity, independentPower: powerSources(state).length, interruptionDays: state.mission.interruption.sustained === true ? state.mission.interruption.endAt - state.mission.interruption.startedAt + 1 : 0 }
+    : state.missionId === 'enough'
+      ? { foodMonths: r.food / Math.max(1, r.population * 0.02), powerPercent: r.power / Math.max(1, r.powerCapacity) * 100, protectedWetlandLoss: state.mission.protectionLost }
+      : { exported: state.mission.exported, lifeSupport: state.mission.collapsedAt === null, protectedHabitatLoss: state.mission.protectionLost };
+  packet(state, 'mission-result', { missionId: state.missionId, outcome, capturedDay: state.localDay, snapshot: { population: r.population, capacity: r.capacity, power: r.power, powerCapacity: r.powerCapacity }, evidence }, 'downlink', state.localDay, 'daneel');
   event(state, 'mission_objective_met', { outcome });
   state.paused = true; // stop the clock at the boundary; the human chooses the next mission
 }

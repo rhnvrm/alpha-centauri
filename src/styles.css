@@ -825,3 +825,12 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .mission-card { min-height: 142px; }
   .title-foot { margin-top: 22px; line-height: 1.5; }
 }
+/* Confirmed mission debrief: evidence comes from the received result packet. */
+.mission-evidence { max-width: 680px; margin: 28px 0; border: 1px solid #3d473f; background: #141b19; padding: 16px 18px; }
+.evidence-list { display: grid; gap: 1px; margin-top: 12px; background: #3d473f; }
+.evidence-row { display: grid; grid-template-columns: 24px minmax(120px, .7fr) 1.3fr; gap: 10px; align-items: baseline; padding: 10px 12px; background: #18201e; }
+.evidence-row strong { color: #d8d1b6; font: 11px 'DM Mono'; text-transform: uppercase; }
+.evidence-row small { color: #9f9d8c; }
+.evidence-check { color: var(--teal); font-weight: 700; } .evidence-fail { color: var(--rust); font-weight: 700; }
+.received-snapshot { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; margin-top: 14px; padding: 12px; border: 1px solid #645d48; background: rgba(183, 131, 85, .08); }
+.received-snapshot strong, .received-snapshot span { display: block; font: 10px 'DM Mono'; color: #e1c382; } .received-snapshot small { display: block; color: #9f9d8c; font-size: 10px; line-height: 1.4; margin-top: 5px; }

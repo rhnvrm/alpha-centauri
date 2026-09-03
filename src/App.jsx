@@ -26,7 +26,7 @@ import {
   WINDOW_BITS,
   RESILIENCE_24,
 } from "./game/constants.js";
-import { earthDemoGuide, earthMissionStatus, earthProjection, earthRelayHero, eventControlCopy } from "./game/projections.js";
+import { earthDemoGuide, earthMissionDebrief, earthMissionStatus, earthProjection, earthRelayHero, eventControlCopy } from "./game/projections.js";
 import { nextSimulationBoundaryDay, nextEarthArrivalDay } from "./game/engine.js";
 import { createStartupPrompt } from "./webmcp/prompt.js";
 import { createToolSet } from "./webmcp/tools.js";
@@ -198,6 +198,7 @@ export default function App({ store }) {
   const missionStatus = useMemo(() => earthMissionStatus(state), [state]);
   const missionConfirmed = missionStatus.complete;
   const demoGuide = useMemo(() => earthDemoGuide(state), [state]);
+  const missionDebrief = useMemo(() => earthMissionDebrief(state), [state]);
   const prompt = useMemo(
     () => createStartupPrompt(state, window.location.href),
     [state],
@@ -642,6 +643,30 @@ export default function App({ store }) {
             <span>{copy[1]}</span>
           </div>
         </div>
+        {missionDebrief && (
+          <section className="mission-evidence" aria-label="Mission goal evidence">
+            <div className="section-label">CONFIRMED MISSION EVIDENCE</div>
+            <div className="evidence-list">
+              {missionDebrief.goals.map((goal) => (
+                <div className="evidence-row" key={goal.id}>
+                  <span className={goal.achieved ? "evidence-check" : "evidence-fail"}>{goal.achieved ? "✓" : "×"}</span>
+                  <strong>{goal.id.replace(/([A-Z])/g, " $1")}</strong>
+                  <small>{goal.value}</small>
+                </div>
+              ))}
+            </div>
+            {missionDebrief.snapshot && (
+              <div className="received-snapshot">
+                <div>
+                  <strong>LAST RECEIVED COLONY SNAPSHOT</strong>
+                  <small>Captured on colony day {missionDebrief.capturedDay}; received on Earth day {missionDebrief.receivedDay}. This is later than the founding projection.</small>
+                </div>
+                <span>{Math.round(missionDebrief.snapshot.population)} / {Math.round(missionDebrief.snapshot.capacity)} residents / capacity</span>
+                <span>{Math.round(missionDebrief.snapshot.power)} / {Math.round(missionDebrief.snapshot.powerCapacity)} power</span>
+              </div>
+            )}
+          </section>
+        )}
         <div className="debrief-grid">
           <div>
             <small>ELAPSED LOCAL TIME</small>
