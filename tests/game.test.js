@@ -103,7 +103,8 @@ test('Daneel can secure Mission I through the same WebMCP construction contract 
     assert.equal(result.ok, true, `${type} construction was accepted`);
   }
 
-  state = integrate(state, 361);
+  const outage = state.pendingEvents.find((event) => event.type === 'power-outage');
+  state = integrate(state, outage.day + outage.days + 1 - state.localDay);
   assert.equal(state.mission.status, 'pending-confirmation');
   assert.equal(state.mission.outcome, 'objective-secured');
   assert.ok(state.buildings.filter((building) => building.origin === 'daneel').length >= 3);

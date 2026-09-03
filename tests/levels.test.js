@@ -9,7 +9,8 @@ test('Mission I winning fixture: capacity, two sources, and a sustained 180-day 
   s = buildLocal(s, 'habitat');       // capacity 64 -> 100
   s = buildLocal(s, 'solar');         // source #2
   s = buildLocal(s, 'battery');       // reserve buffer
-  s = integrate(s, 361);
+  const outage = s.pendingEvents.find((event) => event.type === 'power-outage');
+  s = integrate(s, outage.day + outage.days + 1);
   assert.equal(s.resources.capacity, 100);
   assert.equal(s.mission.interruption.sustained, true);
   assert.equal(s.mission.status, 'pending-confirmation');
@@ -21,7 +22,8 @@ test('Mission I winning fixture: capacity, two sources, and a sustained 180-day 
 test('Mission I manual route is not forced: no second source means the outage is survivable only via stock', () => {
   let s = createGame('firstLight');
   s = buildLocal(s, 'battery');
-  s = integrate(s, 361);
+  const outage = s.pendingEvents.find((event) => event.type === 'power-outage');
+  s = integrate(s, outage.day + outage.days + 1);
   // Only one connected source -> mission cannot resolve as complete; it stays in progress.
   assert.equal(s.mission.status, 'active');
   assert.notEqual(s.mission.outcome, 'objective-secured');

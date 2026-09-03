@@ -1,4 +1,4 @@
-import { MAP_SIZE } from './constants.js';
+import { LIGHT_DELAY_DAYS, MAP_SIZE } from './constants.js';
 
 const tile = (x, y, terrain = 'regolith', risk = 0, isProtected = false) => ({ x, y, terrain, risk, protected: isProtected });
 
@@ -68,11 +68,14 @@ function colonyRoads(seed, cells) {
 export const SCENARIOS = {
   firstLight: {
     id: 'firstLight', title: 'The First Light', location: 'Asteria Landing', subtitle: 'Old coordinates. New consequences.',
-    briefing: 'Build a settlement that can survive the 180-day interruption. The map is an old observation; local decisions are Daneel’s.',
-    objective: 'Reach 100-person life-support capacity, keep two independent power sources, and ride out the seeded 180-day power interruption.',
+    briefing: 'After Earth’s first directive reaches the colony, build a settlement that can survive the seeded 180-day interruption. The map is an old observation; local decisions are Daneel’s.',
+    objective: 'After the first Earth directive arrives: reach 100-person life-support capacity, keep two independent power sources, and ride out the seeded 180-day power interruption.',
     seed: 17, targetPopulation: 100, initialObservationAge: 1595,
     events: [
-      { day: 180, type: 'power-outage', days: 180, sources: ['solar-1'] },
+      // A player’s first command needs one light-delay to reach Daneel. The
+      // opening interruption therefore follows that delivery window rather
+      // than making the directive-first game impossible before it starts.
+      { day: LIGHT_DELAY_DAYS + 240, type: 'power-outage', days: 180, sources: ['solar-1'] },
       { day: 240, type: 'flood', days: 120 },
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 0 },

@@ -13,6 +13,10 @@ function buildWinFixture() {
   s = buildLocal(s, 'battery');
   return s;
 }
+const resolveFirstLight = (state) => {
+  const outage = state.pendingEvents.find((event) => event.type === 'power-outage');
+  return integrate(state, outage.day + outage.days + 1 - state.localDay);
+};
 
 test('small messages: one window, departure at creation, arrival after exactly D', () => {
   let s = createGame(); s = queueHumanIntent(s, 'Keep life support stable');
@@ -56,7 +60,7 @@ test('uplink and downlink budgets are accounted independently per direction', ()
 
 test('mission outcome is not public until its confirming downlink arrives', () => {
   let s = buildWinFixture();
-  s = integrate(s, 361);
+  s = resolveFirstLight(s);
   const confirm = s.packets.find((p) => p.kind === 'mission-result');
   assert.equal(s.mission.interruption.sustained, true);
   assert.equal(s.mission.status, 'pending-confirmation');
@@ -73,7 +77,7 @@ test('mission outcome is not public until its confirming downlink arrives', () =
 });
 
 test('confirmation packet is a normal downlink packet with the own return delay', () => {
-  let s = buildWinFixture(); s = integrate(s, 361);
+  let s = buildWinFixture(); s = resolveFirstLight(s);
   const confirm = s.packets.find((p) => p.kind === 'mission-result');
   assert.ok(confirm); assert.equal(confirm.direction, 'downlink');
   assert.equal(confirm.arrivalDay, s.mission.interruption.endAt + LIGHT_DELAY_DAYS);
@@ -81,9 +85,9 @@ test('confirmation packet is a normal downlink packet with the own return delay'
 });
 
 test('relay hero changes from bootstrap to the newest received mission result', () => {
-  let s = buildWinFixture(); s = integrate(s, 361);
+  let s = buildWinFixture(); s = resolveFirstLight(s);
   const result = s.packets.find((p) => p.kind === 'mission-result');
-  assert.equal(earthRelayHero(s), null, 'the unreceived result cannot appear on Earth');
+  assert.notEqual(earthRelayHero(s)?.kind, 'mission-result', 'the unreceived result cannot appear on Earth, even if routine telemetry has arrived first');
   s = integrate(s, result.arrivalDay - s.localDay);
   const hero = earthRelayHero(s);
   assert.equal(hero.kind, 'mission-result');
@@ -92,7 +96,7 @@ test('relay hero changes from bootstrap to the newest received mission result', 
 });
 
 test('confirmed mission debrief carries goal evidence and a distinctly received snapshot', () => {
-  let s = buildWinFixture(); s = integrate(s, 361);
+  let s = buildWinFixture(); s = resolveFirstLight(s);
   const result = s.packets.find((p) => p.kind === 'mission-result');
   assert.equal(earthMissionDebrief(s), null, 'Earth cannot debrief an unreceived result');
   s = integrate(s, result.arrivalDay - s.localDay);

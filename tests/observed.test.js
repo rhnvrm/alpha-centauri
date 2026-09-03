@@ -93,17 +93,18 @@ test('store coast advance caps at the arrival and nextEarthEvent jumps exactly t
 
 test('demo pace advances exactly one local day per 1× tick', () => {
   const store = createStore({ storage: fakeStorage() });
-  store.advance(178);
+  const outage = store.getState().pendingEvents.find((event) => event.type === 'power-outage');
+  store.advance(outage.day - 2);
   store.toggleDemoPace();
   const after = store.demoStep();
   assert.equal(after.demoPace, true);
-  assert.equal(after.localDay, 179, 'one 1× tick advances one local day');
+  assert.equal(after.localDay, outage.day - 1, 'one 1× tick advances one local day');
   const next = store.demoStep();
-  assert.equal(next.localDay, 180, 'the authored event still lands on its exact day');
-  assert.equal(next.mission.interruption.startedAt, 180);
-  store.advance(180);
+  assert.equal(next.localDay, outage.day, 'the authored event still lands on its exact day');
+  assert.equal(next.mission.interruption.startedAt, outage.day);
+  store.advance(outage.days);
   const steady = store.demoStep();
-  assert.equal(steady.localDay, 361, 'uneventful time does not silently jump ahead');
+  assert.equal(steady.localDay, outage.day + outage.days + 1, 'uneventful time does not silently jump ahead');
 });
 
 test('old saves without observedWorld migrate to the founding observation', () => {
@@ -132,7 +133,8 @@ test('reports carry the observed world and Earth projection exposes it only afte
 test('Earth UI cannot infer an unreceived mission result from the local simulation', () => {
   let s = createGame('firstLight');
   s = buildLocal(s, 'habitat'); s = buildLocal(s, 'solar'); s = buildLocal(s, 'battery');
-  s = integrate(s, 361);
+  const outage = s.pendingEvents.find((event) => event.type === 'power-outage');
+  s = integrate(s, outage.day + outage.days + 1 - s.localDay);
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(earthMissionStatus(s).label, 'IN PROGRESS · OBSERVED');
   assert.equal(earthProjection(s).packets.some((packet) => packet.kind === 'mission-result'), false);

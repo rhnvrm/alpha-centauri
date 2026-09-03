@@ -37,13 +37,14 @@ test('stale human fixed coordinates fail when the flood has changed the tile by 
 
 test('power outage excludes the seeded source for exactly its window', () => {
   let s = createGame('firstLight');
+  const outage = s.pendingEvents.find((event) => event.type === 'power-outage');
   // Only solar-1 exists -> outage must starve power and drive the zero-power streak.
-  s = integrate(s, 180); assert.equal(s.resources.power > 0, true);
-  s = integrate(s, 179);
-  assert.equal(s.mission.interruption.startedAt, 180);
+  s = integrate(s, outage.day); assert.equal(s.resources.power > 0, true);
+  s = integrate(s, outage.days - 1);
+  assert.equal(s.mission.interruption.startedAt, outage.day);
   assert.equal(s.mission.interruption.sustained, s.mission.interruption.minPower >= 0);
-  assert.equal(s.mission.interruption.endAt, 359);
-  // Day 360 onward solar-1 is back.
+  assert.equal(s.mission.interruption.endAt, outage.day + outage.days - 1);
+  // The day after the window solar-1 is back.
   s = integrate(s, 1);
   assert.equal(s.mission.interruption.sustained, true);
 });
