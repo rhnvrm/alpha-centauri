@@ -277,6 +277,7 @@
 - **Actual:** `Receive next Earth receipt` advanced Earth from the day-zero observation directly to `OBJECTIVE SECURED`. This is mechanically efficient but erases the story and makes the lightspeed premise feel like a skip button.
 - **Evidence:** `recordings/mission1-clean-browser-run-2026-09-04.mp4`, terminal receipt: captured colony day 359, received Earth day 1954.
 - **Fix:** Turn the receipt path into a short, skippable arrival sequence: show the packet crossing the timeline, reveal its captured date versus Earth receipt date, animate the observed-world update, and require one compact “review report” acknowledgement before the debrief/confirmation state.
+- **Resolution (live verified):** Fresh directive-first First Light completed locally at day 2014. Earth received the normal telemetry/focus-report sequence, then the terminal packet at day 3609. The receipt screen requires an acknowledgement and visibly separates `CAPTURED ON COLONY · DAY 2014` from `RECEIVED ON EARTH · DAY 3609`.
 
 ### 32. Daneel began local work from the day-zero charter without a delivered Earth directive
 
@@ -284,3 +285,4 @@
 - **Expected:** Connection should permit local inspection, a short status report, and waiting. Construction, surveying, movement, production changes, maintenance, and cargo work should require an Earth intent that has crossed the light-delay and been acknowledged.
 - **Actual:** The original startup brief treated the charter as sufficient local authority, so Daneel could immediately build resilience infrastructure while Earth’s intent box was empty. The Earth UI then had no truthful answer to “what is Daneel working on?”
 - **Fix / resolution:** Local work tools now reject with `AWAITING_EARTH_DIRECTIVE` until `yield_control` acknowledges a delivered intent. The relay distinguishes standing-by, Earth directive in flight, delivered/awaiting report, and a received Daneel-declared focus. Native in-app WebMCP verification confirmed a fresh `construct_building` call is rejected after connection alone.
+- **Timing resolution (live verified):** First Light’s interruption is now scheduled after the first light-delay, rather than at local day 180. In the fresh browser run, Earth’s directive arrived day 1614; Daneel’s solar/habitat builds completed days 1744/1782; the interruption finished day 2014 with the objective secured.
