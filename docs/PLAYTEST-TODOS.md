@@ -169,3 +169,13 @@
 - **Actual:** The debrief correctly says the snapshot was captured day 359 and received day 1954, but its metric grid says `CONFIRMED THROUGH 2280.01`, suggesting day-zero knowledge and contradicting the terminal narrative.
 - **Capture:** `docs/playtest-captures/first-light-debrief-current-code.png`
 - **Fix:** Replace this stale metric with explicit colony capture and Earth receipt dates sourced from the confirmed result; reserve “last observed” for the projection only.
+
+## Fresh Earth command-desk inspection — build/selection flow
+
+### 20. Construction is implicitly armed, so ordinary world inspection is ambiguous
+
+- **Role / moment:** Earth, fresh First Light command desk before any correspondence; choose a building in the Earth Order control and then try to inspect a rover, facility, or map tile.
+- **Expected:** The map should begin in a clear **Select** mode where clicking received buildings and rovers always inspects them. Construction should require an explicit **Build mode**, show a placement preview only while that mode is active, and provide a visible cancel/escape route back to selection.
+- **Actual:** The Earth Order panel always has a building selected and any selected tile immediately becomes a construction target with a build ghost. This makes click intent unclear and causes the player to treat normal selection as accidental placement preparation; units are effectively inaccessible in the normal flow.
+- **Capture:** `docs/playtest-captures/build-selection-before.png`
+- **Fix:** Add mutually exclusive Select / Build / Road / Rover-move interaction modes. Keep Select as the default, never show a build ghost outside Build mode, make build controls explicitly arm/cancel the mode, and give the map hint and selected-object panel an unambiguous current-mode label.
