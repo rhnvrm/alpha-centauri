@@ -34,6 +34,7 @@ import { registerNativeTools } from "./webmcp/register.js";
 import { ColonyScene } from "./scene/ColonyScene.jsx";
 import { isGridConnected } from "./game/networks.js";
 import { transmitChirp, arrivalChime } from "./ui/sound.js";
+import { monotonicNow, runtimeDeadlines } from "./game/superposition.js";
 
 const dayLabel = (day) =>
   `${Math.floor(day / 365) + 2280}.${String(Math.floor((day % 365) / 30) + 1).padStart(2, "0")}`;
@@ -186,7 +187,10 @@ export default function App({ store }) {
   const [tutorialDismissed, setTutorialDismissed] = useState(false);
   const [native, setNative] = useState({ supported: false, registered: [] });
   const [copied, setCopied] = useState(false);
-  const [superpositionNow, setSuperpositionNow] = useState(() => Date.now());
+  const [superpositionClock, setSuperpositionClock] = useState(() => {
+    const now = monotonicNow();
+    return { now, ...runtimeDeadlines(state.superposition, Date.now(), now) };
+  });
   const [relayTab, setRelayTab] = useState("relay");
   const scenario = SCENARIOS[state.missionId];
   const projection = useMemo(() => earthProjection(state), [state]);
@@ -218,15 +222,19 @@ export default function App({ store }) {
   const placement = useMemo(() => receivedPlacement(state, selectedTile ? selected : null, buildType), [state, selected, selectedTile, buildType]);
   const timeScale = [1, 2, 5, 10].includes(state.timeScale) ? state.timeScale : 1;
   const superposition = state.superposition || { passes: 0, activeUntilMs: 0, lastActivatedAtMs: 0 };
-  const superpositionActive = superposition.activeUntilMs > superpositionNow;
-  const superpositionSeconds = Math.max(0, Math.ceil((superposition.activeUntilMs - superpositionNow) / 1000));
-  const superpositionCooldown = Math.max(0, Math.ceil((superposition.lastActivatedAtMs + 60_000 - superpositionNow) / 1000));
+  const superpositionActive = superpositionClock.activeUntil > superpositionClock.now;
+  const superpositionSeconds = Math.max(0, Math.ceil((superpositionClock.activeUntil - superpositionClock.now) / 1000));
+  const superpositionCooldown = Math.max(0, Math.ceil((superpositionClock.cooldownUntil - superpositionClock.now) / 1000));
+  useEffect(() => {
+    const now = monotonicNow();
+    setSuperpositionClock({ now, ...runtimeDeadlines(superposition, Date.now(), now) });
+  }, [superposition.activeUntilMs, superposition.lastActivatedAtMs]);
   const eventCopy = eventControlCopy(state, { local: superpositionActive, nextLocalBoundary, nextEarthBoundary });
   const nextEventButton = eventCopy.next;
   const earthEventButton = eventCopy.earth;
   useEffect(() => {
     if (!superpositionActive && superpositionCooldown <= 0) return undefined;
-    const tick = setInterval(() => setSuperpositionNow(Date.now()), 250);
+    const tick = setInterval(() => setSuperpositionClock((clock) => ({ ...clock, now: monotonicNow() })), 250);
     return () => clearInterval(tick);
   }, [superpositionActive, superpositionCooldown]);
   useEffect(() => {
@@ -395,7 +403,8 @@ export default function App({ store }) {
   };
   const activateSuperposition = () => {
     const result = store.activateSuperposition(Date.now());
-    setSuperpositionNow(Date.now());
+    const now = monotonicNow();
+    setSuperpositionClock({ now, ...runtimeDeadlines(result.state.superposition, Date.now(), now) });
     if (result.ok) setToast("SUPERPOSITION OPEN · local visual only · 30 seconds · one parity pass spent.");
     else if (result.reason === "COOLDOWN") setToast(`SUPERPOSITION COOLDOWN · ${Math.ceil(result.remainingMs / 1000)}s remaining.`);
     else if (result.reason === "NO_PASSES") setToast("SUPERPOSITION BUDGET EXHAUSTED · no local view remains this mission.");

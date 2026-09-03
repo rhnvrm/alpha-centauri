@@ -1,6 +1,7 @@
 import { createGame } from './state.js';
 import { integrate, advanceToNextEvent, nextEarthArrivalDay, queueHumanIntent, queueHumanBuild, queueHumanDoctrine, queueHumanCargo, queueHumanRoad, queueHumanRobotMove, queueHumanProtocol, queueHumanAuthResponse, constructBuilding, cancelJob } from './engine.js';
 import { loadGame, saveGame } from './storage.js';
+import { SUPERPOSITION_DURATION_MS, SUPERPOSITION_COOLDOWN_MS } from './superposition.js';
 
 export function createStore({ storage = globalThis.localStorage } = {}) {
   let state = loadGame(storage) || createGame(); let listeners = new Set();
@@ -21,9 +22,9 @@ export function createStore({ storage = globalThis.localStorage } = {}) {
   const activateSuperposition = (now = Date.now()) => {
     const meta = state.superposition || { passes: 0, activations: 0, lastActivatedAtMs: 0, activeUntilMs: 0 };
     if (now < meta.activeUntilMs) return { ok: false, reason: 'ACTIVE', state };
-    if (now < meta.lastActivatedAtMs + 60_000) return { ok: false, reason: 'COOLDOWN', remainingMs: meta.lastActivatedAtMs + 60_000 - now, state };
+    if (now < meta.lastActivatedAtMs + SUPERPOSITION_COOLDOWN_MS) return { ok: false, reason: 'COOLDOWN', remainingMs: meta.lastActivatedAtMs + SUPERPOSITION_COOLDOWN_MS - now, state };
     if (meta.passes < 1) return { ok: false, reason: 'NO_PASSES', state };
-    const next = publish({ ...state, superposition: { ...meta, passes: meta.passes - 1, activations: meta.activations + 1, lastActivatedAtMs: now, activeUntilMs: now + 30_000 } });
+    const next = publish({ ...state, superposition: { ...meta, passes: meta.passes - 1, activations: meta.activations + 1, lastActivatedAtMs: now, activeUntilMs: now + SUPERPOSITION_DURATION_MS } });
     return { ok: true, untilMs: next.superposition.activeUntilMs, state: next };
   };
   return {
