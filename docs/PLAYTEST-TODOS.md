@@ -105,3 +105,11 @@
 - **Actual:** The screenshot still clips the right half of the correspondence heading, the Earth date, intent panel, and several time controls. The browser image is 1600px wide, but the game shell’s effective layout width is narrower than the CSS breakpoint assumes.
 - **Capture:** `docs/playtest-captures/command-desk-responsive-after.png`
 - **Fix:** Measure and adapt to the actual shell/container width, not only `window.innerWidth`; collapse or reflow rail/controls before any right edge escapes.
+
+### 13. Redesigned title screen clips the mission choice cards at desktop height
+
+- **Role / moment:** Earth, title screen, normal in-app desktop viewport after the visual title-screen redesign.
+- **Expected:** Continue and all three complete mission cards are visible and actionable in the fixed no-scroll frame.
+- **Actual:** The hero/relay composition is now strong, but the lower portions of the mission cards are cut off below the viewport. This makes the mission choices look unfinished and hides useful copy.
+- **Capture:** `docs/playtest-captures/home-screen-after-spruce.png`
+- **Fix:** Preserve the full-bleed visual composition while vertically budgeting the intro, relay, Continue action, and complete cards for the real desktop viewport.
