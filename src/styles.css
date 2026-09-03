@@ -1222,6 +1222,16 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .time-controls { border-left: 0; }
 }
 
+/* Keep the three command-deck columns inside the embedded desktop surface.
+   Without an explicit third flexible track, the docked time-controls panel
+   creates an intrinsic-width column and expands the entire shell horizontally. */
+@media (min-width: 821px) {
+  .game-shell { width: 100%; min-width: 0; }
+  .bottom-deck {
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.6fr) minmax(0, .9fr);
+  }
+}
+
 /* Interaction pass: simulation is docked in the command deck, not laid over the
    colony. Native titles remain available to assistive technology; the matching
    visual tooltip also appears on keyboard focus. */
