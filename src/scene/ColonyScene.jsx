@@ -143,14 +143,16 @@ function meshRoad(r, roadKeys, live, textures) {
   // A soft central node lets the lanes join naturally at bends and intersections.
   const surface = live ? 0x454c46 : 0x5b4934;
   const shoulder = live ? 0x5e8b7e : 0x8f6e42;
-  const node = new THREE.Mesh(new THREE.CircleGeometry(.31, 10), material(0x282720, { roughness: 1, transparent: true, opacity: .8 }));
-  node.rotation.x = -Math.PI / 2; node.position.y = .105; node.scale.set(1.2, .92, 1); node.receiveShadow = true; group.add(node);
+  const node = new THREE.Mesh(new THREE.CircleGeometry(.4, 12), material(0x282720, { roughness: 1, transparent: true, opacity: .8 }));
+  node.rotation.x = -Math.PI / 2; node.position.y = .105; node.scale.set(1.18, .92, 1); node.receiveShadow = true; group.add(node);
   const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => roadKeys.has(`${r.x + dx},${r.y + dy}`));
   for (const [dx, dy] of directions) {
-    const connector = addMesh(group, new THREE.BoxGeometry(dx ? .67 : .28, .026, dy ? .67 : .28), surface, [dx * .35, .137, dy * .35], { roughness: .96, metalness: .02 });
+    // Overlap the neighboring half-segment so roads read as one grounded corridor,
+    // rather than a chain of tiny center markers at this camera scale.
+    const connector = addMesh(group, new THREE.BoxGeometry(dx ? .78 : .42, .026, dy ? .78 : .42), surface, [dx * .37, .12, dy * .37], { roughness: .96, metalness: .02 });
     connector.receiveShadow = true;
     // A narrow, offset worn edge distinguishes a service path from a generic dark stain.
-    const edge = addMesh(group, new THREE.BoxGeometry(dx ? .64 : .05, .008, dy ? .64 : .05), shoulder, [dx ? dx * .35 : .12, .161, dy ? dy * .35 : .12], { emissive: live ? 0x102f2c : 0x000000, emissiveIntensity: live ? .28 : 0, roughness: .82, transparent: true, opacity: .62 });
+    const edge = addMesh(group, new THREE.BoxGeometry(dx ? .74 : .055, .008, dy ? .74 : .055), shoulder, [dx ? dx * .37 : .14, .143, dy ? dy * .37 : .14], { emissive: live ? 0x102f2c : 0x000000, emissiveIntensity: live ? .28 : 0, roughness: .82, transparent: true, opacity: .62 });
     edge.castShadow = false;
   }
   if (live && directions.length >= 2) {
@@ -412,10 +414,14 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
   useEffect(() => {
     if (!host.current) return undefined;
     const el = host.current; const scene = new THREE.Scene(); scene.background = new THREE.Color(0x283437); scene.fog = new THREE.Fog(0x283437, 44, 86);
-    // Frame the known settlement, not the logical board origin. This keeps the opening
-    // view useful for the first decision while leaving room for the authored frontier.
-    const camera = new THREE.OrthographicCamera(-19, 19, 14, -14, .1, 100); camera.zoom = 2.04;
-    const initialObserved = state.observedWorld?.buildings || state.buildings || [];
+    // Frame the known settlement, not the logical board origin. Earth must also avoid
+    // centering on structures outside its received survey, since even camera framing
+    // can disclose where an unreceived installation exists.
+    const camera = new THREE.OrthographicCamera(-19, 19, 14, -14, .1, 100); camera.zoom = viewMode === 'earth' ? 1.52 : 2.04;
+    const initialSurveyedTiles = new Set((viewMode === 'local' ? state.localKnowledge : state.observedKnowledge)?.surveyedTiles || []);
+    const initialWorld = state.observedWorld || { buildings: [], robots: [], roads: [] };
+    const initialObserved = (viewMode === 'local' ? state.buildings : (initialWorld.buildings || []))
+      .filter((building) => viewMode === 'local' || receivedBuilding(building, initialSurveyedTiles));
     const initialCenter = initialObserved.length
       ? initialObserved.reduce((center, building) => { center.x += building.x; center.y += building.y; return center; }, { x: 0, y: 0 })
       : { x: 16, y: 16 };
@@ -555,7 +561,14 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
           contour.position.set(wx, .13, wz); contour.userData = m.userData; world.add(contour);
         }
         if (!visible) {
-          const fog = new THREE.Mesh(new THREE.BoxGeometry(1.08, .09, 1.08), new THREE.MeshBasicMaterial({ color: 0x111817, transparent: true, opacity: .9 }));
+          // A soft, overlapping veil keeps the unknown readable as atmosphere instead
+          // of a tiny hard-edged board diamond. It carries no terrain, structure, or
+          // resource detail; the transparent box above remains the sole pick target.
+          const fog = new THREE.Mesh(new THREE.CircleGeometry(.76, 10), new THREE.MeshBasicMaterial({ color: 0x182522, transparent: true, opacity: latest.current.viewMode === 'earth' ? .5 : .38, depthWrite: false }));
+          fog.rotation.x = -Math.PI / 2;
+          const fogSeed = Math.abs((t.x * 83492791) ^ (t.y * 2971215073));
+          fog.rotation.z = (fogSeed % 12) * .26;
+          fog.scale.set(.86 + (fogSeed % 7) * .045, .86 + ((fogSeed >> 3) % 7) * .045, 1);
           fog.position.set(wx, .16, wz); fog.userData = m.userData; world.add(fog);
         }
       }
