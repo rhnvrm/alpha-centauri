@@ -161,6 +161,7 @@
 - **Actual:** The top confirmation banner, correspondence terminal panel, and lower terminal deck each offer overlapping debrief/mission-selection controls. This makes the terminal state more cluttered than the active game it replaced.
 - **Capture:** `docs/playtest-captures/first-light-terminal-current-code.png`
 - **Fix:** Choose a single primary completion action group; retain one compact read-only explanation in the other areas instead of repeating navigation.
+- **Resolution (live verified):** The confirmation banner is now the sole action group. The correspondence and lower terminal panels are read-only explanations. In the completed corrected Mission 2 browser run, the only terminal action buttons were `Review mission debrief` and `Return to mission selection` in that banner. Capture: `docs/playtest-captures/mission-2-corrected-earth-confirmation.png`.
 
 ### 19. Debrief still displays a stale “confirmed through” date beside current received evidence
 
@@ -177,6 +178,7 @@
 - **Actual:** The evidence section now reads cleanly, but the lower received timeline extends below the fixed 1384px viewport and is clipped. The document deliberately has `overflow: hidden`, so there is no reachable way to inspect its final entries.
 - **Capture:** `docs/playtest-captures/first-light-debrief-build-mode-run.png`
 - **Fix:** Budget the debrief for the actual fixed viewport: compact the header/metric area, progressively disclose or constrain the timeline, and keep all remaining completion actions visible without introducing vertical scrolling.
+- **Resolution (live verified):** The debrief now retains seven decisive final events and explicitly accounts for earlier compacted ledger events. The completed Mission 2 debrief had `scrollHeight === clientHeight === 1384` and no elements with `overflow-y: auto` or `scroll`; its final action remained visible. Capture: `docs/playtest-captures/mission-2-corrected-debrief.png`.
 
 ### 22. Mission 2 can be won by waiting because its initial reserves dwarf its stated two-year challenge
 
@@ -185,6 +187,7 @@
 - **Actual:** The Earth HUD starts at about 23 years of food and 25 years of water. Daneel's local inspector shows 277.6 months of food and a 74% power reserve for a goal requiring only 24 months and 20%. There are no immediate local events or binding inbox decisions, so yielding and waiting is the safe winning strategy.
 - **Capture / evidence:** Native WebMCP `inspect_colony` and `inspect_resource_network` on fresh session `session-x0at28n`; the visible Earth charter/HUD recorded the 23y/25y values.
 - **Fix:** Rebalance or structure Mission 2 around an actual sustainable-production tradeoff: start near the 24-month reserve floor, introduce a predictable degradation/seasonal constraint, and expose one or two authorized choices (for example greenhouse rate vs. wetland protection, or water/power network investment) whose consequences Daneel must manage locally.
+- **Resolution (live verified):** Fresh Mission 2 now starts at 2.3 years of food/water and 28% power; Daneel's current inspector reports 27.7-month declining reserves. In the live WebMCP run, Daneel built a solar array, greenhouse, and reservoir on safe grid-connected sites; at day 316 the local constraint became stable with 46.1 months food, 37.8 months water, and 260/260 power. It completed at day 730, and Earth received the secured result day 2325. The regression suite separately proves the untouched mission loses and this local response wins.
 
 ## Fresh Earth command-desk inspection — build/selection flow
 
