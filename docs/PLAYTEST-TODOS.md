@@ -47,6 +47,7 @@
 - **Role / moment:** Earth, live in-app browser at a 1600px-wide desktop viewport after a received telemetry packet.
 - **Expected:** The top time controls, Earth date, correspondence heading, and relay card remain completely legible without relying on page scrollbars.
 - **Actual:** Horizontal content is clipped: the top-right command controls/date and `Daneel / Correspondence` heading lose their right edges. The no-scrollbar rule currently hides rather than resolves the overflow.
+- **Capture:** `docs/playtest-captures/northern-reach-fog-and-command-desk-before.png`
 - **Fix:** Make the command-shell columns and top controls adapt at constrained desktop widths: preserve a readable correspondence rail, compact/reflow time controls, and avoid clipping any interactive control or receipt label.
 
 ### 6. Fog hides terrain but leaks remote structures
@@ -54,6 +55,7 @@
 - **Role / moment:** Earth, Northern Reach, immediately after opening a fogged Earth-side reconstruction.
 - **Expected:** Outside the received survey area, neither terrain nor identifiable colony structures should provide actionable information.
 - **Actual:** The terrain is fogged, but distant launch-pad and industrial sprites remain visibly recognizable beyond the revealed island. This makes fog look decorative and reveals strategic infrastructure.
+- **Capture:** `docs/playtest-captures/northern-reach-fog-and-command-desk-before.png`
 - **Fix:** Apply the Earth knowledge mask consistently to buildings, robots, roads, selections, and minimap markers; retain only deliberately permitted remote relay cues. Superposition remains the explicit read-only exception.
 
 ### 7. Onboarding makes the Daneel handoff feel like documentation
@@ -61,4 +63,5 @@
 - **Role / moment:** Earth, fresh First Light onboarding screen in the in-app browser.
 - **Expected:** The player can understand the mission, copy the Daneel handoff, and enter the command desk in a few seconds.
 - **Actual:** The screen leads with a large scrollable block of operational prompt text. It reads as a manual, competes with the mission briefing, and makes the first interaction feel daunting.
+- **Capture:** `docs/playtest-captures/first-light-onboarding-before.png`
 - **Fix:** Collapse the full prompt behind a single `Copy Daneel brief` action. Surface only a short three-step handoff summary, a clear copy-confirmation state, and the start button; retain access to the full text for inspection without making it the visual center.
