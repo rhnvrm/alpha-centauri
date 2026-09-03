@@ -97,3 +97,11 @@
 - **Actual:** The hero composition is confined to a narrow central/left column with a large dead black area on the right. Mission and footer copy are dim/small, and the Continue card visibly truncates an opaque session identifier.
 - **Capture:** `docs/playtest-captures/home-screen-before-spruce.png`
 - **Fix:** Rebalance the full-viewport title composition while retaining the existing hero art; raise typography and interactive-card hierarchy, give the entry actions clear focus/hover states, and suppress implementation-only session identifiers.
+
+### 12. First responsive reflow still clips the live embedded command desk
+
+- **Role / moment:** Earth, First Light command desk, live in-app browser after `fix: keep command desk within viewport`.
+- **Expected:** The actual rendered browser view fits all top-bar dates, controls, correspondence title, rail copy, and the lower command card within the visible shell.
+- **Actual:** The screenshot still clips the right half of the correspondence heading, the Earth date, intent panel, and several time controls. The browser image is 1600px wide, but the game shell’s effective layout width is narrower than the CSS breakpoint assumes.
+- **Capture:** `docs/playtest-captures/command-desk-responsive-after.png`
+- **Fix:** Measure and adapt to the actual shell/container width, not only `window.innerWidth`; collapse or reflow rail/controls before any right edge escapes.
