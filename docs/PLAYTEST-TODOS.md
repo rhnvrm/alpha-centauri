@@ -113,3 +113,31 @@
 - **Actual:** The hero/relay composition is now strong, but the lower portions of the mission cards are cut off below the viewport. This makes the mission choices look unfinished and hides useful copy.
 - **Capture:** `docs/playtest-captures/home-screen-after-spruce.png`
 - **Fix:** Preserve the full-bleed visual composition while vertically budgeting the intro, relay, Continue action, and complete cards for the real desktop viewport.
+
+## Fresh First Light completion — session `session-jhjqr1y`
+
+**Validated outcome:** Daneel inspected the day-zero charter, built a second solar source and a habitat locally, and kept the colony through the 180-day interruption. Earth received `OBJECTIVE SECURED` captured on colony day 359 on Earth day 1954. The live relay capture/receipt labels and the outcome agree.
+
+### 14. Completion has no visible route into the debrief or next mission
+
+- **Role / moment:** Earth, immediately after the First Light mission-result packet arrived and the header became `COMPLETE · CONFIRMED`.
+- **Expected:** The confirmed end state should present a prominent, unambiguous action to review the debrief and continue to mission selection.
+- **Actual:** The desk says “Review the confirmed outcome,” but exposes no visible debrief button. The only known path is the unstated `Esc` mission-select shortcut followed by Continue, which is not a completion flow.
+- **Capture:** `docs/playtest-captures/first-light-complete-live.png`
+- **Fix:** Add a clear primary `Review mission debrief` action at confirmation, with a secondary return-to-missions action.
+
+### 15. Confirmed missions leave dead transmission and simulation controls exposed
+
+- **Role / moment:** Earth, same confirmed First Light end state.
+- **Expected:** A completed, paused mission should make its terminal state obvious and prevent or clearly explain actions that can no longer affect it.
+- **Actual:** The live desk still presents `WRITE AN INTENT`, `TRANSMIT INTENT`, `RESUME`, manual day jumps, and speed controls—even though the header is confirmed and no later Earth action can change the completed result.
+- **Capture:** `docs/playtest-captures/first-light-complete-live.png`
+- **Fix:** Replace or disable terminal controls with a concise completed-state panel; retain relay history as read-only evidence.
+
+### 16. The final Earth view gives no synthesized account of what the colony achieved
+
+- **Role / moment:** Earth, after receiving `OBJECTIVE SECURED`.
+- **Expected:** A final result should translate the delayed packet into the resources/conditions the player earned: capacity reached, independent power sources, outage survived, and what Earth can honestly know.
+- **Actual:** The only summary is the generic result sentence. The top resource strip still visually reads as the day-zero projection, while the player has no final mission-specific explanation without hunting through sparse relay copy.
+- **Capture:** `docs/playtest-captures/first-light-complete-live.png`
+- **Fix:** Add a compact outcome debrief with goal-by-goal evidence and a deliberately labelled “last received colony state,” rather than leaving the opening metrics to carry the conclusion.
