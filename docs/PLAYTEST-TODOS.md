@@ -251,3 +251,36 @@
 - **Actual:** The right rail fits its container, but the `Daneel / Correspondence` heading is truncated beside the connection badge (`Daneel / Correspond...`), reducing hierarchy and polish.
 - **Capture:** Fresh live command-desk screenshot from the in-app browser during this pass.
 - **Fix:** Make the rail heading container-aware: allow a controlled wrap or compact type treatment, preserve the connection badge, and keep tabs/composer inside the same fixed-width rail.
+
+### 29. Fresh Earth map reads as an isolated board diamond
+
+- **Role / moment:** Earth, fresh Mission 1 command desk before Daneel connects.
+- **Expected:** Fog of war should preserve the information boundary while the 3D map still reads as a planetary surface with an unexplored frontier.
+- **Actual:** The received orange survey cells form a small hard-edged diamond surrounded by near-black void. The colony sprites are attractive, but the boundary makes the world feel like a board-test area and leaves most of the map visually dead.
+- **Capture:** Fresh live command-desk screenshot from the in-app browser during this pass.
+- **Fix:** Add a subdued, non-informational terrain/fog treatment beyond surveyed cells and adjust the initial camera framing so the settlement has world context without revealing local structures or resources.
+
+## Clean Mission 1 end-to-end replay — Earth + Daneel
+
+### 30. Daneel’s meaningful local work has no readable visual consequence on Earth’s gameplay screen
+
+- **Role / moment:** A complete fresh Mission 1 run. Daneel connected through native WebMCP, built a second solar array, expanded life-support capacity to 100, and survived the seeded outage; Earth watched the command desk during the local run.
+- **Expected:** Even though Earth cannot know the exact local state, the screen should visibly *play*: rover/build crews should move with an evident task, the observed map should receive purposeful updates, and the correspondence rail should make the state transition from “waiting” to “Daneel is acting” legible.
+- **Actual:** The observed Earth map looked nearly identical from connection through completion. The important solar/habitat construction existed in Daneel’s local inspector but there was no visible work-progress vocabulary on the Earth screen, so the run felt like hidden simulation instead of a living RTS/correspondence game.
+- **Evidence:** `recordings/mission1-clean-browser-run-2026-09-04.mp4`; native WebMCP observations in the same run showed solar completion at day 80 and habitat completion at day 193 while the Earth map stayed visually static.
+- **Fix:** Add an Earth-safe activity layer: relay-status pulses, in-transit/working service-fleet silhouettes, time-stamped “local work inferred” correspondence beats, and richer superposition that visibly shows actual construction and workers for its short permitted window. Keep unrevealed building details hidden until a packet arrives.
+
+### 31. One receipt action jumps from an uneventful Earth view directly to a terminal win, collapsing the drama
+
+- **Role / moment:** Earth, after Daneel sent the Mission 1 milestone downlink.
+- **Expected:** The player should experience the delay as a sequence—departure, long transit, anticipation, packet arrival, report review, then mission confirmation—with enough visual state change to understand why it matters.
+- **Actual:** `Receive next Earth receipt` advanced Earth from the day-zero observation directly to `OBJECTIVE SECURED`. This is mechanically efficient but erases the story and makes the lightspeed premise feel like a skip button.
+- **Evidence:** `recordings/mission1-clean-browser-run-2026-09-04.mp4`, terminal receipt: captured colony day 359, received Earth day 1954.
+- **Fix:** Turn the receipt path into a short, skippable arrival sequence: show the packet crossing the timeline, reveal its captured date versus Earth receipt date, animate the observed-world update, and require one compact “review report” acknowledgement before the debrief/confirmation state.
+
+### 32. Daneel began local work from the day-zero charter without a delivered Earth directive
+
+- **Role / moment:** Daneel connected through native WebMCP on a fresh First Light session before Earth sent an intent.
+- **Expected:** Connection should permit local inspection, a short status report, and waiting. Construction, surveying, movement, production changes, maintenance, and cargo work should require an Earth intent that has crossed the light-delay and been acknowledged.
+- **Actual:** The original startup brief treated the charter as sufficient local authority, so Daneel could immediately build resilience infrastructure while Earth’s intent box was empty. The Earth UI then had no truthful answer to “what is Daneel working on?”
+- **Fix / resolution:** Local work tools now reject with `AWAITING_EARTH_DIRECTIVE` until `yield_control` acknowledges a delivered intent. The relay distinguishes standing-by, Earth directive in flight, delivered/awaiting report, and a received Daneel-declared focus. Native in-app WebMCP verification confirmed a fresh `construct_building` call is rejected after connection alone.
