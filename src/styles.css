@@ -703,3 +703,32 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .handoff-steps { grid-template-columns: 1fr; }
   .handoff-step { min-height: 0; }
 }
+
+/* Constrained desktop correction: the command rail must reflow before the
+   no-scrollbar console has a chance to hide a control or receipt label. */
+@media (min-width: 1101px) and (max-width: 1600px) {
+  .topbar { grid-template-columns: minmax(230px, 1fr) minmax(170px, .75fr) max-content; }
+  .dates { gap: 12px; overflow: visible; white-space: nowrap; }
+  .dates > span { white-space: nowrap; }
+
+  .play-body { grid-template-columns: minmax(0, 1fr) minmax(360px, 390px); }
+  .aside-head { align-items: flex-start; gap: 10px; }
+  .aside-head > div { min-width: 0; flex: 1 1 auto; }
+  .aside-head h2 { font-size: 21px; line-height: 1.08; overflow-wrap: normal; }
+  .aside-head > .connected, .aside-head > .disconnected { flex: 0 0 auto; white-space: nowrap; }
+
+  .time-controls {
+    width: min(900px, calc(100% - 500px));
+    right: 402px;
+    height: auto;
+    min-height: 54px;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: center;
+    row-gap: 3px;
+    overflow: visible;
+  }
+  .time-controls button { white-space: normal; line-height: 1.15; }
+  .time-controls > button:nth-of-type(5),
+  .time-controls > button:nth-of-type(6) { max-width: 220px; }
+}
