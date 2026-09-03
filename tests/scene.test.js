@@ -82,6 +82,30 @@ test('local scene data is rendered only by the explicit read-only superposition 
   assert.equal(world.children.filter((object) => object.userData.kind === 'building').length, 1, 'Earth boundary is restored when the mode closes');
 });
 
+test('Earth masks received structures, roads, robots, and their selection targets by survey', async (t) => {
+  const { root, renderers, factory } = await setup(t);
+  const base = createGame();
+  const remote = { id: 'remote-launch', type: 'launch', x: 25, y: 25, status: 'complete' };
+  const state = {
+    ...base,
+    buildings: [...base.buildings, remote],
+    robots: [...base.robots, { id: 'remote-rover', type: 'cargo', x: 25, y: 25, status: 'idle' }],
+    roads: [...base.roads, { x: 25, y: 25 }],
+    observedWorld: {
+      buildings: [...base.observedWorld.buildings, remote],
+      robots: [...base.observedWorld.robots, { id: 'remote-rover', type: 'cargo', x: 25, y: 25, status: 'idle' }],
+      roads: [...base.observedWorld.roads, { x: 25, y: 25 }],
+    },
+  };
+  await act(async () => root.render(React.createElement(ColonyScene, { state, onSelect() {}, rendererFactory: factory })));
+  const world = renderers[0].scene.children.find((object) => object.isGroup);
+  assert.equal(world.children.filter((object) => object.userData.kind === 'building').some((object) => object.userData.id === remote.id), false);
+  assert.equal(world.children.filter((object) => object.userData.kind === 'robot').some((object) => object.userData.id === 'remote-rover'), false);
+  const remoteTileObjects = world.children.filter((object) => object.userData.kind === 'tile' && object.userData.x === 25 && object.userData.y === 25);
+  assert.equal(remoteTileObjects.length, 2, 'fog tile and its pick target remain without rendering the remote road');
+  assert.ok(world.children.filter((object) => object.userData.kind === 'building').length < base.observedWorld.buildings.length, 'at least one received structure is masked');
+});
+
 test('failed initialization keeps a mounted host and can retry successfully', async (t) => {
   const { root, renderers, factory } = await setup(t); let attempts = 0;
   const retryFactory = () => { if (++attempts === 1) throw new Error('Test GPU unavailable'); return factory(); };

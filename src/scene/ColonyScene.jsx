@@ -13,6 +13,18 @@ const addMesh = (group, geometry, color, position, options = {}) => {
   mesh.position.set(...position); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh;
 };
 const tileData = (x, y) => ({ id: `tile-${x}-${y}`, kind: 'tile', x, y });
+const buildingFootprint = (building) => BUILDINGS[building.type]?.footprint || [2, 2];
+const surveyedCell = (surveyedTiles, x, y) => surveyedTiles.has(`${x},${y}`);
+const receivedBuilding = (building, surveyedTiles) => {
+  const [width, height] = buildingFootprint(building);
+  for (let dy = 0; dy < height; dy += 1) for (let dx = 0; dx < width; dx += 1) {
+    if (!surveyedCell(surveyedTiles, building.x + dx, building.y + dy)) return false;
+  }
+  return true;
+};
+const receivedEntity = (entity, kind, surveyedTiles) => kind === 'building'
+  ? receivedBuilding(entity, surveyedTiles)
+  : surveyedCell(surveyedTiles, entity.x, entity.y);
 // Public asset paths are resolved against the active document at runtime. This preserves the
 // GitHub Pages subpath and keeps the lightweight Node scene tests free of image-loader setup.
 const relaySpriteUrl = 'sprites/relay-v1.png';
@@ -438,7 +450,13 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
     const observed = () => {
       const { state: current, viewMode: mode } = latest.current;
       if (mode === 'local') return { buildings: current.buildings.filter((b) => b.status !== 'cancelled'), robots: current.robots, roads: current.roads };
-      return current.observedWorld || { buildings: [], robots: [], roads: [] };
+      const world = current.observedWorld || { buildings: [], robots: [], roads: [] };
+      const surveyedTiles = new Set(current.observedKnowledge?.surveyedTiles || []);
+      return {
+        buildings: (world.buildings || []).filter((building) => receivedEntity(building, 'building', surveyedTiles)),
+        robots: (world.robots || []).filter((robot) => receivedEntity(robot, 'robot', surveyedTiles)),
+        roads: (world.roads || []).filter((road) => receivedEntity(road, 'road', surveyedTiles)),
+      };
     };
     const surveyed = () => {
       const { state: current, viewMode: mode } = latest.current;
@@ -564,7 +582,8 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
         const target = new THREE.Mesh(new THREE.RingGeometry(.34, .43, 16), new THREE.MeshBasicMaterial({ color: 0xd9b46b, transparent: true, opacity: .78, side: THREE.DoubleSide }));
         target.rotation.x = -Math.PI / 2; target.position.set(toX, .23, toZ); target.renderOrder = 6; world.add(target);
       }
-      const marker = selectionMarker(tacticalSelection, latest.current.viewMode);
+      const marker = tacticalSelection && (latest.current.viewMode === 'local' || surveyedCell(surveyedTiles, tacticalSelection.x, tacticalSelection.y))
+        ? selectionMarker(tacticalSelection, latest.current.viewMode) : null;
       if (marker) world.add(marker);
     };
     renderWorld();
@@ -599,7 +618,7 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       // Skip decorative/selection meshes; select the first actual world object beneath them.
       const selectable = raycaster.intersectObjects(world.children, true).map((hit) => {
         let obj = hit.object; while (obj.parent && !obj.userData.id) obj = obj.parent; return obj.userData.id ? obj : null;
-      }).find(Boolean);
+      }).filter(Boolean).find((object) => latest.current.viewMode === 'local' || surveyedCell(surveyed(), object.userData.x, object.userData.y));
       if (selectable) {
         tacticalSelection = selectable.userData;
         renderWorld(); drawMinimap(); resize();
