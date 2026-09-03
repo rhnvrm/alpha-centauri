@@ -38,13 +38,46 @@ await (async () => {
   // Mission I onboarding -> play
   await page.locator('.mission-card').first().click();
   await page.waitForTimeout(150);
-  const promptText = await page.locator('.prompt-card pre').innerText();
+  await page.locator('.brief-inspection summary').click();
+  const promptText = await page.locator('.brief-inspection pre').innerText();
   check('startup prompt includes tool names', promptText.includes('connect_steward') && promptText.includes('wait_for_event'));
-  await page.locator('.onboard-actions .primary').click();
+  await page.locator('.start-command').click();
   await page.waitForTimeout(700);
   check('3D canvas present', (await page.locator('.scene-shell canvas').count()) >= 1);
   check('minimap present', (await page.locator('.minimap').count()) >= 1);
+  await page.locator('.relay-tabs button', { hasText: 'BRIEFING' }).click();
   check('day-zero charter remains visible', (await page.locator('.mission-charter').innerText()).includes('100-person life-support capacity'));
+  await page.locator('.relay-tabs button', { hasText: 'RELAY' }).click();
+
+  // Measure the actual rendered desk at the constrained desktop width. CSS
+  // token assertions cannot detect a rail or absolute control escaping the
+  // shell's right edge, which is the failure this regression covers.
+  const layout = await page.evaluate(() => {
+    const element = (selector) => document.querySelector(selector);
+    const box = (selector) => element(selector)?.getBoundingClientRect();
+    const shell = box('.game-shell');
+    const right = (selector) => box(selector)?.right;
+    const untruncated = (selector) => {
+      const node = element(selector);
+      return node ? node.scrollWidth <= node.clientWidth + 1 : false;
+    };
+    return {
+      shellRight: shell?.right,
+      shellWidth: shell?.width,
+      dateRight: right('.dates'),
+      controlsRight: right('.time-controls'),
+      headingRight: right('.aside-head h2'),
+      railRight: right('.correspondence'),
+      dateTextFits: untruncated('.dates'),
+      headingTextFits: untruncated('.aside-head h2'),
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  const fitsShell = [layout.dateRight, layout.controlsRight, layout.headingRight, layout.railRight]
+    .every((edge) => Number.isFinite(edge) && edge <= layout.shellRight + 1);
+  check('command desk fits the viewport', fitsShell && layout.dateTextFits && layout.headingTextFits && layout.documentWidth <= layout.viewportWidth,
+    JSON.stringify(layout));
 
   // A player must deliberately choose an Earth-visible map tile before the
   // construction control unlocks. Try several unobstructed terrain positions

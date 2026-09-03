@@ -641,8 +641,9 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 /* Simulation is a top-level command. Keep every speed and jump control at the
    top of the console, rather than competing with placement feedback below. */
 .game-shell { position: relative; }
+.game-shell { --correspondence-width: clamp(360px, 25vw, 390px); }
 .bottom-deck { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
-.time-controls { position: absolute; z-index: 8; top: 47px; right: 12px; width: min(800px, calc(100% - 560px)); min-height: 0; height: 54px; padding: 5px 0 0; display: flex; align-content: start; justify-content: flex-end; gap: 4px; border: 0; background: transparent; }
+.time-controls { position: absolute; z-index: 8; top: 47px; right: calc(var(--correspondence-width) + 12px); width: min(800px, calc(100% - var(--correspondence-width) - 28px)); min-height: 0; height: 54px; padding: 5px 0 0; display: flex; align-content: start; justify-content: flex-end; gap: 4px; border: 0; background: transparent; }
 .time-controls::before { content: 'SIM'; align-self: center; margin-right: 3px; color: #bda16a; font: 9px 'DM Mono', monospace; letter-spacing: .1em; }
 .time-controls .time-label { display: none; }
 .time-controls button { min-height: 27px; height: 27px; padding: 4px 7px; font-size: 9px; white-space: nowrap; }
@@ -707,19 +708,19 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 /* Constrained desktop correction: the command rail must reflow before the
    no-scrollbar console has a chance to hide a control or receipt label. */
 @media (min-width: 1101px) and (max-width: 1600px) {
-  .topbar { grid-template-columns: minmax(230px, 1fr) minmax(170px, .75fr) max-content; }
+  .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .dates { gap: 12px; overflow: visible; white-space: nowrap; }
   .dates > span { white-space: nowrap; }
 
-  .play-body { grid-template-columns: minmax(0, 1fr) minmax(360px, 390px); }
+  .play-body { grid-template-columns: minmax(0, 1fr) var(--correspondence-width); }
   .aside-head { align-items: flex-start; gap: 10px; }
   .aside-head > div { min-width: 0; flex: 1 1 auto; }
   .aside-head h2 { font-size: 21px; line-height: 1.08; overflow-wrap: normal; }
   .aside-head > .connected, .aside-head > .disconnected { flex: 0 0 auto; white-space: nowrap; }
 
   .time-controls {
-    width: min(900px, calc(100% - 500px));
-    right: 402px;
+    width: min(900px, calc(100% - var(--correspondence-width) - 28px));
+    right: calc(var(--correspondence-width) + 12px);
     height: auto;
     min-height: 54px;
     flex-wrap: wrap;
