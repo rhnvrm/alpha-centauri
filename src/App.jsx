@@ -71,6 +71,12 @@ const reportTiming = (report) => {
     transit: transit === null ? null : `${transit} DAYS / ${(transit / 365).toFixed(2)} Y IN FLIGHT`,
   };
 };
+const observedPowerPercent = (resources) => Math.round(100 * (resources.power || 0) / Math.max(1, resources.powerCapacity || 0));
+const missionTarget = (missionId, resources) => {
+  if (missionId === "firstLight") return { title: "SURVIVE THE FIRST LIGHT", detail: `Capacity ${resources.capacity}/100 · establish 2 power sources · survive the outage` };
+  if (missionId === "enough") return { title: "MAKE ENOUGH LAST", detail: `Food ≥ 24 months · power ≥ 20% · preserve every wetland` };
+  return { title: "THE RIGHT TO DECIDE", detail: `Export 1,000 t by day 730 · keep life support on · preserve habitat` };
+};
 const receivedPlacement = (state, target, type) => {
   if (!target) return { valid: false, reason: "SELECT A RECEIVED TILE TO ASSESS A SITE." };
   const spec = BUILDINGS[type];
@@ -194,6 +200,7 @@ export default function App({ store }) {
   const receivedBuildings = state.observedWorld?.buildings || [];
   const selectedBuilding = selected?.kind === "building" ? receivedBuildings.find((building) => building.id === selected.id) : null;
   const projectImpact = buildingImpact(buildType, state);
+  const goal = missionTarget(state.missionId, projection.resources);
   const selectedImpact = selectedBuilding ? buildingImpact(selectedBuilding.type, state) : null;
   const selectedFacilityStatus = selectedBuilding ? receivedFacilityStatus(state, selectedBuilding) : null;
   const placement = useMemo(() => receivedPlacement(state, selectedTile ? selected : null, buildType), [state, selected, selectedTile, buildType]);
@@ -667,29 +674,33 @@ export default function App({ store }) {
           <strong>
             {reserveLabel(projection.resources.food, projection.resources.population * 0.02)}
           </strong>
+          <span className="metric-detail">{Math.round(projection.resources.food).toLocaleString()} stock · −{(projection.resources.population * .02).toFixed(2)}/day</span>
         </div>
         <div>
           <small>WATER ENDURANCE</small>
           <strong>
             {reserveLabel(projection.resources.water, projection.resources.population * 0.03)}
           </strong>
+          <span className="metric-detail">{Math.round(projection.resources.water).toLocaleString()} stock · −{(projection.resources.population * .03).toFixed(2)}/day</span>
         </div>
         <div>
-          <small>POWER</small>
+          <small>POWER RESERVE</small>
           <strong>
-            {Math.round(projection.resources.power)} <i>u</i>
+            {observedPowerPercent(projection.resources)}<i>%</i>
           </strong>
+          <span className="metric-detail">{Math.round(projection.resources.power)} / {Math.round(projection.resources.powerCapacity)} units</span>
         </div>
         <div>
-          <small>POPULATION</small>
+          <small>LIFE SUPPORT</small>
           <strong>
             {projection.resources.population}{" "}
             <i>/ {projection.resources.capacity}</i>
           </strong>
+          <span className="metric-detail">{Math.max(0, projection.resources.capacity - projection.resources.population)} seats available</span>
         </div>
         <div className="objective">
-          <small>{missionStatus.complete ? "MISSION" : "STATUS"}</small>
-          <strong>{missionStatus.label}</strong>
+          <small>{missionStatus.complete ? "MISSION CONFIRMED" : goal.title}</small>
+          <strong>{missionStatus.complete ? missionStatus.label : goal.detail}</strong>
           {state.mission.deadlineDay && !missionStatus.complete && (
             <div className="meter">
               <i
@@ -997,9 +1008,17 @@ export default function App({ store }) {
               </div>
             </div>
           ) : (
-            <p className="muted">
-              Select a received map tile to choose a construction target.
-            </p>
+            <div className="mission-next" aria-label="Recommended next action">
+              <div className="section-label">NEXT EARTH ACTION</div>
+              <strong>{demoGuide.title}</strong>
+              <p>{demoGuide.detail}</p>
+              {demoGuide.action !== "wait" && demoGuide.action !== "answer" && demoGuide.action !== "debrief" && (
+                <button onClick={takeGuideAction}>
+                  {demoGuide.action === "daneel" ? "OPEN DANEEL BRIEF" : demoGuide.action === "pace" ? "START 1× CLOCK" : "WRITE AN INTENT"}
+                </button>
+              )}
+              <small>Select a received tile whenever you want to send a literal Earth construction order.</small>
+            </div>
           )}
         </div>
         <div className="build-tools">
