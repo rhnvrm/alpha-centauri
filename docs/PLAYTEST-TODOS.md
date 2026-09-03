@@ -73,3 +73,19 @@
 - **Actual:** The current live screenshot still clips the right edge of all three. CSS token tests pass, but the rendered game does not satisfy the intended viewport.
 - **Capture:** `docs/playtest-captures/northern-reach-fog-and-command-desk-before.png` (same geometry; rerun live after the implementation).
 - **Fix:** Replace token-level layout assertions with a browser-layout measurement/check. Account for the actual game shell width and fixed rail positions rather than only adding a media query.
+
+### 9. Earth’s event control leaks Daneel’s unreceived local work
+
+- **Role / moment:** First Light, Earth desk, while the connected Daneel scheduled a solar array locally. Earth’s last observed day was still 0 and no downlink had arrived.
+- **Expected:** Earth should see only an honestly labelled simulation control such as “advance local time”; it must not learn which local activity will happen next before a report has crossed the gap.
+- **Actual:** The control said `NEXT: CONSTRUCTION COMPLETE · DAY 76`, revealing both that Daneel had chosen construction and its completion date despite the relay still saying “No downlink has arrived.”
+- **Capture:** `docs/playtest-captures/first-light-earth-while-daneel-builds.png`
+- **Fix:** On the Earth view, hide local job/event names and dates until telemetry arrives. Keep a role-neutral advance affordance; reserve the precise event schedule for Daneel and Superposition.
+
+### 10. Superposition’s 30-second read-only pass drains at simulation cadence
+
+- **Role / moment:** First Light, Earth, immediately after spending the first Superposition pass while a local construction job was active.
+- **Expected:** A pass labelled “30s local view” should last approximately 30 wall-clock seconds, independent of the colony’s simulation tick rate, and visibly count down.
+- **Actual:** The badge fell from 30 seconds to 8 and then 1 during a short live observation (well under a 30-second wall-clock pass). It did not remain a dependable observation window.
+- **Captures:** `docs/playtest-captures/first-light-superposition-live.png`, `docs/playtest-captures/first-light-superposition-ended-early.png`
+- **Fix:** Drive the pass from a monotonic real-time deadline, not simulation advances or render ticks; keep the countdown legible and restore the normal Earth reconstruction only at expiry.
