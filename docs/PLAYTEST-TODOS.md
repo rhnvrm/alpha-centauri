@@ -141,3 +141,31 @@
 - **Actual:** The only summary is the generic result sentence. The top resource strip still visually reads as the day-zero projection, while the player has no final mission-specific explanation without hunting through sparse relay copy.
 - **Capture:** `docs/playtest-captures/first-light-complete-live.png`
 - **Fix:** Add a compact outcome debrief with goal-by-goal evidence and a deliberately labelled “last received colony state,” rather than leaving the opening metrics to carry the conclusion.
+
+## Current-code First Light completion — session `session-8cqtyev`
+
+**Validated outcome:** Under the new mission-result payload format, Earth received capacity `100`, two independent sources, and a 180-day interruption survival record with capture day 359 / receipt day 1954. The terminal controls became read-only and the debrief route works, but the following live visual defects remain.
+
+### 17. Confirmed mission evidence overlaps into an unreadable block
+
+- **Role / moment:** Earth, opening the current-code First Light debrief after pressing `Review mission debrief`.
+- **Expected:** Goal-by-goal evidence and the received colony snapshot should read as a compact, scannable final report.
+- **Actual:** The goal names, numeric values, snapshot heading, explanatory copy, and snapshot figures visually collide into one another. The evidence data is correct but the typography/layout defeats it.
+- **Capture:** `docs/playtest-captures/first-light-debrief-current-code.png`
+- **Fix:** Give evidence rows and received snapshot an explicit grid/stack layout, real spacing, semantic labels, and responsive wrapping; verify the actual desktop render.
+
+### 18. Terminal confirmation presents the same debrief/navigation actions three times
+
+- **Role / moment:** Earth, current-code confirmed First Light desk before opening the debrief.
+- **Expected:** One obvious completion action area should replace mutable controls.
+- **Actual:** The top confirmation banner, correspondence terminal panel, and lower terminal deck each offer overlapping debrief/mission-selection controls. This makes the terminal state more cluttered than the active game it replaced.
+- **Capture:** `docs/playtest-captures/first-light-terminal-current-code.png`
+- **Fix:** Choose a single primary completion action group; retain one compact read-only explanation in the other areas instead of repeating navigation.
+
+### 19. Debrief still displays a stale “confirmed through” date beside current received evidence
+
+- **Role / moment:** Earth, same current-code First Light debrief.
+- **Expected:** Date labels must distinguish the founding/previous Earth projection from the actual final packet receipt.
+- **Actual:** The debrief correctly says the snapshot was captured day 359 and received day 1954, but its metric grid says `CONFIRMED THROUGH 2280.01`, suggesting day-zero knowledge and contradicting the terminal narrative.
+- **Capture:** `docs/playtest-captures/first-light-debrief-current-code.png`
+- **Fix:** Replace this stale metric with explicit colony capture and Earth receipt dates sourced from the confirmed result; reserve “last observed” for the projection only.
