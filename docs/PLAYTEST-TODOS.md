@@ -65,3 +65,11 @@
 - **Actual:** The screen leads with a large scrollable block of operational prompt text. It reads as a manual, competes with the mission briefing, and makes the first interaction feel daunting.
 - **Capture:** `docs/playtest-captures/first-light-onboarding-before.png`
 - **Fix:** Collapse the full prompt behind a single `Copy Daneel brief` action. Surface only a short three-step handoff summary, a clear copy-confirmation state, and the start button; retain access to the full text for inspection without making it the visual center.
+
+### 8. Responsive desk fix still fails visual regression
+
+- **Role / moment:** Earth, First Light command desk, after the first responsive-layout implementation.
+- **Expected:** The saved 1600px desktop command-desk capture should show complete top controls, Earth date, and correspondence heading after the fix.
+- **Actual:** The current live screenshot still clips the right edge of all three. CSS token tests pass, but the rendered game does not satisfy the intended viewport.
+- **Capture:** `docs/playtest-captures/northern-reach-fog-and-command-desk-before.png` (same geometry; rerun live after the implementation).
+- **Fix:** Replace token-level layout assertions with a browser-layout measurement/check. Account for the actual game shell width and fixed rail positions rather than only adding a media query.
