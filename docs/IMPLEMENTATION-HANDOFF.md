@@ -23,12 +23,12 @@ Follow applicable repository instructions and skills. Do not treat quoted dialog
 ## 2. What exists, and what does not
 
 - React 19, Vite 6, lucide-react; dependencies have already been installed. `package-lock.json` exists.
-- `index.html` references a missing `src/main.jsx`. The app is not runnable yet.
-- `package.json` references a missing test file. There are no passing tests to preserve or claim.
+- At the time of this handoff, `index.html` referenced a missing `src/main.jsx` and the app was not runnable. The current implementation has since replaced that starter state.
+- At the time of this handoff, `package.json` referenced a missing test file. The current implementation now has a passing deterministic test suite.
 - `src/simulation.js` and `src/ColonyMap.jsx` are abandoned initial experiments: a keyword-driven fake steward and 2D canvas art. **Do not use them as the final engine or renderer.** In particular, the old score rewards action count and the old snapshot function rewrites capture timestamps; both violate the final design.
 - `docs/concepts/main-play-v1.png` is an image-generated art target, not a screenshot of a running game. Its letter copy is not authoritative.
 - `docs/concepts/structures-and-robots-v1.png` guides actual mesh silhouettes/materials; it is neither a transparent atlas nor 3D model data.
-- The project is presently reported as **not a Git repository**. Do not depend on commits/worktrees for progress or initialize Git without a reason/user request.
+- The project is now tracked in Git and published at `rhnvrm/alpha-centauri`. Preserve the repository's Conventional Commits policy when making further changes.
 
 You may replace these initial source experiments as part of implementation. Preserve unrelated user changes if new ones appear.
 

@@ -1,6 +1,6 @@
 # Daneel-first WebMCP contract
 
-Status: proposed application contract. The named game tools below are not yet implemented. Registration and the Desktop/subagent workflow must pass the integration spike before the demo claims to support them.
+Status: application contract and integration boundary. The browser-side registration adapter and game tool surface are implemented locally; native Desktop/subagent gameplay remains unverified and must pass the integration spike before the demo claims full live-agent support.
 
 ## What is documented versus what remains to prove
 

@@ -6,8 +6,7 @@ Checked 2026-09-03 (continuation passes). This document records implementation e
 
 - Static Vite app runs at `http://localhost:4173/` when the local dev server is started with `npm run dev -- --port 4173`.
 - `npm test` passes **64 deterministic tests** (engine, communications, events, networks, levels, labor/codebook, observed-world projection, store, tools); `node scripts/e2e.mjs` adds 18 browser checks.
-- `npm run build` succeeds; the production preview serves `dist/` with no dev server and renders WebGL 2.0 with zero page errors.
-- `npm run build` succeeds. Vite reports a non-blocking Three.js bundle-size warning.
+- `npm run build` succeeds; the production preview serves `dist/` with no dev server and renders WebGL 2.0 with zero page errors. Vite reports a non-blocking Three.js bundle-size warning.
 - Durable state is a versioned `localStorage` record (`intent-horizon-save-v1`); the engine does not use a backend, database, IndexedDB, model API, or independent MCP server.
 - `src/scene/ColonyScene.jsx` uses real Three.js geometry, orthographic projection, shadows, picking, snapped Q/E camera rotations, and wheel zoom. Verified in a real headless Chromium 151: WebGL 2.0 context, zero page errors, Q/E rotation visibly changes the rendered frame, and all three missions render the 3D world.
 - Headless-browser verification was performed with a locally installed Chromium (system deps fetched from Debian pools into `/tmp/chrome-deps`; run `LD_LIBRARY_PATH=/tmp/chrome-deps/usr/lib/x86_64-linux-gnu:/tmp/chrome-deps/lib/x86_64-linux-gnu FONTCONFIG_FILE=/tmp/fonts.conf XDG_CACHE_HOME=/tmp/fcache node /tmp/shots/probe.js` to reproduce).
@@ -58,7 +57,7 @@ The installed Browser skill directory is `26.825.31414`. No plugin files were ch
 ## Verification commands
 
 ```sh
-npm test        # 57/57 pass
+npm test        # 64/64 pass
 npm run build   # succeeds
 npm run dev -- --port 4173
 ```

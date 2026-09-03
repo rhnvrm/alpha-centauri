@@ -1,6 +1,6 @@
 # Browser-only state and persistence
 
-Status: implementation specification. This documents the user's explicit no-backend constraint; it does not claim the persistence layer is already implemented.
+Status: implementation contract. The current browser slice implements versioned localStorage persistence and recovery; the checks below define the guarantees and remaining compatibility work rather than implying a backend exists.
 
 ## Fixed boundaries
 
