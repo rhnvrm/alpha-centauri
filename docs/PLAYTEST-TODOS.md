@@ -170,6 +170,22 @@
 - **Capture:** `docs/playtest-captures/first-light-debrief-current-code.png`
 - **Fix:** Replace this stale metric with explicit colony capture and Earth receipt dates sourced from the confirmed result; reserve “last observed” for the projection only.
 
+### 21. The final received timeline is cut off inside the fixed no-scroll debrief viewport
+
+- **Role / moment:** Earth, First Light debrief after receiving the confirmed result in the live WebMCP run.
+- **Expected:** The final evidence and received timeline should be legible as a complete end-of-mission report at the supported embedded desktop viewport, without exposing a page scrollbar.
+- **Actual:** The evidence section now reads cleanly, but the lower received timeline extends below the fixed 1384px viewport and is clipped. The document deliberately has `overflow: hidden`, so there is no reachable way to inspect its final entries.
+- **Capture:** `docs/playtest-captures/first-light-debrief-build-mode-run.png`
+- **Fix:** Budget the debrief for the actual fixed viewport: compact the header/metric area, progressively disclose or constrain the timeline, and keep all remaining completion actions visible without introducing vertical scrolling.
+
+### 22. Mission 2 can be won by waiting because its initial reserves dwarf its stated two-year challenge
+
+- **Role / moment:** Daneel, fresh `The Meaning of Enough` run, after reading the charter, inbox, current colony inspector, and resource network through native WebMCP.
+- **Expected:** The food/power/wetland objective should create a legible local tradeoff: Daneel must make an authorized production, network, or protection decision to sustain the colony for the required two years.
+- **Actual:** The Earth HUD starts at about 23 years of food and 25 years of water. Daneel's local inspector shows 277.6 months of food and a 74% power reserve for a goal requiring only 24 months and 20%. There are no immediate local events or binding inbox decisions, so yielding and waiting is the safe winning strategy.
+- **Capture / evidence:** Native WebMCP `inspect_colony` and `inspect_resource_network` on fresh session `session-x0at28n`; the visible Earth charter/HUD recorded the 23y/25y values.
+- **Fix:** Rebalance or structure Mission 2 around an actual sustainable-production tradeoff: start near the 24-month reserve floor, introduce a predictable degradation/seasonal constraint, and expose one or two authorized choices (for example greenhouse rate vs. wetland protection, or water/power network investment) whose consequences Daneel must manage locally.
+
 ## Fresh Earth command-desk inspection — build/selection flow
 
 ### 20. Construction is implicitly armed, so ordinary world inspection is ambiguous
