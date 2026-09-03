@@ -680,10 +680,23 @@ export default function App({ store }) {
             <small>DOWNLINK PAYLOAD</small>
             <b>{state.channel.downlinkBits.toLocaleString()} bits</b>
           </div>
-          <div>
-            <small>CONFIRMED THROUGH</small>
-            <b>{dayLabel(projection.observedDay)}</b>
-          </div>
+          {missionDebrief ? (
+            <>
+              <div>
+                <small>COLONY CAPTURE DAY</small>
+                <b>{missionDebrief.capturedDay}</b>
+              </div>
+              <div>
+                <small>EARTH RECEIPT DAY</small>
+                <b>{missionDebrief.receivedDay}</b>
+              </div>
+            </>
+          ) : (
+            <div>
+              <small>LAST OBSERVED</small>
+              <b>{dayLabel(projection.observedDay)}</b>
+            </div>
+          )}
           {state.missionId === "enough" && (
             <div>
               <small>PROTOCOL DEFINITION COST</small>

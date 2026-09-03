@@ -16,3 +16,15 @@ test('confirmed Earth desk exposes both completion routes', () => {
   assert.match(styles, /\.completion-banner/);
   assert.match(styles, /\.secondary-action/);
 });
+
+test('mission debrief timing uses confirmed packet dates and keeps the projection fallback labelled', () => {
+  const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  const debriefGrid = app.slice(app.indexOf('className="debrief-grid"'));
+  assert.match(debriefGrid, /COLONY CAPTURE DAY/);
+  assert.match(debriefGrid, /missionDebrief\.capturedDay/);
+  assert.match(debriefGrid, /EARTH RECEIPT DAY/);
+  assert.match(debriefGrid, /missionDebrief\.receivedDay/);
+  assert.match(debriefGrid, /LAST OBSERVED/);
+  assert.match(debriefGrid, /dayLabel\(projection\.observedDay\)/);
+  assert.doesNotMatch(debriefGrid, /CONFIRMED THROUGH/);
+});
