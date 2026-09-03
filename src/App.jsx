@@ -26,7 +26,7 @@ import {
   WINDOW_BITS,
   RESILIENCE_24,
 } from "./game/constants.js";
-import { earthDemoGuide, earthMissionDebrief, earthMissionStatus, earthProjection, earthRelayHero, eventControlCopy } from "./game/projections.js";
+import { earthDemoGuide, earthMissionDebrief, earthMissionStatus, earthProjection, earthRelayActivity, earthRelayHero, eventControlCopy } from "./game/projections.js";
 import { nextSimulationBoundaryDay, nextEarthArrivalDay } from "./game/engine.js";
 import { createStartupPrompt } from "./webmcp/prompt.js";
 import { createToolSet } from "./webmcp/tools.js";
@@ -188,6 +188,7 @@ export default function App({ store }) {
   const [tutorialDismissed, setTutorialDismissed] = useState(false);
   const [native, setNative] = useState({ supported: false, registered: [] });
   const [copied, setCopied] = useState(false);
+  const [receiptAcknowledged, setReceiptAcknowledged] = useState(false);
   const [superpositionClock, setSuperpositionClock] = useState(() => {
     const now = monotonicNow();
     return { now, ...runtimeDeadlines(state.superposition, Date.now(), now) };
@@ -196,6 +197,7 @@ export default function App({ store }) {
   const scenario = SCENARIOS[state.missionId];
   const projection = useMemo(() => earthProjection(state), [state]);
   const relayHero = useMemo(() => earthRelayHero(state), [state]);
+  const relayActivity = useMemo(() => earthRelayActivity(state), [state]);
   const missionStatus = useMemo(() => earthMissionStatus(state), [state]);
   const missionConfirmed = missionStatus.complete;
   const demoGuide = useMemo(() => earthDemoGuide(state), [state]);
@@ -210,6 +212,18 @@ export default function App({ store }) {
     .filter((p) => p.direction === "uplink" && p.status !== "delivered")
     .sort((a, b) => a.arrivalDay - b.arrivalDay);
   const nextOutbound = outboundPackets[0];
+  const earthDirectiveInFlight = projection.packets.some((packet) => packet.direction === "uplink" && packet.kind === "intent" && packet.status === "in-transit");
+  const earthDirectiveDelivered = projection.packets.some((packet) => packet.direction === "uplink" && packet.kind === "intent" && packet.status === "delivered");
+  const latestDeclaredFocus = [...projection.reports]
+    .sort((a, b) => (b.earthReceivedDay ?? b.receivedDay ?? 0) - (a.earthReceivedDay ?? a.receivedDay ?? 0))
+    .find((report) => report.payload?.declaredFocus)?.payload?.declaredFocus;
+  const daneelFocus = latestDeclaredFocus
+    ? { label: "DANEEL DECLARED FOCUS", detail: latestDeclaredFocus }
+    : earthDirectiveInFlight
+      ? { label: "EARTH DIRECTIVE IN FLIGHT", detail: "Daneel remains on standby until this intent crosses the gap." }
+      : earthDirectiveDelivered
+        ? { label: "DIRECTIVE DELIVERED · AWAITING REPORT", detail: "Earth knows its intent arrived; the local plan remains unknown until Daneel reports." }
+        : { label: relayActivity.label, detail: relayActivity.detail };
   const nextLocalBoundary = nextSimulationBoundaryDay(state);
   const nextEarthBoundary = nextEarthArrivalDay(state);
   const superposition = state.superposition || { passes: 0, activeUntilMs: 0, lastActivatedAtMs: 0 };
@@ -349,6 +363,23 @@ export default function App({ store }) {
     deliveredRef.current = delivered;
     return undefined;
   }, [state.packets]);
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timer = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  useEffect(() => {
+    if (!superpositionActive && typeof toast === "string" && toast.startsWith("SUPERPOSITION OPEN")) {
+      setToast(null);
+    }
+  }, [superpositionActive, toast]);
+  // A confirmed result is itself a received event. Give Earth a short, explicit
+  // hand-off before opening the terminal so the outcome cannot read like a UI skip.
+  useEffect(() => {
+    if (!missionConfirmed || receiptAcknowledged || screen === "receipt" || screen === "debrief") return;
+    store.pause();
+    setScreen("receipt");
+  }, [missionConfirmed, receiptAcknowledged, screen, store]);
   const start = (missionId = "firstLight") => {
     store.newGame(missionId);
     setScreen("onboard");
@@ -357,6 +388,7 @@ export default function App({ store }) {
     setRoadStart(null);
     setMoveRobotId(null);
     setCopied(false);
+    setReceiptAcknowledged(false);
   };
   const copyPrompt = async () => {
     await navigator.clipboard?.writeText(prompt);
@@ -794,6 +826,57 @@ export default function App({ store }) {
       </main>
     );
   }
+  if (screen === "receipt") {
+    const timing = missionDebrief
+      ? { captured: missionDebrief.capturedDay, received: missionDebrief.receivedDay }
+      : reportTiming(relayHero);
+    const acknowledgeReceipt = (destination = "play") => {
+      setReceiptAcknowledged(true);
+      setScreen(destination);
+    };
+    return (
+      <main className="debrief" aria-labelledby="receipt-title">
+        <p className="eyebrow">EARTH RECEIPT · CONFIRMED DOWNLINK</p>
+        <h1 id="receipt-title">A report crossed the gap.</h1>
+        <div className="outcome">
+          <Radio size={36} />
+          <div>
+            <strong>{reportSummary(relayHero)}</strong>
+            <span>This is the first Earth-side view of the confirmed result. The colony continued locally while the packet was in flight.</span>
+          </div>
+        </div>
+        <section className="mission-evidence" aria-label="Receipt timing">
+          <div className="section-label">ARRIVAL / REVIEW</div>
+          <div className="evidence-list">
+            <div className="evidence-row">
+              <span className="evidence-check" aria-hidden="true">↑</span>
+              <strong>CAPTURED ON COLONY</strong>
+              <small><b>DAY {timing.captured}</b><em>local evidence recorded</em></small>
+            </div>
+            <div className="evidence-row">
+              <span className="evidence-check" aria-hidden="true">↓</span>
+              <strong>RECEIVED ON EARTH</strong>
+              <small><b>DAY {timing.received}</b><em>Earth can review it now</em></small>
+            </div>
+          </div>
+          <div className="received-snapshot">
+            <div className="snapshot-heading">
+              <strong>ACKNOWLEDGE THE RECEIVED REPORT</strong>
+              <small>Earth knowledge stops at this downlink. No later colony state is being revealed.</small>
+            </div>
+          </div>
+        </section>
+        <div className="completion-actions">
+          <button className="primary" onClick={() => acknowledgeReceipt("play")}>
+            Acknowledge · open terminal <ChevronRight size={17} />
+          </button>
+          <button className="secondary-action" onClick={() => acknowledgeReceipt("debrief")}>
+            Skip review · open full debrief
+          </button>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="game-shell">
       <header className="topbar">
@@ -1026,6 +1109,10 @@ export default function App({ store }) {
                 : "OFFLINE"}
             </span>
           </div>
+          <section className="relay-activity" aria-label="Daneel declared focus">
+            <span>{daneelFocus.label}</span>
+            <strong>{daneelFocus.detail}</strong>
+          </section>
           <nav className="relay-tabs" aria-label="Colony relay panels">
             <button className={relayTab === "relay" ? "active" : ""} onClick={() => setRelayTab("relay")}>RELAY</button>
             <button className={relayTab === "briefing" ? "active" : ""} onClick={() => setRelayTab("briefing")}>BRIEFING</button>

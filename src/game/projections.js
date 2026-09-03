@@ -36,6 +36,65 @@ export const earthMissionStatus = (state) => state.mission.earthOutcome
   ? { label: 'COMPLETE · CONFIRMED', complete: true }
   : { label: 'IN PROGRESS · OBSERVED', complete: false };
 
+/**
+ * Earth-safe relay activity for the command desk.
+ *
+ * This is intentionally a projection of only the public connection lease and
+ * packet lifecycle. It does not inspect jobs, resources, local events, packet
+ * kinds, payloads, targets, or dates, so activity can be legible without
+ * turning an unreceived Daneel action into an Earth-side fact. `status` is a
+ * small render contract: disconnected | packet-in-flight | awaiting-report |
+ * relay-ready.
+ */
+export const earthRelayActivity = (state) => {
+  if (state.connection?.status !== 'connected') {
+    return {
+      status: 'disconnected',
+      label: 'RELAY DISCONNECTED',
+      detail: 'No active Daneel connection is visible to Earth.',
+      inFlight: 0,
+      awaitingReport: false,
+    };
+  }
+
+  const packets = Array.isArray(state.packets) ? state.packets : [];
+  const inFlight = packets.filter((packet) => packet.status === 'in-transit').length;
+  if (inFlight) {
+    return {
+      status: 'packet-in-flight',
+      label: 'PACKET IN FLIGHT',
+      detail: 'A relay packet is crossing the light-delay.',
+      inFlight,
+      awaitingReport: false,
+    };
+  }
+
+  // Packet order is sufficient here and avoids using local/arrival dates. An
+  // Earth-authored packet that has arrived at Daneel likewise means the desk
+  // may honestly wait for a corresponding report.
+  const latestDelivered = [...packets].reverse().find((packet) => packet.status === 'delivered');
+  const awaitingReport = latestDelivered?.direction === 'uplink';
+  return awaitingReport
+    ? {
+        status: 'awaiting-report',
+        label: 'RELAY READY · AWAITING REPORT',
+        detail: 'Daneel is connected; Earth is waiting for the next downlink.',
+        inFlight: 0,
+        awaitingReport: true,
+      }
+    : {
+        status: 'relay-ready',
+        label: 'DANEEL STANDING BY · AWAITING EARTH DIRECTIVE',
+        detail: 'Daneel is connected, but local work cannot begin until Earth sends an intent across the gap.',
+        inFlight: 0,
+        awaitingReport: false,
+      };
+};
+
+// Alias kept descriptive for callers that name projections by their Earth
+// surface rather than by the relay component.
+export const earthActivityProjection = earthRelayActivity;
+
 export const earthProjection = (state) => ({
   localDay: state.localDay,
   observedDay: state.telemetry.captureDay,

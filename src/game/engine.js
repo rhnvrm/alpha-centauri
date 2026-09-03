@@ -452,7 +452,16 @@ export function scheduleMaintenance(state, facilityId) {
   const j = job(next, { type: 'maintenance', facilityId, status: 'queued', startDay: next.localDay, completeDay: next.localDay + 30 }, true);
   event(next, 'maintenance_queued', { jobId: j.id, facilityId, robotId: j.robotId || null }); return markRevision(next);
 }
-export function sendReport(state, text, kind = 'status') { const next = copyGame(state); packet(next, kind, { text, ...telemetryFor(next) }, 'downlink', next.localDay, 'daneel'); event(next, 'report_queued', { kind }); return markRevision(next); }
+export function sendReport(state, text, kind = 'status', declaredFocus = null) {
+  const next = copyGame(state);
+  packet(next, kind, {
+    text,
+    ...(declaredFocus ? { declaredFocus } : {}),
+    ...telemetryFor(next),
+  }, 'downlink', next.localDay, 'daneel');
+  event(next, 'report_queued', { kind });
+  return markRevision(next);
+}
 export function sendAuthorizationRequest(state, payload) { const next = copyGame(state); packet(next, 'authorization', { ...payload, capturedDay: next.localDay }, 'downlink', next.localDay, 'daneel'); return markRevision(next); }
 export function queueLocalIntent(state, payload) { const next = copyGame(state); const p = packet(next, 'intent', payload, 'uplink'); return markRevision(next); }
 export function applyDeliveredIntent(state, messageId) { const next = copyGame(state); const m = next.inbox.find((x) => x.id === messageId); if (!m) throw new Error('MESSAGE_NOT_DELIVERED'); m.handled = true; next.pendingDecision = { id: m.id, reason: 'new-instruction' }; return markRevision(next); }

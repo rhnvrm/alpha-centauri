@@ -5,6 +5,20 @@ import { advanceToNextEvent, constructBuilding, integrate, queueHumanIntent, sen
 import { createToolSet } from '../src/webmcp/tools.js';
 import { placeBuildingNearRoad } from './helpers.js';
 
+// Tool-contract tests start at an already-delivered packet rather than advancing
+// a whole light-delay through a scenario that is intentionally unsafe without a
+// plan. Daneel still has to acknowledge that Earth directive before local work.
+const acknowledgeEarthDirective = async (store, tools, leaseId, id = 'earth-intent-test') => {
+  const state = store.getState();
+  state.inbox.push({ id, kind: 'intent', payload: { text: 'Proceed with the smallest safe resilience plan.' }, deliveredDay: state.localDay, handled: false });
+  const result = await tools.find((tool) => tool.name === 'yield_control').execute({
+    sessionId: state.sessionId, leaseId, expectedRevision: state.revision,
+    operationId: `ack-${id}`, handledMessageIds: [id],
+  });
+  assert.equal(result.ok, true, 'Earth directive acknowledgement was accepted');
+  return store.getState();
+};
+
 test('one-way packets are absent before exact arrival and present at arrival', () => {
   let s = createGame(); s = queueHumanIntent(s, 'Keep the first habitat safe');
   assert.equal(s.inbox.length, 0); s = integrate(s, 1594); assert.equal(s.inbox.length, 0); s = integrate(s, 1); assert.equal(s.inbox.length, 1); assert.equal(s.inbox[0].deliveredDay, 1595);
@@ -49,8 +63,8 @@ test('cancellation is recoverable and refunds most reserved material', () => { l
 
 test('reports use the serialized downlink delay and preserve capture day', () => { let s = createGame(); s = sendReport(s, 'Solar array stable'); assert.equal(s.reports.length, 0); const p = s.packets.at(-1); s = integrate(s, p.arrivalDay - s.localDay); assert.equal(s.reports.length, 1); assert.equal(s.reports[0].payload.capturedDay, 0); assert.equal(s.reports[0].receivedDay, p.arrivalDay); });
 
-test('native tool write retries with one operation receipt and one job', async () => {
-  let state = createGame(); const store = { getState: () => state, commit: (next) => { state = next; } }; const tools = createToolSet(store); const connect = tools.find((t) => t.name === 'connect_steward'); const connected = await connect.execute({ sessionId: state.sessionId, protocolVersion: 'v1', agentLabel: 'test' }); assert.equal(connected.ok, true); const leaseId = connected.result.leaseId; state = store.getState(); const construct = tools.find((t) => t.name === 'construct_building'); const args = { sessionId: state.sessionId, leaseId, expectedRevision: state.revision, operationId: 'op-1', type: 'battery', x: 5, y: 5 }; const first = await construct.execute(args); const second = await construct.execute({ ...args, expectedRevision: state.revision }); assert.equal(first.ok, true); assert.deepEqual(second, first); assert.equal(state.jobs.filter((j) => j.type === 'construct').length, 1);
+test('native work requires an acknowledged Earth directive and then retries with one operation receipt', async () => {
+  let state = createGame(); const store = { getState: () => state, commit: (next) => { state = next; } }; const tools = createToolSet(store); const connect = tools.find((t) => t.name === 'connect_steward'); const connected = await connect.execute({ sessionId: state.sessionId, protocolVersion: 'v1', agentLabel: 'test' }); assert.equal(connected.ok, true); const leaseId = connected.result.leaseId; state = store.getState(); const construct = tools.find((t) => t.name === 'construct_building'); const args = { sessionId: state.sessionId, leaseId, expectedRevision: state.revision, operationId: 'op-1', type: 'battery', x: 5, y: 5 }; const blocked = await construct.execute(args); assert.equal(blocked.ok, false); assert.equal(blocked.error.code, 'AWAITING_EARTH_DIRECTIVE'); state = await acknowledgeEarthDirective(store, tools, leaseId); const authorizedArgs = { ...args, expectedRevision: state.revision }; const first = await construct.execute(authorizedArgs); const second = await construct.execute({ ...authorizedArgs, expectedRevision: state.revision }); assert.equal(first.ok, true); assert.deepEqual(second, first); assert.equal(state.jobs.filter((j) => j.type === 'construct').length, 1);
 });
 
 test('Daneel receives a concrete day-zero charter through the WebMCP doctrine read', async () => {
@@ -74,6 +88,7 @@ test('Daneel can secure Mission I through the same WebMCP construction contract 
   const connected = await connect.execute({ sessionId: state.sessionId, protocolVersion: 'v1', agentLabel: 'Daneel test' });
   assert.equal(connected.ok, true);
   const leaseId = connected.result.leaseId;
+  state = await acknowledgeEarthDirective(store, tools, leaseId, 'mission-one-directive');
 
   for (const type of ['habitat', 'solar', 'battery']) {
     const cell = placeBuildingNearRoad(state, type)[0];
@@ -99,6 +114,7 @@ test('Daneel production controls change local facility output and remain inspect
   const store = { getState: () => state, commit: (next) => { state = next; } };
   const tools = createToolSet(store);
   const connected = await tools.find((tool) => tool.name === 'connect_steward').execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
+  state = await acknowledgeEarthDirective(store, tools, connected.result.leaseId, 'production-directive');
   const healthy = structuredClone(state);
   const result = await tools.find((tool) => tool.name === 'modify_production').execute({
     sessionId: state.sessionId,
@@ -125,6 +141,7 @@ test('Daneel can win Mission II with a local production and grid response', asyn
   const store = { getState: () => state, commit: (next) => { state = next; } };
   const tools = createToolSet(store);
   const connected = await tools.find((tool) => tool.name === 'connect_steward').execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
+  state = await acknowledgeEarthDirective(store, tools, connected.result.leaseId, 'mission-two-directive');
   const construct = tools.find((tool) => tool.name === 'construct_building');
   for (const type of ['solar', 'greenhouse', 'reservoir']) {
     const cell = placeBuildingNearRoad(state, type)[0];

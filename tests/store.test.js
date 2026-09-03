@@ -147,6 +147,10 @@ test('same operationId never applies twice and revision mismatch is rejected', a
   const c = await connect.execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
   const leaseId = c.result.leaseId; state = store.getState();
   assert.equal(state.paused, false); assert.equal(state.demoPace, true);
+  state.inbox.push({ id: 'store-earth-intent', kind: 'intent', payload: { text: 'Proceed with a safe resilience action.' }, deliveredDay: state.localDay, handled: false });
+  const acknowledged = await tools.find((t) => t.name === 'yield_control').execute({ sessionId: state.sessionId, leaseId, expectedRevision: state.revision, operationId: 'ack-store-earth-intent', handledMessageIds: ['store-earth-intent'] });
+  assert.equal(acknowledged.ok, true);
+  state = store.getState();
   const construct = tools.find((t) => t.name === 'construct_building');
   const args = { sessionId: state.sessionId, leaseId, expectedRevision: state.revision, operationId: 'op-1', type: 'battery', x: 5, y: 5 };
   const first = await construct.execute(args);

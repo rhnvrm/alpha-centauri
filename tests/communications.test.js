@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/game/state.js';
 import { integrate, queueHumanIntent, sendReport, queueLocalCargo } from '../src/game/engine.js';
-import { earthMissionDebrief, earthProjection, earthRelayHero } from '../src/game/projections.js';
+import { earthActivityProjection, earthMissionDebrief, earthProjection, earthRelayActivity, earthRelayHero } from '../src/game/projections.js';
 import { bitsForPayload, windowsFor, LIGHT_DELAY_DAYS, WINDOW_BITS, ENVELOPE_BITS } from '../src/game/constants.js';
 import { buildLocal } from './helpers.js';
 
@@ -112,6 +112,27 @@ test('relay hero selects the latest Earth receipt, not report insertion order', 
     { id: 'newer', kind: 'daneel-report', receivedDay: 20, payload: { text: 'new' } },
   );
   assert.equal(earthRelayHero(s).id, 'newer');
+});
+
+test('Earth relay activity exposes only safe connection and packet lifecycle state', () => {
+  let s = createGame();
+  assert.equal(earthRelayActivity(s).status, 'disconnected');
+
+  s.connection.status = 'connected';
+  assert.equal(earthRelayActivity(s).status, 'relay-ready');
+
+  s = queueHumanIntent(s, 'private target and construction details');
+  const inFlight = earthRelayActivity(s);
+  assert.equal(inFlight.status, 'packet-in-flight');
+  assert.equal(inFlight.inFlight, 1);
+  assert.equal('kind' in inFlight, false);
+  assert.equal('payload' in inFlight, false);
+
+  s.packets[0].status = 'delivered';
+  const waiting = earthRelayActivity(s);
+  assert.equal(waiting.status, 'awaiting-report');
+  assert.equal(waiting.awaitingReport, true);
+  assert.deepEqual(earthActivityProjection(s), waiting);
 });
 
 test('cargo launch reserves iridium at queue time and exports only at job completion', () => {
