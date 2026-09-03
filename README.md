@@ -124,6 +124,7 @@ This repository is both a game and a design argument:
 
 - [Design specification](DESIGN.md): story, missions, causal model, scoring, UI, and acceptance criteria.
 - [Lore and setting](docs/LORE.md): the real Alpha Centauri sky, the fictional Aurora, and Daneel's place in the story.
+- [Science notes](docs/SCIENCE.md): propagation delay, bit budgets, Shannon, semantic communication, and the spacecraft analogy.
 - [WebMCP contract](docs/WEBMCP.md): the tool surface, authority model, message accounting, and integration boundary.
 - [Browser-only state](docs/LOCAL-STATE.md): persistence, one owning tab, recovery, and save guarantees.
 - [Daneel startup/resume prompt](docs/DANEEL-START-PROMPT.md): intended human-agent onboarding.
