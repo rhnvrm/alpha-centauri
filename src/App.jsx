@@ -649,20 +649,22 @@ export default function App({ store }) {
             <div className="evidence-list">
               {missionDebrief.goals.map((goal) => (
                 <div className="evidence-row" key={goal.id}>
-                  <span className={goal.achieved ? "evidence-check" : "evidence-fail"}>{goal.achieved ? "✓" : "×"}</span>
+                  <span className={goal.achieved ? "evidence-check" : "evidence-fail"} aria-label={goal.achieved ? "Achieved" : "Not achieved"}>{goal.achieved ? "✓" : "×"}</span>
                   <strong>{goal.id.replace(/([A-Z])/g, " $1")}</strong>
-                  <small>{goal.value}</small>
+                  <small><b>{goal.value}</b><em>{goal.achieved ? "confirmed" : "not confirmed"}</em></small>
                 </div>
               ))}
             </div>
             {missionDebrief.snapshot && (
               <div className="received-snapshot">
-                <div>
+                <div className="snapshot-heading">
                   <strong>LAST RECEIVED COLONY SNAPSHOT</strong>
                   <small>Captured on colony day {missionDebrief.capturedDay}; received on Earth day {missionDebrief.receivedDay}. This is later than the founding projection.</small>
                 </div>
-                <span>{Math.round(missionDebrief.snapshot.population)} / {Math.round(missionDebrief.snapshot.capacity)} residents / capacity</span>
-                <span>{Math.round(missionDebrief.snapshot.power)} / {Math.round(missionDebrief.snapshot.powerCapacity)} power</span>
+                <div className="snapshot-values" aria-label="Received colony values">
+                  <span><b>{Math.round(missionDebrief.snapshot.population)} / {Math.round(missionDebrief.snapshot.capacity)}</b><em>residents / capacity</em></span>
+                  <span><b>{Math.round(missionDebrief.snapshot.power)} / {Math.round(missionDebrief.snapshot.powerCapacity)}</b><em>power / capacity</em></span>
+                </div>
               </div>
             )}
           </section>
