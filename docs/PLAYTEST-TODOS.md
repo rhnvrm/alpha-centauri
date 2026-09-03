@@ -225,3 +225,19 @@
 - **Actual:** The lower deck compresses next action, build selection, resource impact, queue buttons, and simulation controls into small mono copy. The key `Enter Build Mode` affordance is present but competes with several secondary lines and is visually weaker than the surrounding instrumentation.
 - **Capture:** `docs/playtest-captures/mission-2-fresh-map-visual-gap.png`
 - **Fix:** Establish a stronger lower-deck hierarchy: one primary next-action card, larger mode/build controls, abbreviated secondary copy behind selection/hover, and a compact speed cluster that remains readable without shrinking essential decisions.
+
+## Fresh live replay — service-fleet and command-desk pass
+
+### 26. Simulation clock and speed controls obstruct the top map
+
+- **Role / moment:** Earth, fresh Mission 2 command desk at the supported embedded desktop width.
+- **Expected:** The colony view should remain the visual focus; time controls should be available without covering the settlement or critical map status.
+- **Actual:** The top-docked clock, pace, and event buttons sit over the upper map edge and compete with the settlement framing.
+- **Fix:** Collapse or dock the time controls into a compact, clearly labeled HUD zone that does not cover the playable map, while preserving pause, pace, and event access.
+
+### 27. World entities have no hover affordance
+
+- **Role / moment:** Earth, moving the pointer over a vehicle, building, tile, or command control during the live replay.
+- **Expected:** Hover/focus should explain what an entity does, its current status, and the consequence or cost of the available action.
+- **Actual:** The scene and controls provide no contextual hover language, so the player must guess whether a vehicle is useful or what a command will consume.
+- **Fix:** Add accessible hover/focus tooltips for buildings, service vehicles, survey tiles, and primary actions; keep the same information available in the selected-object panel for keyboard and touch users.
