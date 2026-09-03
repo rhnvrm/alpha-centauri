@@ -23,6 +23,12 @@ function floodKeys(seed) {
 
 const building = (id, type, x, y, level = 0) => ({ id, type, x, y, level, status: 'complete', health: 100 });
 const robot = (id, type, x, y) => ({ id, type, x, y, status: 'idle', path: [] });
+// Service units are authored scenery with a local operational purpose. They are
+// never eligible for labor assignment; their small loops keep the settlement
+// visibly inhabited while specialist robots remain available for real work.
+const serviceRobot = (id, type, x, y, purpose, patrol) => ({
+  id, type, x, y, purpose, patrol, patrolIndex: 0, status: 'patrolling', lifecycle: 'patrolling', path: [],
+});
 
 /** Manhattan corridor between two anchors, bending around blocked tiles. */
 function route(seed, ax, ay, bx, by, blockedKeys) {
@@ -71,7 +77,12 @@ export const SCENARIOS = {
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 0 },
     buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 12, 15), building('solar-1', 'solar', 18, 12)],
-    robots: [robot('rover-1', 'survey', 10, 12), robot('builder-1', 'construction', 15, 19), robot('hauler-1', 'cargo', 20, 18)],
+    robots: [
+      robot('rover-1', 'survey', 10, 12), robot('builder-1', 'construction', 15, 19), robot('hauler-1', 'cargo', 20, 18),
+      serviceRobot('logistics-1', 'logistics', 14, 17, 'Moving stores between relay and landing habitat', [{ x: 14, y: 17 }, { x: 15, y: 17 }, { x: 16, y: 17 }, { x: 16, y: 16 }]),
+      serviceRobot('habitat-service-1', 'habitat-service', 12, 17, 'Inspecting habitat seals and life-support couplings', [{ x: 12, y: 17 }, { x: 13, y: 17 }, { x: 13, y: 16 }, { x: 12, y: 16 }]),
+      serviceRobot('scout-1', 'scout', 17, 16, 'Perimeter sweep of the received landing corridor', [{ x: 17, y: 16 }, { x: 18, y: 16 }, { x: 18, y: 15 }, { x: 17, y: 15 }]),
+    ],
     // Earth cannot correct a bad landing plan for 4.37 years. These stocks provide
     // roughly fifty-two years of food and water even if no local production is added.
     resources: { material: 120, food: 16000, water: 24000, power: 90, powerCapacity: 160, population: 42, capacity: 64, iridium: 0 },
@@ -96,7 +107,12 @@ export const SCENARIOS = {
       building('workshop-1', 'workshop', 17, 17), building('workshop-2', 'workshop', 20, 16),
       building('workshop-3', 'workshop', 13, 19), building('workshop-4', 'workshop', 10, 20),
     ],
-    robots: [robot('rover-1', 'survey', 8, 12), robot('builder-1', 'construction', 17, 18), robot('hauler-1', 'cargo', 20, 17)],
+    robots: [
+      robot('rover-1', 'survey', 8, 12), robot('builder-1', 'construction', 17, 18), robot('hauler-1', 'cargo', 20, 17),
+      serviceRobot('logistics-1', 'logistics', 16, 17, 'Balancing stores between workshops and the relay', [{ x: 16, y: 17 }, { x: 17, y: 17 }, { x: 18, y: 17 }, { x: 18, y: 16 }]),
+      serviceRobot('habitat-service-1', 'habitat-service', 13, 17, 'Inspecting habitat seals and water couplings', [{ x: 13, y: 17 }, { x: 14, y: 17 }, { x: 14, y: 16 }, { x: 13, y: 16 }]),
+      serviceRobot('scout-1', 'scout', 19, 15, 'Perimeter sweep of the civic service corridor', [{ x: 19, y: 15 }, { x: 20, y: 15 }, { x: 20, y: 16 }, { x: 19, y: 16 }]),
+    ],
     // The reserve floor is close enough to demand that Daneel must act locally:
     // there is food and water for a little over two years, not decades.  Productive
     // buildings also draw on the grid, making resilience a production/network
@@ -117,7 +133,12 @@ export const SCENARIOS = {
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 4 },
     buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 12, 14), building('solar-1', 'solar', 18, 13), building('mine-1', 'mine', 24, 12), building('launch-1', 'launch', 7, 21)],
-    robots: [robot('rover-1', 'survey', 9, 13), robot('builder-1', 'construction', 19, 18), robot('hauler-1', 'cargo', 22, 16), robot('maintenance-1', 'maintenance', 18, 17)],
+    robots: [
+      robot('rover-1', 'survey', 9, 13), robot('builder-1', 'construction', 19, 18), robot('hauler-1', 'cargo', 22, 16), robot('maintenance-1', 'maintenance', 18, 17),
+      serviceRobot('logistics-1', 'logistics', 15, 17, 'Moving sealed export stores through the relay yard', [{ x: 15, y: 17 }, { x: 16, y: 17 }, { x: 17, y: 17 }, { x: 17, y: 16 }]),
+      serviceRobot('habitat-service-1', 'habitat-service', 13, 16, 'Inspecting life-support seals around the habitat', [{ x: 13, y: 16 }, { x: 14, y: 16 }, { x: 14, y: 15 }, { x: 13, y: 15 }]),
+      serviceRobot('scout-1', 'scout', 20, 15, 'Watching the surveyed approach to the mine corridor', [{ x: 20, y: 15 }, { x: 21, y: 15 }, { x: 21, y: 16 }, { x: 20, y: 16 }]),
+    ],
     resources: { material: 240, food: 125000, water: 185000, power: 340, powerCapacity: 480, population: 330, capacity: 420, iridium: 320 },
   },
 };

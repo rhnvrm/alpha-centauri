@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame } from '../src/game/state.js';
+import { createGame, telemetryFor } from '../src/game/state.js';
 import { advanceToNextEvent, constructBuilding, integrate, queueHumanIntent, sendReport, cancelJob, queueLocalRoad } from '../src/game/engine.js';
 import { createToolSet } from '../src/webmcp/tools.js';
 import { placeBuildingNearRoad } from './helpers.js';
@@ -29,6 +29,20 @@ test('road work assigns the construction unit, preserves its work path, and beco
   assert.equal(s.jobs.at(-1).status, 'complete');
   assert.equal(s.roads.some((road) => road.x === first.x && road.y === first.y), true);
   assert.equal(s.robots.find((robot) => robot.id === builder.id).status, 'idle');
+});
+
+test('authored service fleet patrols locally without consuming specialist labor', () => {
+  let s = createGame('rightToDecide');
+  const service = s.robots.filter((robot) => robot.status === 'patrolling');
+  assert.equal(service.length, 3);
+  const before = service.map((robot) => ({ id: robot.id, x: robot.x, y: robot.y }));
+  s = integrate(s, 1);
+  assert.equal(s.robots.filter((robot) => robot.status === 'patrolling').length, 3);
+  assert.ok(s.robots.some((robot) => before.some((start) => start.id === robot.id && (start.x !== robot.x || start.y !== robot.y))), 'a service unit advances along its authored patrol');
+  assert.equal(s.robots.filter((robot) => robot.status === 'idle').length, 4, 'service units do not join the available labor pool');
+  const received = telemetryFor(s).observedWorld.robots.find((robot) => robot.id === 'logistics-1');
+  assert.equal(received.lifecycle, 'patrolling');
+  assert.match(received.purpose, /stores/i);
 });
 
 test('cancellation is recoverable and refunds most reserved material', () => { let s = createGame(); s = constructBuilding(s, 'battery', 5, 5); const j = s.jobs.at(-1); s = cancelJob(s, j.id); assert.equal(s.jobs.at(-1).status, 'cancelled'); assert.equal(s.buildings.at(-1).status, 'cancelled'); assert.equal(s.resources.material, 118); });

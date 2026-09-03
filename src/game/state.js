@@ -18,7 +18,7 @@ export function createGame(missionId = 'firstLight', sessionId = id('session')) 
     // rover scan immediately, while Earth must wait for the corresponding downlink.
     localKnowledge: { surveyedTiles: initialSurveyKnowledge(scenario), regions: [{ id: 'landing-perimeter', name: 'Landing relay perimeter', discoveredDay: 0 }] },
     observedKnowledge: { surveyedTiles: initialSurveyKnowledge(scenario), regions: [{ id: 'landing-perimeter', name: 'Landing relay perimeter', discoveredDay: 0 }] },
-    observedWorld: { buildings: scenario.buildings.map(({ id, type, x, y }) => ({ id, type, x, y, status: 'complete' })), robots: structuredClone(scenario.robots).map(({ id, type, x, y, status }) => ({ id, type, x, y, status })), roads: seededRoads(scenario).map((r) => ({ x: r.x, y: r.y })) },
+    observedWorld: { buildings: scenario.buildings.map(({ id, type, x, y }) => ({ id, type, x, y, status: 'complete' })), robots: structuredClone(scenario.robots).map(({ id, type, x, y, status, lifecycle, purpose, path }) => ({ id, type, x, y, status, lifecycle: lifecycle || status, purpose: purpose || null, routeRemaining: (path || []).length })), roads: seededRoads(scenario).map((r) => ({ x: r.x, y: r.y })) },
     tiles: scenarioTiles(scenario), floodKeys: [...scenarioFloodKeys(scenario)], roads: seededRoads(scenario), jobs: [], packets: [], inbox: [], reports: [], observations: [], events: [], logs: [], receipts: {},
     pendingEvents: structuredClone(scenario.events || []),
     flows: { ...(scenario.flows || {}) },
@@ -68,9 +68,9 @@ export function telemetryFor(state) {
       buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, status: 'complete', health })),
       // This is a captured local status, not a live Earth-side peek. It lets a
       // received rover remain meaningfully inspectable until the next downlink.
-      robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path }) => ({
+      robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path, purpose }) => ({
         id, type, x, y, status, lifecycle: lifecycle || status, assignedJob: assignedJob || null,
-        routeRemaining: (path || []).length,
+        routeRemaining: (path || []).length, purpose: purpose || null,
       })),
       roads: state.roads.map((r) => ({ x: Array.isArray(r) ? r[0] : r.x, y: Array.isArray(r) ? r[1] : r.y })),
     },

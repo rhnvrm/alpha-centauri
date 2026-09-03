@@ -293,6 +293,9 @@ function robotSpriteKey(r) {
   if (r.type === 'survey') return 'vehicleSurvey';
   if (r.type === 'cargo') return 'vehicleCargo';
   if (r.type === 'maintenance') return 'vehicleMaintenance';
+  if (r.type === 'logistics') return 'vehicleCargo';
+  if (r.type === 'habitat-service') return 'vehicleMaintenance';
+  if (r.type === 'scout') return 'vehicleSurvey';
   const choices = ['vehicleConstruction', 'vehicleSurvey', 'vehicleCargo', 'vehicleMaintenance'];
   return choices[[...String(r.id)].reduce((sum, char) => sum + char.charCodeAt(0), 0) % choices.length];
 }
@@ -302,7 +305,7 @@ function meshRobot(r, textures) {
   const g = new THREE.Group(); g.userData = { id: r.id, kind: 'robot', x: r.x, y: r.y };
   const key = robotSpriteKey(r); const hasSprite = addSprite(g, textures[key], key, { y: .12, centerY: .12, order: 4 });
   const lifecycle = r.lifecycle || r.status;
-  const role = lifecycle === 'en-route' || r.status === 'moving' ? 0x72d9ce : lifecycle === 'working' ? 0xf0c56b : r.type === 'construction' ? 0xd9a455 : r.type === 'survey' ? 0x5bb7c7 : r.type === 'cargo' ? 0xd17e47 : r.type === 'maintenance' ? 0x91bc72 : 0xc6b680;
+  const role = lifecycle === 'en-route' || r.status === 'moving' ? 0x72d9ce : lifecycle === 'working' ? 0xf0c56b : r.type === 'construction' ? 0xd9a455 : r.type === 'survey' || r.type === 'scout' ? 0x5bb7c7 : r.type === 'cargo' || r.type === 'logistics' ? 0xd17e47 : r.type === 'maintenance' || r.type === 'habitat-service' ? 0x91bc72 : 0xc6b680;
   // A small role halo is intentionally visible from the default camera, so rovers don't read
   // as interchangeable decoration when the player is choosing a target.
   const halo = new THREE.Mesh(new THREE.RingGeometry(.33, .39, 16), new THREE.MeshBasicMaterial({ color: role, transparent: true, opacity: .82, side: THREE.DoubleSide }));

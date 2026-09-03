@@ -1161,8 +1161,8 @@ export default function App({ store }) {
                       ? superpositionActive && selectedRobotJob
                         ? `${selectedRobot.type} · ${(selectedRobot.lifecycle || selectedRobot.status).toUpperCase()} · ${selectedRobotJob.type.toUpperCase()} · ${Math.max(0, selectedRobotJob.completeDay - state.localDay)}d remaining`
                         : superpositionActive
-                          ? `${selectedRobot?.type || "rover"} · IDLE · available for local work`
-                          : `${selectedRobot?.type || "rover"} · ${(selectedRobot?.lifecycle || selectedRobot?.status || "idle").toUpperCase()}${selectedRobot?.routeRemaining ? ` · ${selectedRobot.routeRemaining} received route tiles remaining` : ""} · last received position; a move order still crosses the light-delay`
+                          ? `${selectedRobot?.type || "rover"} · ${(selectedRobot?.lifecycle || selectedRobot?.status || "idle").toUpperCase()}${selectedRobot?.purpose ? ` · ${selectedRobot.purpose}` : " · available for local work"}`
+                          : `${selectedRobot?.type || "rover"} · ${(selectedRobot?.lifecycle || selectedRobot?.status || "idle").toUpperCase()}${selectedRobot?.routeRemaining ? ` · ${selectedRobot.routeRemaining} received route tiles remaining` : ""}${selectedRobot?.purpose ? ` · ${selectedRobot.purpose}` : ""} · last received position; a move order still crosses the light-delay`
                       : "Selectable from reconstructed telemetry"}
                 </small>
                 {selectedImpact && (

@@ -52,6 +52,18 @@ function routeProgress(route, elapsedDays, roads) {
 function routeTravelDays(route, roads) {
   return Math.ceil((route || []).reduce((days, waypoint) => days + (roads.has(`${waypoint.x},${waypoint.y}`) ? .5 : 1), 0));
 }
+// Purposeful service fleet movement is deterministic and local-only. Service
+// units never enter the labor queue, so their ambience cannot starve a survey,
+// cargo, construction, or maintenance job of its specialist.
+function advanceServicePatrols(state) {
+  for (const robot of state.robots) {
+    if (robot.status !== 'patrolling' || !Array.isArray(robot.patrol) || robot.patrol.length < 2) continue;
+    robot.patrolIndex = ((robot.patrolIndex ?? 0) + 1) % robot.patrol.length;
+    const waypoint = robot.patrol[robot.patrolIndex];
+    robot.x = waypoint.x; robot.y = waypoint.y;
+    robot.lifecycle = 'patrolling'; robot.path = robot.patrol.slice(robot.patrolIndex + 1).concat(robot.patrol.slice(0, robot.patrolIndex));
+  }
+}
 /** Deterministic role-specific labor gate. Jobs keep their target and route so the
  * renderer and inspectors can show the physical work rather than a decorative sprite. */
 function assignFreeRobot(state, j) {
@@ -146,6 +158,7 @@ export function integrate(state, days = 0) {
   const next = copyGame(state); const end = next.localDay + Math.max(0, Math.floor(days));
   while (next.localDay < end) {
     next.localDay += 1;
+    advanceServicePatrols(next);
     for (const j of next.jobs) {
       if (j.status === 'awaiting-labor') assignFreeRobot(next, j);
       if (j.status === 'queued' && next.localDay >= j.startDay) j.status = 'active';
