@@ -46,7 +46,7 @@ export function createGame(missionId = 'firstLight', sessionId = id('session')) 
     mission: {
       status: 'active', progress: 0, progressLabel: 'Awaiting confirmation',
       outcome: null, earthOutcome: null, confirmedAt: null, exported: 0, startedAt: 0,
-      deadlineDay: scenario.deadlineDay ?? null, sustainDays: scenario.sustainDays ?? null,
+      deadlineDay: scenario.deadlineDay ?? null, sustainDays: scenario.sustainDays ?? null, directedWork: false,
       powerZeroStreak: 0, collapsedAt: null, protectionLost: 0, interruption: { startedAt: null, endAt: null, minPower: Infinity, sustained: null },
     },
     observedConstraints: [],

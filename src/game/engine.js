@@ -231,7 +231,7 @@ function resolveMission(state) {
     const foodOK = r.food / Math.max(1, r.population * 0.02) / 30 >= 24;
     const powerOK = r.powerCapacity ? r.power / r.powerCapacity >= 0.2 : false;
     if (m.sustainDays && state.localDay >= m.sustainDays) {
-      if (m.protectionLost === 0 && foodOK && powerOK) finalizeMission(state, 'objective-secured');
+      if (m.protectionLost === 0 && foodOK && powerOK && m.directedWork) finalizeMission(state, 'objective-secured');
       else if (m.protectionLost > 0) finalizeMission(state, 'wetlands-lost');
       else finalizeMission(state, 'reserves-broken');
     }
@@ -383,6 +383,7 @@ export function constructBuilding(state, type, x, y, origin = 'agent') {
   if (occupied(next, x, y, w, h)) throw Object.assign(new Error('OCCUPIED'), { code: 'OCCUPIED' });
   if (next.resources.material < spec.cost) throw Object.assign(new Error('INSUFFICIENT_MATERIAL'), { code: 'INSUFFICIENT_MATERIAL' });
   next.resources.material -= spec.cost; const id = `${type}-x${next.counters.job + 1}`; next.buildings.push({ id, type, x, y, level: 0, status: 'queued', health: 100, origin });
+  if (origin === 'daneel') next.mission.directedWork = true;
   const j = job(next, { type: 'construct', buildingId: id, cost: spec.cost, labor: spec.labor, completeDay: next.localDay + spec.days }, true); event(next, 'construction_queued', { jobId: j.id, buildingId: id, robotId: next.robots.find((r) => r.assignedJob === j.id)?.id || null });
   if (prot.loss > 0) { next.mission.protectionLost = (next.mission.protectionLost || 0) + prot.loss; next.doctrine.protectedWetlandLoss += prot.loss; event(next, 'protected_habitat_lost', { cells: prot.loss, buildingId: id }); }
   return markRevision(next);

@@ -51,9 +51,10 @@ test('power outage excludes the seeded source for exactly its window', () => {
 
 test('Mission III life-support fault disables its named solar facility for the authored window', () => {
   let faulted = createGame('rightToDecide');
-  // Isolate the facility event at day 400: solar-1 is connected, and zero
+  const faultEvent = faulted.pendingEvents.find((event) => event.type === 'life-support-fault');
+  // Isolate the facility event at its authored post-directive day: solar-1 is connected, and zero
   // population makes the fault's lost solar generation directly observable.
-  faulted.localDay = 399;
+  faulted.localDay = faultEvent.day - 1;
   faulted.resources.population = 0;
   faulted.resources.power = 100;
   const healthy = structuredClone(faulted);
@@ -85,7 +86,9 @@ test('survey completion discovers the authored ecology on schedule', () => {
   s = integrate(s, 60);
   const evt = s.events.find((e) => e.type === 'survey_complete');
   assert.equal(evt.discovery, 'microbial-mat');
-  assert.ok(s.events.find((e) => e.type === 'discovery' && e.day === 60));
+  const discoveryDay = s.pendingEvents.find((event) => event.type === 'survey-discovery').day;
+  s = integrate(s, discoveryDay - s.localDay);
+  assert.ok(s.events.find((e) => e.type === 'discovery' && e.day === discoveryDay));
 });
 
 test('no negative inventories or NaN at any point in a long no-build run', () => {

@@ -180,8 +180,10 @@ test('wait_for_event uses distinct cursors and reports an empty wait honestly', 
   const wait = tools.find((t) => t.name === 'wait_for_event');
   const empty = await wait.execute({ sessionId: state.sessionId, leaseId: state.connection.leaseId, cursor: 0, timeoutMs: 5 });
   assert.equal(empty.result.timedOut, true);
-  // A local discovery event (authored, deterministic) arrives -> sequence grows past the cursor.
-  state = integrate(state, 60);
+  // A local discovery event (authored, deterministic) arrives after the first
+  // Earth directive window -> sequence grows past the cursor.
+  const discovery = state.pendingEvents.find((event) => event.type === 'survey-discovery');
+  state = integrate(state, discovery.day);
   const next = await wait.execute({ sessionId: state.sessionId, leaseId: state.connection.leaseId, cursor: empty.result.cursor, timeoutMs: 5 });
   assert.equal(next.result.timedOut, false);
   assert.ok(next.result.events.length > 0);

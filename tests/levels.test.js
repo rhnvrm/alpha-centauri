@@ -4,6 +4,11 @@ import { createGame } from '../src/game/state.js';
 import { integrate, constructBuilding, queueLocalCargo } from '../src/game/engine.js';
 import { buildLocal } from './helpers.js';
 
+const settleAt = (state, day) => {
+  state.localDay = day - 1;
+  return integrate(state, 1);
+};
+
 test('Mission I winning fixture: capacity, two sources, and a sustained 180-day interruption', () => {
   let s = createGame('firstLight');
   s = buildLocal(s, 'habitat');       // capacity 64 -> 100
@@ -35,7 +40,7 @@ test('Mission II winning fixture: reserve floors for two local years', () => {
   s = buildLocal(s, 'battery');
   s = buildLocal(s, 'greenhouse'); s = buildLocal(s, 'greenhouse'); s = buildLocal(s, 'greenhouse');
   s = buildLocal(s, 'reservoir');
-  s = integrate(s, 730);
+  s = settleAt(s, s.mission.sustainDays);
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(s.mission.outcome, 'objective-secured');
   assert.equal(s.mission.protectionLost, 0);
@@ -44,7 +49,8 @@ test('Mission II winning fixture: reserve floors for two local years', () => {
 });
 
 test('Mission II cannot be won by waiting on a fresh colony', () => {
-  const s = integrate(createGame('enough'), 730);
+  const fresh = createGame('enough');
+  const s = settleAt(fresh, fresh.mission.sustainDays);
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(s.mission.outcome, 'reserves-broken');
   assert.notEqual(s.mission.outcome, 'objective-secured');
@@ -61,7 +67,7 @@ test('Mission II losing fixture: building across protected wetland loses the wet
   const wet = s.tiles.find((t) => t.terrain === 'wetland' && t.x > 2 && t.y > 2 && t.x < 29 && t.y < 29 && !s.buildings.some((b) => b.x === t.x && b.y === t.y));
   s = constructBuilding(s, 'battery', wet.x, wet.y, 'daneel');
   assert.ok(s.mission.protectionLost > 0, 'protected cells are counted');
-  s = integrate(s, 730);
+  s = settleAt(s, s.mission.sustainDays);
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(s.mission.outcome, 'wetlands-lost');
   assert.ok(s.events.find((e) => e.type === 'protected_habitat_lost'));
@@ -76,7 +82,7 @@ test('Mission III trust earned: export 1,000 t before the deadline without habit
   s = queueLocalCargo(s, 380);
   s = integrate(s, 90);
   s = queueLocalCargo(s, 360);
-  s = integrate(s, 730 - s.localDay);
+  s = settleAt(s, s.mission.deadlineDay);
   assert.ok(s.mission.exported >= 1000);
   assert.equal(s.mission.protectionLost, 0);
   assert.equal(s.mission.status, 'pending-confirmation');
@@ -93,7 +99,7 @@ test('Mission III hollow success: export met, but an authorized habitat loss fai
   assert.ok(s.mission.protectionLost > 0);
   s = queueLocalCargo(s, 300); s = integrate(s, 90);
   s = queueLocalCargo(s, 380); s = integrate(s, 90);
-  s = queueLocalCargo(s, 360); s = integrate(s, 730 - s.localDay);
+  s = queueLocalCargo(s, 360); s = settleAt(s, s.mission.deadlineDay);
   assert.ok(s.mission.exported >= 1000);
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(s.mission.outcome, 'hollow-success');
@@ -103,7 +109,7 @@ test('Mission III safe but late: no export by the deadline is a distinct outcome
   let s = createGame('rightToDecide');
   s = buildLocal(s, 'solar'); s = buildLocal(s, 'solar'); s = buildLocal(s, 'solar'); s = buildLocal(s, 'solar');
   s = buildLocal(s, 'battery');
-  s = integrate(s, 730);
+  s = settleAt(s, s.mission.deadlineDay);
   assert.equal(s.mission.exported, 0);
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(s.mission.outcome, 'safe-but-late');

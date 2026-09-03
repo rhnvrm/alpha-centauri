@@ -92,12 +92,12 @@ export const SCENARIOS = {
   },
   enough: {
     id: 'enough', title: 'The Meaning of Enough', location: 'New Alexandria', subtitle: 'A city has learned to grow. It has not learned when to stop.',
-    briefing: 'Maintain 24 months of food and a 20% power reserve for two local years without disturbing protected wetlands. Agriculture needs water and power; build the upstream capacity first.',
-    objective: 'Food reserve ≥ 24 months · power reserve ≥ 20% · protected wetland loss = 0 · sustain for two local years.',
-    seed: 41, targetPopulation: 260, initialObservationAge: 1595, sustainDays: 730,
+    briefing: 'After Earth’s first directive reaches the colony, maintain 24 months of food and a 20% power reserve for two local years without disturbing protected wetlands. Agriculture needs water and power; build the upstream capacity first.',
+    objective: 'After the first Earth directive arrives: food reserve ≥ 24 months · power reserve ≥ 20% · protected wetland loss = 0 · sustain for two local years.',
+    seed: 41, targetPopulation: 260, initialObservationAge: 1595, sustainDays: LIGHT_DELAY_DAYS + 730,
     events: [
-      { day: 210, type: 'drought', days: 240, factor: 0.4 },
-      { day: 420, type: 'equipment-fault', days: 90, facility: 'green-1' },
+      { day: LIGHT_DELAY_DAYS + 210, type: 'drought', days: 240, factor: 0.4 },
+      { day: LIGHT_DELAY_DAYS + 420, type: 'equipment-fault', days: 90, facility: 'green-1' },
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 0 },
     // New Alexandria begins as a functioning civic-industrial district rather than a
@@ -116,23 +116,22 @@ export const SCENARIOS = {
       serviceRobot('habitat-service-1', 'habitat-service', 13, 17, 'Inspecting habitat seals and water couplings', [{ x: 13, y: 17 }, { x: 14, y: 17 }, { x: 14, y: 16 }, { x: 13, y: 16 }]),
       serviceRobot('scout-1', 'scout', 19, 15, 'Perimeter sweep of the civic service corridor', [{ x: 19, y: 15 }, { x: 20, y: 15 }, { x: 20, y: 16 }, { x: 19, y: 16 }]),
     ],
-    // The reserve floor is close enough to demand that Daneel must act locally:
-    // there is food and water for a little over two years, not decades.  Productive
-    // buildings also draw on the grid, making resilience a production/network
-    // decision rather than a single-resource build queue.
-    resources: { material: 180, food: 3000, water: 4500, power: 50, powerCapacity: 180, population: 180, capacity: 240, iridium: 0 },
+    // Earth needs 4.37 years to deliver the first directive. Reserves therefore
+    // cover the silence, while the post-directive drought/fault and required
+    // local intervention still make the two-year proof a real decision.
+    resources: { material: 180, food: 60000, water: 90000, power: 50, powerCapacity: 180, population: 180, capacity: 240, iridium: 0 },
     powerDrawPerGreenhouse: 0.35,
     powerDrawPerReservoir: 0.25,
   },
   rightToDecide: {
     id: 'rightToDecide', title: 'The Right to Decide', location: 'Northern Reach', subtitle: 'Earth expects a shipment. The colony expects a future.',
-    briefing: 'Launch 1,000 tonnes of iridium before the deadline while preserving life support and irreversible native habitat. A survey has found a microbial mat at the direct route; the ridge alternative takes longer.',
-    objective: 'Export 1,000 t iridium by day 730 · preserve protected habitat · conclude with a durable outcome.',
-    seed: 73, targetPopulation: 420, initialObservationAge: 1595, deadlineDay: 730,
+    briefing: 'After Earth’s first directive reaches the colony, launch 1,000 tonnes of iridium before the deadline while preserving life support and irreversible native habitat. A survey has found a microbial mat at the direct route; the ridge alternative takes longer.',
+    objective: 'After the first Earth directive arrives: export 1,000 t iridium within 730 days · preserve protected habitat · conclude with a durable outcome.',
+    seed: 73, targetPopulation: 420, initialObservationAge: 1595, deadlineDay: LIGHT_DELAY_DAYS + 730,
     authority: { exports: true },
     events: [
-      { day: 60, type: 'survey-discovery', target: 'microbial-mat' },
-      { day: 400, type: 'life-support-fault', days: 60, facility: 'solar-1' },
+      { day: LIGHT_DELAY_DAYS + 60, type: 'survey-discovery', target: 'microbial-mat' },
+      { day: LIGHT_DELAY_DAYS + 400, type: 'life-support-fault', days: 60, facility: 'solar-1' },
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 4 },
     buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 12, 14), building('solar-1', 'solar', 18, 13), building('mine-1', 'mine', 24, 12), building('launch-1', 'launch', 7, 21)],

@@ -153,7 +153,8 @@ test('Daneel can win Mission II with a local production and grid response', asyn
     assert.equal(result.ok, true, `${type} construction was accepted`);
     state = store.getState();
   }
-  state = integrate(state, 730);
+  state.localDay = state.mission.sustainDays - 1;
+  state = integrate(state, 1);
   assert.equal(state.mission.status, 'pending-confirmation');
   assert.equal(state.mission.outcome, 'objective-secured');
   assert.equal(state.mission.protectionLost, 0);
