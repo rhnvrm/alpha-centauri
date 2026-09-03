@@ -87,6 +87,7 @@ Reads use `sessionId`; agent-only reads also require the active `leaseId`. The l
 | `survey_region` | bounded rectangle or region ID, available robot IDs | Schedules survey job; discoveries occur on completion, not instantly |
 | `construct_building` | unlocked type, tile, orientation, optional dependency job IDs | Schedules a costed construction job; no teleported completed building |
 | `build_road` | bounded tile path, robot IDs | Validates path and resources; schedules connectivity work |
+| `move_robot` | one idle rover ID, safe local tile | Schedules a physical tile-by-tile travel job; rejects a busy rover or invalid destination |
 | `assign_robots` | available robot IDs, job ID | Assigns feasible local labor; rejects unavailable or duplicate workers |
 | `modify_production` | facility ID, bounded rate | Applies permitted rate; observes capacity and reserve floors |
 | `set_power_priority` | consumer group, enumerated priority | Changes load order within the active emergency/safety envelope |

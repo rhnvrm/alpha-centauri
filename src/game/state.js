@@ -7,7 +7,9 @@ const id = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 export function createGame(missionId = 'firstLight', sessionId = id('session')) {
   const scenario = SCENARIOS[missionId] || SCENARIOS.firstLight;
   return {
-    schemaVersion: SAVE_VERSION, sessionId, revision: 0, missionId, localDay: 0, paused: true, earthCoast: false,
+    // A colony is never notionally frozen while Earth composes a packet.  The
+    // presentation only begins stepping the clock once the live desk is shown.
+    schemaVersion: SAVE_VERSION, sessionId, revision: 0, missionId, localDay: 0, launched: false, paused: false, earthCoast: false, demoPace: false, timeScale: 1,
     connection: { status: 'not-connected', leaseId: null, expiresAt: 0, agentLabel: null },
     channel: { uplinkBits: 0, downlinkBits: 0, uplinkPackets: 0, downlinkPackets: 0 },
     resources: { ...scenario.resources }, observedResources: { ...scenario.resources }, buildings: structuredClone(scenario.buildings), robots: structuredClone(scenario.robots),
@@ -15,7 +17,25 @@ export function createGame(missionId = 'firstLight', sessionId = id('session')) 
     tiles: scenarioTiles(scenario), floodKeys: [...scenarioFloodKeys(scenario)], roads: seededRoads(scenario), jobs: [], packets: [], inbox: [], reports: [], observations: [], events: [], logs: [], receipts: {},
     pendingEvents: structuredClone(scenario.events || []),
     flows: { ...(scenario.flows || {}) },
-    doctrine: { version: 1, authority: { roads: true, repairs: true, food: true, settlements: false, habitatLoss: false, exports: false, ...(scenario.authority || {}) }, protectedWetlandLoss: 0, protocols: [] },
+    // Daneel may deliberately throttle completed productive facilities.
+    // Omitted entries run at their normal (100%) output.
+    productionRates: {},
+    // The local, day-zero mandate carried by Daneel before any Earth packet arrives.
+    doctrine: {
+      version: 1,
+      charter: {
+        version: 1,
+        issuedBy: 'Earth Mission Control',
+        deliveredDay: 0,
+        missionId: scenario.id,
+        title: scenario.title,
+        objective: scenario.objective,
+        briefing: scenario.briefing,
+      },
+      authority: { roads: true, repairs: true, food: true, settlements: false, habitatLoss: false, exports: false, ...(scenario.authority || {}) },
+      protectedWetlandLoss: 0,
+      protocols: [],
+    },
     pendingQuestions: [],
     cursors: { inbox: 0, event: 0 }, pendingDecision: null,
     mission: {
@@ -25,6 +45,8 @@ export function createGame(missionId = 'firstLight', sessionId = id('session')) 
       powerZeroStreak: 0, collapsedAt: null, protectionLost: 0, interruption: { startedAt: null, endAt: null, minPower: Infinity, sustained: null },
     },
     telemetry: { captureDay: 0, arrivalDay: LIGHT_DELAY_DAYS, label: 'Bootstrap observation' },
+    // Browser-local diagnostic budget: never advances or mutates the colony simulation.
+    superposition: { passes: 2, activations: 0, lastActivatedAtMs: 0, activeUntilMs: 0 },
     counters: { packet: 0, job: 0, event: 0 },
   };
 }

@@ -4,6 +4,10 @@ export const LIGHT_DELAY_YEARS = (LIGHT_DELAY_DAYS / DAYS_PER_YEAR).toFixed(2);
 export const SAVE_KEY = 'intent-horizon-save-v1';
 export const SAVE_VERSION = 1;
 export const MAP_SIZE = 32;
+// A seeded array must sustain a mature landing district.  This is intentionally
+// above the normal colony demand so an outage is a meaningful reserve event,
+// rather than an unavoidable slow collapse before the player can respond.
+export const SOLAR_OUTPUT_PER_DAY = 4.5;
 
 // Communications: one transmission window per local day, per direction.
 // Application payload capacity per window and a small disclosed envelope overhead.
@@ -27,7 +31,7 @@ export const BUILDINGS = {
 export const TOOL_NAMES = [
   'connect_steward', 'read_inbox', 'inspect_colony', 'read_doctrine',
   'construct_building', 'send_report', 'yield_control', 'wait_for_event',
-  'survey_region', 'build_road', 'assign_robots', 'inspect_resource_network',
+  'survey_region', 'build_road', 'move_robot', 'assign_robots', 'inspect_resource_network',
   'modify_production', 'set_power_priority', 'schedule_maintenance',
   'register_policy', 'request_authorization', 'launch_cargo',
 ];

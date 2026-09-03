@@ -64,6 +64,24 @@ test('one WebGL renderer survives callback, state, and reduced-motion changes', 
   assert.equal(renderer.disposed, 1); assert.equal(renderer.released, 1);
 });
 
+test('local scene data is rendered only by the explicit read-only superposition mode', async (t) => {
+  const { root, renderers, factory } = await setup(t);
+  const base = createGame();
+  const state = {
+    ...base,
+    buildings: [...base.buildings, { id: 'local-only-hab', type: 'habitat', x: 25, y: 25, status: 'complete' }],
+    observedWorld: { ...base.observedWorld, buildings: base.observedWorld.buildings.slice(0, 1) },
+  };
+  const render = (viewMode) => act(async () => root.render(React.createElement(ColonyScene, { state, onSelect() {}, rendererFactory: factory, viewMode, readOnly: viewMode === 'local' })));
+  await render('earth');
+  const world = renderers[0].scene.children.find((object) => object.isGroup);
+  assert.equal(world.children.filter((object) => object.userData.kind === 'building').length, 1, 'Earth mode keeps the local habitat hidden');
+  await render('local');
+  assert.equal(world.children.filter((object) => object.userData.kind === 'building').length, state.buildings.length, 'explicit local mode can inspect the live colony');
+  await render('earth');
+  assert.equal(world.children.filter((object) => object.userData.kind === 'building').length, 1, 'Earth boundary is restored when the mode closes');
+});
+
 test('failed initialization keeps a mounted host and can retry successfully', async (t) => {
   const { root, renderers, factory } = await setup(t); let attempts = 0;
   const retryFactory = () => { if (++attempts === 1) throw new Error('Test GPU unavailable'); return factory(); };

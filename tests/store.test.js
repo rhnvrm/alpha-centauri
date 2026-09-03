@@ -49,16 +49,20 @@ test('legacy simulation extensions are filled in without overwriting saved field
   legacy.localDay = 25;
   legacy.mission.exported = 123;
   legacy.doctrine.authority.exports = true;
-  for (const key of ['pendingQuestions', 'pendingEvents', 'floodKeys', 'flows', 'earthCoast', 'observedWorld']) delete legacy[key];
+  for (const key of ['pendingQuestions', 'pendingEvents', 'floodKeys', 'flows', 'productionRates', 'earthCoast', 'demoPace', 'observedWorld']) delete legacy[key];
   delete legacy.mission.interruption;
   delete legacy.mission.collapsedAt;
   delete legacy.mission.powerZeroStreak;
   delete legacy.doctrine.protocols;
+  delete legacy.doctrine.charter;
   const storage = fakeStorage({ 'intent-horizon-save-v1': JSON.stringify(legacy) });
   const loaded = createStore({ storage });
   assert.deepEqual(loaded.getState().doctrine.protocols, []);
+  assert.equal(loaded.getState().doctrine.charter.missionId, 'enough');
   assert.equal(loaded.getState().doctrine.authority.exports, true);
   assert.equal(loaded.getState().mission.exported, 123);
+  assert.deepEqual(loaded.getState().productionRates, {});
+  assert.equal(loaded.getState().demoPace, false);
   assert.doesNotThrow(() => loaded.advance(1));
   assert.equal(loaded.getState().localDay, 26);
   assert.equal(loaded.getState().mission.status, 'active');
@@ -84,6 +88,23 @@ test('a write failure keeps the last committed world and pauses play', () => {
   assert.equal(store.getState().localDay, before, 'uncommitted advance is not visible');
   assert.equal(store.getState().paused, true);
   assert.equal(store.getState().saveError, true);
+});
+
+test('superposition is a scarce, timed visual diagnostic with a persistent cooldown', () => {
+  const store = createStore({ storage: fakeStorage() });
+  const before = store.getState(); const now = 1_000_000;
+  const first = store.activateSuperposition(now);
+  assert.equal(first.ok, true);
+  assert.equal(store.getState().superposition.passes, 1);
+  assert.equal(store.getState().superposition.activeUntilMs, now + 30_000);
+  assert.equal(store.getState().localDay, before.localDay, 'visual access does not advance local time');
+  assert.deepEqual(store.getState().resources, before.resources, 'visual access does not mutate resources');
+  assert.equal(store.activateSuperposition(now + 10_000).reason, 'ACTIVE');
+  assert.equal(store.activateSuperposition(now + 40_000).reason, 'COOLDOWN');
+  const second = store.activateSuperposition(now + 60_000);
+  assert.equal(second.ok, true);
+  assert.equal(store.getState().superposition.passes, 0);
+  assert.equal(store.activateSuperposition(now + 120_000).reason, 'NO_PASSES');
 });
 
 test('invalid and newer saves are preserved for recovery, not silently reset', () => {
@@ -125,6 +146,7 @@ test('same operationId never applies twice and revision mismatch is rejected', a
   const connect = tools.find((t) => t.name === 'connect_steward');
   const c = await connect.execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
   const leaseId = c.result.leaseId; state = store.getState();
+  assert.equal(state.paused, false); assert.equal(state.demoPace, true);
   const construct = tools.find((t) => t.name === 'construct_building');
   const args = { sessionId: state.sessionId, leaseId, expectedRevision: state.revision, operationId: 'op-1', type: 'battery', x: 5, y: 5 };
   const first = await construct.execute(args);

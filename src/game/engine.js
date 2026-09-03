@@ -1,4 +1,4 @@
-import { BUILDINGS, LIGHT_DELAY_DAYS, bitsForPayload, windowsFor } from './constants.js';
+import { BUILDINGS, LIGHT_DELAY_DAYS, SOLAR_OUTPUT_PER_DAY, bitsForPayload, windowsFor } from './constants.js';
 import { copyGame, markRevision, occupied, tileAt, updateProgress, scenarioFor, isFlooded, telemetryFor } from './state.js';
 import { gridConsumers, powerSources, isGridConnected } from './networks.js';
 
@@ -46,12 +46,18 @@ const floodFilter = (state, day) => { const fn = isFlooded(state, day); return (
 
 function activeOutage(state, day) { return state.pendingEvents.filter((e) => e.type === 'power-outage' && day >= e.day && day < e.day + e.days).map((e) => e.sources).flat(); }
 function droughtFactor(state, day) { const e = state.pendingEvents.find((x) => x.type === 'drought' && day >= x.day && day < x.day + x.days); return e ? e.factor : 1; }
-function faultedFacilities(state, day) { return new Set(state.pendingEvents.filter((e) => e.type === 'equipment-fault' && day >= e.day && day < e.day + e.days).map((e) => e.facility)); }
+function faultedFacilities(state, day) {
+  // Mission III names its seeded disruption for the player-facing consequence;
+  // it still uses the same facility outage mechanics as Mission II equipment faults.
+  return new Set(state.pendingEvents
+    .filter((e) => ['equipment-fault', 'life-support-fault'].includes(e.type) && day >= e.day && day < e.day + e.days)
+    .map((e) => e.facility));
+}
 
 function powerFlow(state) {
   const outage = new Set(activeOutage(state, state.localDay));
   for (const id of faultedFacilities(state, state.localDay)) outage.add(id);
-  const supply = powerSources(state).filter((s) => !outage.has(s.id)).reduce((a, s) => a + (s.type === 'solar' ? 0.8 : 0), 0);
+  const supply = powerSources(state).filter((s) => !outage.has(s.id)).reduce((a, s) => a + (s.type === 'solar' ? SOLAR_OUTPUT_PER_DAY : 0), 0);
   const demand = state.resources.population * 0.01 + gridConsumers(state).length * 0.12;
   return { supply, demand, outage };
 }
@@ -60,10 +66,11 @@ function resourceFlows(state) {
   const drought = droughtFactor(state, state.localDay);
   const faulted = faultedFacilities(state, state.localDay);
   const f = state.flows || {};
+  const rateFor = (facility) => state.productionRates?.[facility.id] ?? 1;
   const connected = (type) => state.buildings.filter((b) => b.status === 'complete' && b.type === type && isGridConnected(state, b));
-  const food = connected('greenhouse').reduce((a, b) => a + (faulted.has(b.id) ? 0 : (f.foodPerGreenhouse || 2) * drought), 0);
-  const water = connected('reservoir').reduce((a, b) => a + (faulted.has(b.id) ? 0 : (f.waterPerReservoir || 3)), 0);
-  const iridium = connected('mine').reduce((a) => a + (f.iridiumPerMineDay || 0), 0);
+  const food = connected('greenhouse').reduce((a, b) => a + (faulted.has(b.id) ? 0 : (f.foodPerGreenhouse || 2) * drought * rateFor(b)), 0);
+  const water = connected('reservoir').reduce((a, b) => a + (faulted.has(b.id) ? 0 : (f.waterPerReservoir || 3) * rateFor(b)), 0);
+  const iridium = connected('mine').reduce((a, b) => a + (faulted.has(b.id) ? 0 : (f.iridiumPerMineDay || 0) * rateFor(b)), 0);
   return { food, water, iridium };
 }
 
@@ -74,6 +81,14 @@ export function integrate(state, days = 0) {
     for (const j of next.jobs) {
       if (j.status === 'awaiting-labor') assignFreeRobot(next, j);
       if (j.status === 'queued' && next.localDay >= j.startDay) j.status = 'active';
+      // Movement is a local, physical job rather than a coordinate teleport.
+      // The route is canonical and advances one terrain tile per simulation day.
+      if (j.type === 'move' && j.status === 'active' && Array.isArray(j.path)) {
+        const rover = next.robots.find((candidate) => candidate.id === j.robotId);
+        const step = Math.min(j.path.length, Math.max(0, next.localDay - j.startDay));
+        const waypoint = step > 0 ? j.path[step - 1] : null;
+        if (rover && waypoint) { rover.x = waypoint.x; rover.y = waypoint.y; rover.path = j.path.slice(step); }
+      }
       const laborOk = !j.labor || j.status === 'active';
       if (j.status === 'active' && next.localDay >= j.completeDay && laborOk) { j.status = 'complete'; freeRobotFor(next, j.id); applyJob(next, j); event(next, 'job_complete', { jobId: j.id }); }
     }
@@ -147,6 +162,10 @@ function applyJob(state, j) {
   }
   if (j.type === 'survey') { event(state, 'survey_complete', { region: j.region, discovery: state.pendingEvents.find((e) => e.type === 'survey-discovery')?.target || 'safe-ridge' }); }
   if (j.type === 'road') { for (const cell of (j.path || [])) { const [x, y] = Array.isArray(cell) ? [Math.floor(cell[0]), Math.floor(cell[1])] : [Math.floor(cell.x), Math.floor(cell.y)]; const t = tileAt(state, x, y); if (t && t.terrain === 'regolith' && !floodFilter(state, state.localDay)(x, y) && !state.roads.some((r) => (Array.isArray(r) ? r[0] === x && r[1] === y : r.x === x && r.y === y))) state.roads.push({ x, y }); } }
+  if (j.type === 'move') {
+    const robot = state.robots.find((candidate) => candidate.id === j.robotId);
+    if (robot) { robot.x = j.x; robot.y = j.y; robot.path = []; }
+  }
   if (j.type === 'mine' && j.special !== true) { /* handled by construct above */ }
   if (j.type === 'cargo') { state.mission.exported = (state.mission.exported || 0) + (j.quantity || 0); event(state, 'cargo_launched', { quantity: j.quantity }); }
 }
@@ -157,6 +176,10 @@ function deliverDue(state) {
       if (p.kind === 'build-order') {
         try { const applied = constructBuilding(state, p.payload.type, p.payload.x, p.payload.y, 'human-arrival'); Object.assign(state, applied); event(state, 'human_order_applied', { packetId: p.id }); } catch (error) { event(state, 'human_order_rejected', { packetId: p.id, reason: error.code || error.message }); }
       } else if (p.kind === 'doctrine-change') { state.doctrine.authority = { ...state.doctrine.authority, ...p.payload.authority }; state.doctrine.version += 1; event(state, 'doctrine_arrived', { packetId: p.id, version: state.doctrine.version }); }
+      else if (p.kind === 'robot-move') {
+        try { const applied = queueLocalRobotMove(state, p.payload.robotId, p.payload.x, p.payload.y); Object.assign(state, applied); event(state, 'human_move_applied', { packetId: p.id, robotId: p.payload.robotId }); }
+        catch (error) { event(state, 'human_order_rejected', { packetId: p.id, reason: error.code || error.message }); }
+      }
       else if (p.kind === 'cargo-order') {
         const pad = state.buildings.some((b) => b.type === 'launch' && b.status === 'complete');
         const has = state.doctrine.authority.exports && (p.payload.quantity || 0) <= state.resources.iridium && pad;
@@ -183,7 +206,22 @@ function deliverDue(state) {
     }
   }
 }
-export function advanceToNextEvent(state) { const pending = state.packets.filter((p) => p.status === 'in-transit').map((p) => p.arrivalDay).filter((d) => d > state.localDay); const jobs = state.jobs.filter((j) => ['queued', 'active', 'awaiting-labor'].includes(j.status)).map((j) => j.completeDay).filter((d) => d > state.localDay); const target = Math.min(...pending.concat(jobs)); return Number.isFinite(target) ? integrate(state, target - state.localDay) : integrate(state, 1); }
+/** The next authored simulation boundary, bounded by a caller-selected maximum stride. */
+export function nextSimulationBoundaryDay(state, maxDays = Infinity) {
+  const afterNow = (day) => Number.isFinite(day) && day > state.localDay;
+  const arrivals = state.packets.filter((packet) => packet.status === 'in-transit').map((packet) => packet.arrivalDay);
+  const jobs = state.jobs.filter((job) => ['queued', 'active', 'awaiting-labor'].includes(job.status)).map((job) => job.completeDay);
+  const authoredEvents = state.pendingEvents.flatMap((event) => [event.day, event.days ? event.day + event.days : null]);
+  const missionBoundary = [state.mission.sustainDays, state.mission.deadlineDay];
+  const target = Math.min(...arrivals.concat(jobs, authoredEvents, missionBoundary).filter(afterNow));
+  const stride = Number.isFinite(maxDays) ? Math.max(1, Math.floor(maxDays)) : Infinity;
+  return Number.isFinite(target) ? Math.min(target, state.localDay + stride) : Number.isFinite(stride) ? state.localDay + stride : state.localDay + 1;
+}
+
+export function advanceToNextEvent(state) {
+  const target = nextSimulationBoundaryDay(state);
+  return integrate(state, target - state.localDay);
+}
 
 /** The next day any Earth-visible packet (either direction) lands, or null if none is in flight. */
 export function nextEarthArrivalDay(state) {
@@ -195,7 +233,27 @@ export function queueHumanIntent(state, text, attachment = null) { const next = 
 export function queueHumanBuild(state, type, x, y) { const next = copyGame(state); const p = packet(next, 'build-order', { type, x, y }, 'uplink'); event(next, 'build_order_queued', { packetId: p.id }); return markRevision(next); }
 export function queueHumanDoctrine(state, authority) { const next = copyGame(state); const p = packet(next, 'doctrine-change', { authority }, 'uplink'); event(next, 'doctrine_queued', { packetId: p.id }); return markRevision(next); }
 export function queueHumanCargo(state, quantity) { const next = copyGame(state); const p = packet(next, 'cargo-order', { quantity }, 'uplink'); event(next, 'cargo_order_queued', { packetId: p.id }); return markRevision(next); }
-export function queueHumanRoad(state, path) { const next = copyGame(state); const p = packet(next, 'road-order', { path: path.slice(0, 48) }, 'uplink'); event(next, 'road_order_queued', { packetId: p.id }); return markRevision(next); }
+export function queueHumanRoad(state, path) {
+  // An Earth order may still fail on arrival as terrain changes, but it must never
+  // transmit a malformed corridor that Daneel cannot physically follow.
+  const cells = (path || []).slice(0, 32).map((cell) => Array.isArray(cell)
+    ? { x: Math.floor(cell[0]), y: Math.floor(cell[1]) }
+    : { x: Math.floor(cell.x), y: Math.floor(cell.y) });
+  if (cells.length < 2) throw Object.assign(new Error('INVALID_PATH'), { code: 'INVALID_PATH', reason: 'A road requires at least two adjacent tiles.' });
+  for (let index = 1; index < cells.length; index += 1) {
+    const previous = cells[index - 1]; const current = cells[index];
+    if (Math.abs(current.x - previous.x) + Math.abs(current.y - previous.y) !== 1) throw Object.assign(new Error('INVALID_PATH'), { code: 'INVALID_PATH', reason: 'Road tiles must form one contiguous corridor.' });
+  }
+  const next = copyGame(state); const p = packet(next, 'road-order', { path: cells }, 'uplink'); event(next, 'road_order_queued', { packetId: p.id, cells: cells.length }); return markRevision(next);
+}
+/** A literal Earth rover order.  It is intentionally narrow and delayed: the
+ * destination is checked again against the current colony when the packet lands. */
+export function queueHumanRobotMove(state, robotId, x, y) {
+  const next = copyGame(state);
+  const p = packet(next, 'robot-move', { robotId, x: Math.floor(x), y: Math.floor(y) }, 'uplink');
+  event(next, 'robot_move_queued', { packetId: p.id, robotId });
+  return markRevision(next);
+}
 export function queueHumanProtocol(state, definition) { const next = copyGame(state); const p = packet(next, 'protocol-definition', { ...definition, reference: `${definition.name}/v${definition.version}` }, 'uplink'); event(next, 'protocol_queued', { packetId: p.id, reference: p.payload.reference }); return markRevision(next); }
 export function queueHumanAuthResponse(state, questionPacketId, answer) { const next = copyGame(state); const p = packet(next, 'authorization-response', { questionId: questionPacketId, answer, authority: answer === 'allow' ? { habitatLoss: true } : {} }, 'uplink'); event(next, 'auth_response_queued', { packetId: p.id, questionId: questionPacketId }); return markRevision(next); }
 
@@ -243,10 +301,39 @@ export function queueLocalCargo(state, quantity) {
 /** Local road job: validates bounded, buildable path cells at scheduling time. */
 export function queueLocalRoad(state, path) {
   const next = copyGame(state);
-  const cells = (path || []).slice(0, 32); if (!cells.length) throw Object.assign(new Error('INVALID_PATH'), { code: 'INVALID_PATH' });
-  for (const c of cells) { const [x, y] = Array.isArray(c) ? [Math.floor(c[0]), Math.floor(c[1])] : [Math.floor(c.x), Math.floor(c.y)]; const t = tileAt(next, x, y); if (!t || t.terrain !== 'regolith') throw Object.assign(new Error('MISSING_CONNECTION'), { code: 'MISSING_CONNECTION', reason: 'Road cells must be buildable regolith.' }); }
+  const cells = (path || []).slice(0, 32).map((cell) => Array.isArray(cell) ? { x: Math.floor(cell[0]), y: Math.floor(cell[1]) } : { x: Math.floor(cell.x), y: Math.floor(cell.y) });
+  if (cells.length < 2) throw Object.assign(new Error('INVALID_PATH'), { code: 'INVALID_PATH', reason: 'A road requires at least two adjacent tiles.' });
+  for (let index = 0; index < cells.length; index += 1) {
+    const { x, y } = cells[index]; const t = tileAt(next, x, y);
+    if (!t || t.terrain !== 'regolith') throw Object.assign(new Error('MISSING_CONNECTION'), { code: 'MISSING_CONNECTION', reason: 'Road cells must be buildable regolith.' });
+    if (index > 0) {
+      const previous = cells[index - 1];
+      if (Math.abs(x - previous.x) + Math.abs(y - previous.y) !== 1) throw Object.assign(new Error('INVALID_PATH'), { code: 'INVALID_PATH', reason: 'Road tiles must form one contiguous corridor.' });
+    }
+  }
   job(next, { type: 'road', status: 'queued', startDay: next.localDay, completeDay: next.localDay + 20, path: cells });
   event(next, 'road_queued', { cells: cells.length }); return markRevision(next);
+}
+
+/** Schedule a physical rover movement in local time.  This is shared by a
+ * delayed human packet and Daneel's native tool; neither may teleport a busy
+ * rover or drive it into unbuildable terrain. */
+export function queueLocalRobotMove(state, robotId, x, y) {
+  const next = copyGame(state);
+  const robot = next.robots.find((candidate) => candidate.id === robotId);
+  if (!robot) throw Object.assign(new Error('ROBOT_NOT_FOUND'), { code: 'ROBOT_NOT_FOUND', reason: 'No rover with that identifier is present locally.' });
+  if (robot.status !== 'idle' || robot.assignedJob) throw Object.assign(new Error('ROBOT_BUSY'), { code: 'ROBOT_BUSY', reason: 'The rover is committed to another local job.' });
+  const target = tileAt(next, Math.floor(x), Math.floor(y));
+  if (!target || target.terrain !== 'regolith' || floodFilter(next, next.localDay)(target.x, target.y)) throw Object.assign(new Error('INVALID_DESTINATION'), { code: 'INVALID_DESTINATION', reason: 'The destination is not currently safe, dry regolith.' });
+  const path = [];
+  let px = robot.x; let py = robot.y;
+  while (px !== target.x) { px += Math.sign(target.x - px); path.push({ x: px, y: py }); }
+  while (py !== target.y) { py += Math.sign(target.y - py); path.push({ x: px, y: py }); }
+  const travelDays = Math.max(1, path.length);
+  const movement = job(next, { type: 'move', robotId: robot.id, x: target.x, y: target.y, path, startDay: next.localDay, completeDay: next.localDay + travelDays });
+  robot.status = 'moving'; robot.assignedJob = movement.id; robot.path = path;
+  event(next, 'robot_move_queued', { jobId: movement.id, robotId: robot.id, x: target.x, y: target.y, travelDays });
+  return markRevision(next);
 }
 
 /** Local survey job: scheduled rover survey with deterministic discovery on completion. */
@@ -258,6 +345,32 @@ export function sendReport(state, text, kind = 'status') { const next = copyGame
 export function sendAuthorizationRequest(state, payload) { const next = copyGame(state); packet(next, 'authorization', { ...payload, capturedDay: next.localDay }, 'downlink', next.localDay, 'daneel'); return markRevision(next); }
 export function queueLocalIntent(state, payload) { const next = copyGame(state); const p = packet(next, 'intent', payload, 'uplink'); return markRevision(next); }
 export function applyDeliveredIntent(state, messageId) { const next = copyGame(state); const m = next.inbox.find((x) => x.id === messageId); if (!m) throw new Error('MESSAGE_NOT_DELIVERED'); m.handled = true; next.pendingDecision = { id: m.id, reason: 'new-instruction' }; return markRevision(next); }
+function localBuildSites(state, type, limit = 3) {
+  const spec = BUILDINGS[type]; if (!spec) return [];
+  const [width, height] = spec.footprint;
+  const tiles = new Map(state.tiles.map((tile) => [`${tile.x},${tile.y}`, tile]));
+  const grid = new Set(state.roads.map((road) => `${Array.isArray(road) ? road[0] : road.x},${Array.isArray(road) ? road[1] : road.y}`));
+  for (const building of state.buildings.filter((b) => b.status !== 'cancelled')) {
+    const buildingSpec = BUILDINGS[building.type]; if (!buildingSpec) continue;
+    for (let dx = 0; dx < buildingSpec.footprint[0]; dx += 1) for (let dy = 0; dy < buildingSpec.footprint[1]; dy += 1) grid.add(`${building.x + dx},${building.y + dy}`);
+  }
+  const flooded = floodFilter(state, state.localDay);
+  const results = [];
+  for (let y = 0; y < 32 && results.length < limit; y += 1) for (let x = 0; x < 32 && results.length < limit; x += 1) {
+    const cells = [];
+    for (let dx = 0; dx < width; dx += 1) for (let dy = 0; dy < height; dy += 1) cells.push([x + dx, y + dy]);
+    if (cells.some(([cx, cy]) => {
+      const tile = tiles.get(`${cx},${cy}`);
+      return !tile || tile.terrain !== 'regolith' || flooded(cx, cy);
+    })) continue;
+    if (occupied(state, x, y, width, height)) continue;
+    const gridAdjacent = cells.some(([cx, cy]) => [[cx, cy], [cx - 1, cy], [cx + 1, cy], [cx, cy - 1], [cx, cy + 1]].some(([gx, gy]) => grid.has(`${gx},${gy}`)));
+    if (gridAdjacent) results.push({ x, y, connectsToExistingGrid: true });
+  }
+  return results;
+}
+
 export function inspectProjection(state) {  const s = scenarioFor(state); const foodMonths = state.resources.food / Math.max(1, state.resources.population * 0.02);
-  return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status }) => ({ id, type, x, y, status })), jobs: state.jobs.map(({ id, type, status, completeDay }) => ({ id, type, status, completeDay })), metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
+  const safeBuildSites = Object.fromEntries(Object.keys(BUILDINGS).map((type) => [type, localBuildSites(state, type)]));
+  return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, charter: state.doctrine.charter, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status }) => ({ id, type, x, y, status })), jobs: state.jobs.map(({ id, type, status, completeDay }) => ({ id, type, status, completeDay })), safeBuildSites, productionRates: { ...(state.productionRates || {}) }, metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
 }

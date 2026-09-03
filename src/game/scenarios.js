@@ -72,7 +72,9 @@ export const SCENARIOS = {
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 0 },
     buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 12, 15), building('solar-1', 'solar', 18, 12)],
     robots: [robot('rover-1', 'survey', 10, 12), robot('builder-1', 'construction', 15, 19), robot('hauler-1', 'cargo', 20, 18)],
-    resources: { material: 120, food: 420, water: 780, power: 90, powerCapacity: 160, population: 42, capacity: 64, iridium: 0 },
+    // Earth cannot correct a bad landing plan for 4.37 years. These stocks provide
+    // roughly fifty-two years of food and water even if no local production is added.
+    resources: { material: 120, food: 16000, water: 24000, power: 90, powerCapacity: 160, population: 42, capacity: 64, iridium: 0 },
   },
   enough: {
     id: 'enough', title: 'The Meaning of Enough', location: 'New Alexandria', subtitle: 'A city has learned to grow. It has not learned when to stop.',
@@ -84,9 +86,20 @@ export const SCENARIOS = {
       { day: 420, type: 'equipment-fault', days: 90, facility: 'green-1' },
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 0 },
-    buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 11, 14), building('hab-2', 'habitat', 14, 15), building('solar-1', 'solar', 18, 12), building('green-1', 'greenhouse', 7, 18), building('reservoir-1', 'reservoir', 22, 20)],
+    // New Alexandria begins as a functioning civic-industrial district rather than a
+    // landing camp. Workshops add no food, water, or power production, so this makes
+    // the mature scenario visually legible without weakening its reserve challenge.
+    buildings: [
+      building('relay-1', 'relay', 15, 15),
+      building('hab-1', 'habitat', 11, 14), building('hab-2', 'habitat', 14, 15),
+      building('solar-1', 'solar', 18, 12), building('green-1', 'greenhouse', 7, 18), building('reservoir-1', 'reservoir', 22, 20),
+      building('workshop-1', 'workshop', 17, 17), building('workshop-2', 'workshop', 20, 16),
+      building('workshop-3', 'workshop', 13, 19), building('workshop-4', 'workshop', 10, 20),
+    ],
     robots: [robot('rover-1', 'survey', 8, 12), robot('builder-1', 'construction', 17, 18), robot('hauler-1', 'cargo', 20, 17)],
-    resources: { material: 180, food: 3600, water: 4200, power: 210, powerCapacity: 310, population: 180, capacity: 240, iridium: 0 },
+    // Reserve policy is intentionally long-horizon: drought and faults create the
+    // pressure here, not a colony that was doomed before Earth could hear from it.
+    resources: { material: 180, food: 30000, water: 50000, power: 210, powerCapacity: 310, population: 180, capacity: 240, iridium: 0 },
   },
   rightToDecide: {
     id: 'rightToDecide', title: 'The Right to Decide', location: 'Northern Reach', subtitle: 'Earth expects a shipment. The colony expects a future.',
@@ -101,7 +114,7 @@ export const SCENARIOS = {
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 4 },
     buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 12, 14), building('solar-1', 'solar', 18, 13), building('mine-1', 'mine', 24, 12), building('launch-1', 'launch', 7, 21)],
     robots: [robot('rover-1', 'survey', 9, 13), robot('builder-1', 'construction', 19, 18), robot('hauler-1', 'cargo', 22, 16)],
-    resources: { material: 240, food: 6200, water: 7400, power: 340, powerCapacity: 480, population: 330, capacity: 420, iridium: 320 },
+    resources: { material: 240, food: 125000, water: 185000, power: 340, powerCapacity: 480, population: 330, capacity: 420, iridium: 320 },
   },
 };
 

@@ -77,15 +77,34 @@ test('a human road order is validated again at arrival', () => {
   }
 });
 
-test('a road order across a wetland is rejected at arrival, not silently rerouted', () => {
+test('a contiguous road order across a wetland is rejected at arrival, not silently rerouted', () => {
   let s = createGame('firstLight');
-  const wet = s.tiles.find((t) => t.terrain === 'wetland' && t.x > 2 && t.y > 2);
-  const path = [{ x: 5, y: 8 }, { x: wet.x, y: wet.y }, { x: 8, y: 8 }];
+  const wet = s.tiles.find((t) => t.terrain === 'wetland' && t.x > 2 && t.y > 2 && [
+    [{ x: t.x - 1, y: t.y }, { x: t.x + 1, y: t.y }],
+    [{ x: t.x, y: t.y - 1 }, { x: t.x, y: t.y + 1 }],
+  ].some((pair) => pair.every((cell) => s.tiles.find((tile) => tile.x === cell.x && tile.y === cell.y)?.terrain === 'regolith')));
+  assert.ok(wet, 'scenario contains a wetland with a traversable approach');
+  const horizontal = [{ x: wet.x - 1, y: wet.y }, { x: wet.x + 1, y: wet.y }].every((cell) => s.tiles.find((tile) => tile.x === cell.x && tile.y === cell.y)?.terrain === 'regolith');
+  const path = horizontal
+    ? [{ x: wet.x - 1, y: wet.y }, { x: wet.x, y: wet.y }, { x: wet.x + 1, y: wet.y }]
+    : [{ x: wet.x, y: wet.y - 1 }, { x: wet.x, y: wet.y }, { x: wet.x, y: wet.y + 1 }];
   s = queueHumanRoad(s, path);
   s = integrate(s, LIGHT_DELAY_DAYS);
   const rejected = s.events.find((e) => e.type === 'human_order_rejected' && e.reason === 'MISSING_CONNECTION');
   assert.ok(rejected, 'invalid road order fails with a structured reason');
   assert.equal(s.jobs.filter((j) => j.type === 'road').length, 0);
+});
+
+test('a road corridor rejects gaps instead of teleporting across the map', () => {
+  const s = createGame('firstLight');
+  const start = s.tiles.find((tile) => tile.terrain === 'regolith' && s.tiles.some((other) => other.x === tile.x + 3 && other.y === tile.y && other.terrain === 'regolith'));
+  assert.ok(start, 'scenario contains a candidate corridor');
+  assert.throws(() => queueLocalRoad(s, [{ x: start.x, y: start.y }, { x: start.x + 3, y: start.y }]), (error) => error.code === 'INVALID_PATH');
+});
+
+test('Earth refuses to spend an uplink on a malformed road corridor', () => {
+  const s = createGame('firstLight');
+  assert.throws(() => queueHumanRoad(s, [{ x: 3, y: 3 }, { x: 5, y: 3 }]), (error) => error.code === 'INVALID_PATH');
 });
 
 test('the shared codebook definition travels in-band and gates policy registration', () => {

@@ -43,3 +43,26 @@ Constraints: original science-fiction design, no people, no weaponry, no waterma
 Generator: built-in ImageGen, 2026-09-03. Saved output: [colony-kit-v1.png](concepts/colony-kit-v1.png).
 
 Visual QA: the new relay, solar, greenhouse, and rover silhouettes are now reflected in the procedural Three.js scene through an illuminated relay beacon, panel-grid solar arrays, visible greenhouse crop rows, stronger terrain lighting, and native-wetland silhouette dressing. This remains a reference sheet, not a runtime texture atlas.
+
+## D — Title-screen colony panorama
+
+Use case: stylized-concept
+Asset type: original title-screen hero art for the playable browser demo.
+Primary request: a dense high-angle alien coastal colony with a central relay dish, habitat domes, hydroponic greenhouses, solar fields, reservoirs, workshops, service roads, small rovers, rocky regolith, and luminous teal shallows. Leave the left third darker for live title typography.
+Style/medium: premium grounded retro-futurist strategy-game key art, with warm double-sun late-afternoon light and cool teal ambient fill.
+Constraints: original composition, no people, words, logos, UI, watermark, or borrowed game assets.
+
+Generator: built-in ImageGen, 2026-09-03. Saved output: [title-hero-v2.png](concepts/title-hero-v2.png).
+
+Visual QA: this supports the title and mission-selection mood only. The interactive colony remains live Three.js geometry and cannot claim this raster scene as a gameplay screenshot.
+
+## E — Runtime facility sprites
+
+Use case: runtime transparent facility sprites for the live Three.js colony, generated in parallel.
+Asset type: isolated orthographic/isometric 3D strategy-game objects with genuine alpha backgrounds; each remains a selectable, telemetry-derived entity rather than part of a baked world image.
+
+Primary requests: (1) a ceramic-and-copper relay station with a teal beacon; (2) a compact three-dome habitat with service pipes and rover; (3) a solar array and hydroponic greenhouse utility cluster; (4) a reservoir, battery, and industrial service cluster. All use the established weathered ivory, copper, graphite, teal-glass visual language, no text, no logo, no people, no weapons, no watermark.
+
+Generator: built-in ImageGen, 2026-09-03. Saved outputs: [relay-v1.png](../public/sprites/relay-v1.png), [habitat-v1.png](../public/sprites/habitat-v1.png), [solar-greenhouse-v1.png](../public/sprites/solar-greenhouse-v1.png), and [utility-v1.png](../public/sprites/utility-v1.png).
+
+Runtime use: `ColonyScene` maps each observed facility type to one of these transparent sprites, retains a small physical plinth for selection and terrain contact, and falls back to procedural geometry only for an asset type without a matching sprite. This keeps the information boundary intact: in-flight Earth orders stay amber wireframes and unobserved local facilities never receive sprite art.

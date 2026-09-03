@@ -4,7 +4,7 @@ import { createGame } from '../src/game/state.js';
 import { integrate, sendReport, nextEarthArrivalDay, queueHumanIntent, constructBuilding, queueLocalRoad } from '../src/game/engine.js';
 import { loadGame, saveGame } from '../src/game/storage.js';
 import { createStore } from '../src/game/store.js';
-import { earthProjection } from '../src/game/projections.js';
+import { earthDemoGuide, earthMissionStatus, earthProjection } from '../src/game/projections.js';
 import { buildLocal } from './helpers.js';
 
 function fakeStorage(initial = {}) {
@@ -76,6 +76,21 @@ test('store coast advance caps at the arrival and nextEarthEvent jumps exactly t
   assert.ok(earth.packets.find((p) => p.kind === 'intent')?.status === 'delivered');
 });
 
+test('demo pace advances exactly one local day per 1× tick', () => {
+  const store = createStore({ storage: fakeStorage() });
+  store.advance(178);
+  store.toggleDemoPace();
+  const after = store.demoStep();
+  assert.equal(after.demoPace, true);
+  assert.equal(after.localDay, 179, 'one 1× tick advances one local day');
+  const next = store.demoStep();
+  assert.equal(next.localDay, 180, 'the authored event still lands on its exact day');
+  assert.equal(next.mission.interruption.startedAt, 180);
+  store.advance(180);
+  const steady = store.demoStep();
+  assert.equal(steady.localDay, 361, 'uneventful time does not silently jump ahead');
+});
+
 test('old saves without observedWorld migrate to the founding observation', () => {
   let s = createGame('firstLight');
   delete s.observedWorld; delete s.earthCoast;
@@ -90,11 +105,39 @@ test('reports carry the observed world and Earth projection exposes it only afte
   let s = createGame('firstLight');
   s = sendReport(s, 'all nominal');
   let proj = earthProjection(s);
-  assert.equal(proj.packets[0].status, 'in-transit');
+  assert.equal(proj.packets.length, 0, 'an in-flight downlink is not yet visible to Earth');
   const flight = s.packets.at(-1).arrivalDay - s.localDay;
   s = integrate(s, flight);
   proj = earthProjection(s);
   assert.ok(proj.packets[0].status === 'delivered');
   assert.equal(s.observedWorld.roads.length >= 1, true);
   assert.equal(s.reports.length, 1);
+});
+
+test('Earth UI cannot infer an unreceived mission result from the local simulation', () => {
+  let s = createGame('firstLight');
+  s = buildLocal(s, 'habitat'); s = buildLocal(s, 'solar'); s = buildLocal(s, 'battery');
+  s = integrate(s, 361);
+  assert.equal(s.mission.status, 'pending-confirmation');
+  assert.equal(earthMissionStatus(s).label, 'IN PROGRESS · OBSERVED');
+  assert.equal(earthProjection(s).packets.some((packet) => packet.kind === 'mission-result'), false);
+  const result = s.packets.find((packet) => packet.kind === 'mission-result');
+  s = integrate(s, result.arrivalDay - s.localDay);
+  assert.equal(earthMissionStatus(s).label, 'COMPLETE · CONFIRMED');
+  assert.equal(earthProjection(s).packets.some((packet) => packet.kind === 'mission-result'), true);
+});
+
+test('demo guide only advances from Earth-known connection and received relay facts', () => {
+  let s = createGame('firstLight');
+  assert.equal(earthDemoGuide(s).action, 'daneel');
+  s.connection.status = 'connected';
+  assert.equal(earthDemoGuide(s).action, 'pace');
+  s.demoPace = true;
+  // The local mission can already be resolved, but Earth cannot call it complete
+  // or offer a new instruction until a downlink has arrived.
+  s.mission.status = 'pending-confirmation';
+  s.mission.outcome = 'objective-secured';
+  assert.equal(earthDemoGuide(s).action, 'wait');
+  s.reports.push({ id: 'received-report', receivedDay: s.localDay, payload: { text: 'received' } });
+  assert.equal(earthDemoGuide(s).action, 'intent');
 });

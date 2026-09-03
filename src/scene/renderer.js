@@ -25,7 +25,7 @@ export function disposeObjectTree(root) {
     }
   });
   geometries.forEach((geometry) => geometry.dispose());
-  textures.forEach((texture) => texture.dispose());
+  textures.forEach((texture) => { if (!texture.userData?.persistentSceneTexture) texture.dispose(); });
   materials.forEach((material) => material.dispose());
   root.clear();
 }

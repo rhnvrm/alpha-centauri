@@ -3,7 +3,8 @@
 * { box-sizing: border-box; } body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at 40% 0%, #21332d 0, #111715 50%); } button, textarea, select { font: inherit; } button { cursor: pointer; color: inherit; } .eyebrow, small, .section-label, .map-hint, .dates, .metrics small, .footer-strip { font-family: 'DM Mono', monospace; letter-spacing: .1em; font-size: 10px; }
 .title-screen { max-width: 1040px; margin: auto; min-height: 100vh; padding: 10vh 7vw 5vh; position: relative; } .title-mark { color: var(--copper); border: 1px solid var(--copper); width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; margin-bottom: 38px; } .title-screen h1, .onboard h1, .debrief h1 { font-size: clamp(54px, 9vw, 110px); line-height: .92; font-weight: 500; margin: 16px 0 28px; letter-spacing: -.07em; } h1 em { color: var(--copper); font-style: normal; } .lede { color: #9f9d8c; font-size: 20px; line-height: 1.6; } .continue-card { display: block; text-align: left; margin-top: 34px; padding: 18px 20px; background: rgba(183, 131, 85, .1); border: 1px solid var(--copper); position: relative; min-width: 320px; } .continue-card:hover { background: rgba(183, 131, 85, .18); } .continue-card span { font: 10px 'DM Mono'; letter-spacing: .14em; color: var(--copper); } .continue-card strong { display: block; font-size: 16px; font-weight: 500; margin-top: 8px; } .continue-card small { display: block; margin-top: 6px; color: #9f9d8c; font-size: 10px; } .continue-card svg { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--copper); } .mission-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 72px; } .mission-card { position: relative; text-align: left; padding: 23px 22px 20px; background: rgba(24, 32, 30, .75); border: 1px solid #3c443d; min-height: 190px; transition: border .2s, transform .2s; } .mission-card:hover { border-color: var(--copper); transform: translateY(-3px); } .mission-card span { color: var(--copper); font-family: 'DM Mono'; } .mission-card strong { display: block; font-size: 18px; margin-top: 28px; font-weight: 500; } .mission-card small { color: var(--teal); display: block; margin-top: 6px; } .mission-card p { color: #9f9d8c; font-size: 12px; line-height: 1.5; max-width: 190px; } .mission-card svg { position: absolute; right: 18px; bottom: 21px; color: var(--copper); } .title-foot { color: #6d766f; font-size: 11px; margin-top: 42px; }
 .onboard, .debrief { min-height: 100vh; padding: 7vh 7vw; max-width: 1100px; margin: auto; } .onboard-copy { max-width: 950px; } .briefing { color: #c4c0aa; max-width: 620px; line-height: 1.7; font-size: 18px; } .delay-card, .outcome { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border: 1px solid #5b513d; background: rgba(183, 131, 85, .08); margin: 34px 0 26px; max-width: 640px; } .delay-card svg, .outcome svg { color: var(--copper); flex: none; } .delay-card strong, .outcome strong { display: block; } .delay-card span, .outcome span { display: block; color: #9f9d8c; font-size: 12px; margin-top: 6px; line-height: 1.5; } .prompt-card { border: 1px solid #3c443d; background: #101614; max-width: 920px; } .card-heading { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #3c443d; color: var(--teal); } .card-heading button, .footer-strip button { background: transparent; border: 0; color: var(--copper); font-size: 11px; display: inline-flex; gap: 7px; align-items: center; } pre { white-space: pre-wrap; max-height: 260px; overflow: auto; padding: 18px; margin: 0; font: 11px/1.7 'DM Mono', monospace; color: #b9b7a6; } .onboard-actions { display: flex; gap: 20px; align-items: center; margin-top: 28px; flex-wrap: wrap; } .primary, .transmit { background: var(--copper); border: 1px solid #d3a06e; color: #171b18; padding: 12px 16px; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; } .native-ok, .native-muted { font: 10px 'DM Mono'; color: var(--teal); } .native-muted { color: #777f76; } .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #69736b; margin-right: 7px; } .native-ok .status-dot, .connected .status-dot { background: var(--teal); box-shadow: 0 0 9px var(--teal); }
-.arrival-toast { position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%); z-index: 50; background: #1b2622; border: 1px solid var(--teal); color: #e2dcc4; padding: 10px 16px; font: 11px 'DM Mono'; letter-spacing: .08em; box-shadow: 0 6px 24px rgba(0,0,0,.5); } .status-dot.teal { background: var(--teal); box-shadow: 0 0 9px var(--teal); }
+.agency-card { display: grid; grid-template-columns: 1fr 1fr; max-width: 720px; border: 1px solid #665334; background: rgba(12, 15, 12, .82); margin: 0 0 26px; } .agency-card > div { padding: 15px 17px; } .agency-card > div + div { border-left: 1px solid #665334; background: rgba(69, 117, 105, .12); } .agency-card small { display: block; color: #b99b65; font: 9px 'DM Mono'; letter-spacing: .12em; } .agency-card strong { display: block; color: #dfd2b1; font: 14px Georgia, serif; margin: 6px 0; } .agency-card p { color: #a7aa96; font-size: 10px; line-height: 1.5; margin: 0; } .agency-card footer { grid-column: 1 / -1; border-top: 1px solid #4c4939; color: #6fb5a7; padding: 8px 17px; font: 8px 'DM Mono'; letter-spacing: .09em; }
+.arrival-toast { position: fixed; top: 108px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 8px; max-width: min(560px, calc(100vw - 32px)); background: #1b2622; border: 1px solid var(--teal); color: #e2dcc4; padding: 8px 10px 8px 13px; font: 11px 'DM Mono'; letter-spacing: .08em; box-shadow: 0 6px 24px rgba(0,0,0,.5); } .arrival-toast button { flex: none; width: 24px; height: 24px; padding: 0; border: 0; border-left: 1px solid rgba(120, 180, 170, .38); background: transparent; color: #b6dcd4; font-size: 18px; line-height: 1; } .arrival-toast button:hover { color: #fff2cf; background: rgba(120, 180, 170, .12); } .status-dot.teal { background: var(--teal); box-shadow: 0 0 9px var(--teal); }
 .tutorial-card { position: absolute; left: 14px; top: 14px; z-index: 4; background: rgba(16, 22, 20, .92); border: 1px solid #5b513d; padding: 12px 14px; width: 260px; } .tutorial-card .section-label button { background: transparent; border: 0; color: var(--copper); font-size: 12px; padding: 0; } .tut { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #2c352f; } .tut span { font: 11px 'DM Mono'; color: var(--ochre); min-width: 16px; } .tut strong { font-size: 11px; font-weight: 400; color: #b9b7a6; line-height: 1.45; } .tut.done span { color: var(--teal); } .tut.done strong { color: #6f7d74; text-decoration: line-through; text-decoration-color: #556; }
 .game-shell { min-height: 100vh; background: #111715; display: flex; flex-direction: column; } .minimap { position: absolute; right: 14px; bottom: 58px; z-index: 4; border: 1px solid #55634f; background: #16201d; cursor: crosshair; opacity: .92; } .minimap:hover { opacity: 1; border-color: var(--copper); }
 .modal-overlay { position: fixed; inset: 0; z-index: 40; background: rgba(8, 12, 10, .66); display: grid; place-items: center; } .doctrine-modal { width: min(560px, 92vw); max-height: 84vh; overflow: auto; background: #141b19; border: 1px solid #5b513d; padding: 22px 24px; } .modal-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #343e37; padding-bottom: 12px; margin-bottom: 14px; } .modal-head h2 { font-size: 18px; font-weight: 500; margin: 0; } .modal-head button { background: transparent; border: 0; color: var(--copper); font-size: 15px; } .doctrine-row { display: grid; grid-template-columns: 1fr 110px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid #2c352f; align-items: center; } .doctrine-row span { font: 11px 'DM Mono'; color: #c9c1a7; } .doctrine-row strong { font: 10px 'DM Mono'; text-align: right; } .doctrine-row strong.allowed { color: var(--teal); } .doctrine-row strong.denied { color: var(--rust); } .doctrine-row small { color: #7d877d; font-size: 9px; } .debrief-timeline { max-width: 680px; margin: 26px 0; border: 1px solid #3d473f; background: #141b19; padding: 16px 18px; } .timeline-row { display: flex; gap: 14px; padding: 6px 0; border-bottom: 1px solid #2c352f; align-items: baseline; } .timeline-row span { font: 9px 'DM Mono'; color: var(--ochre); min-width: 60px; } .timeline-row strong { font: 10px 'DM Mono'; text-transform: lowercase; color: #c9c1a7; } .timeline-row strong::first-letter { text-transform: uppercase; } .timeline-row small { color: #7d877d; font-size: 9px; margin-left: auto; text-align: right; } .topbar { height: 50px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; padding: 0 17px; border-bottom: 1px solid var(--line); background: #0e1412; } .brand { display: flex; gap: 10px; align-items: center; font: 12px 'DM Mono'; letter-spacing: .14em; } .brand span { color: var(--copper); font-size: 19px; } .mission-name { text-align: center; font: 12px 'DM Mono'; color: #bbb39b; } .dates { display: flex; justify-content: flex-end; gap: 22px; color: #9b9a8b; } .metrics { min-height: 68px; display: flex; align-items: center; gap: 32px; padding: 10px 18px; border-bottom: 1px solid #313b35; background: #17201d; } .metrics > div { min-width: 90px; } .metrics small { display: block; color: #7f897f; } .metrics strong { display: block; font: 17px 'DM Mono'; margin-top: 7px; } .metrics i { color: #7f897f; font-size: 10px; font-style: normal; } .objective { margin-left: auto; width: 180px !important; } .meter { height: 4px; background: #313b35; margin-top: 8px; } .meter i { display: block; height: 100%; background: var(--copper); }
@@ -21,8 +22,8 @@
 .scene-fallback summary { cursor: pointer; color: var(--copper); }
 .scene-fallback pre { max-height: 130px; padding: 12px 0; overflow-wrap: anywhere; }
 
-/* Original colony kit: mission selection gets a sense of place without putting raster art in the interactive map. */
-.title-screen::before { content: ''; position: absolute; pointer-events: none; right: -7vw; top: 6vh; width: min(62vw, 850px); height: min(62vw, 850px); background: linear-gradient(90deg, #111715 0%, rgba(17, 23, 21, .72) 30%, rgba(17, 23, 21, .04) 100%), url('../docs/concepts/colony-kit-v1.png') center / cover no-repeat; opacity: .48; mask-image: linear-gradient(90deg, transparent, #000 28%, #000 82%, transparent); z-index: 0; }
+/* Original colony panorama: title framing only; the interactive map remains live Three.js. */
+.title-screen::before { content: ''; position: absolute; pointer-events: none; right: -16vw; top: 0; width: min(110vw, 1500px); height: min(78vw, 930px); background: linear-gradient(90deg, #111715 0%, rgba(17, 23, 21, .92) 26%, rgba(17, 23, 21, .32) 54%, rgba(17, 23, 21, .02) 82%), url('../docs/concepts/title-hero-v2.png') center right / cover no-repeat; opacity: .72; mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 88%, transparent 100%); z-index: 0; }
 .title-screen > * { position: relative; z-index: 1; }
 @media (max-width: 820px) { .title-screen::before { opacity: .2; width: 100vw; right: 0; } }
 
@@ -47,3 +48,627 @@
 .build-tools button, .time-controls button { background: #1d2a24; }
 .build-tools button:hover, .time-controls button:hover { background: #293a31; }
 @media (min-width: 1100px) { .play-body { grid-template-columns: minmax(0, 1fr) 365px; } .map-panel { min-height: 620px; } }
+
+/* The objective must stay visible after onboarding; it is an Earth-authored mandate, not telemetry. */
+.mission-charter { padding: 12px 17px; border-bottom: 1px solid #38473d; background: linear-gradient(100deg, rgba(183, 131, 85, .12), rgba(24, 38, 31, .88)); }
+.mission-charter .section-label { color: var(--ochre); margin-bottom: 6px; }
+.mission-charter p { margin: 0; color: #d8d1b6; font-size: 11px; line-height: 1.5; }
+.mission-charter small { display: block; margin-top: 7px; color: #7f897f; font: 8px/1.35 'DM Mono'; letter-spacing: .04em; }
+.demo-guide { padding: 12px 17px; border-bottom: 1px solid #645d48; background: rgba(13, 22, 18, .9); }
+.demo-guide .section-label { color: #c9a66c; margin-bottom: 6px; }
+.demo-guide strong { display: block; color: #ded3b8; font: 11px 'DM Mono'; letter-spacing: .03em; }
+.demo-guide p { margin: 7px 0 9px; color: #aeb3a1; font-size: 10px; line-height: 1.45; }
+.demo-guide button { width: 100%; padding: 8px; border: 1px solid #8c7045; color: #d8bd87; background: rgba(156, 112, 49, .12); font: 9px 'DM Mono'; letter-spacing: .08em; }
+.demo-guide small { color: #9a957d; font: 8px 'DM Mono'; }
+
+/* Command targeting: build orders require a deliberate, Earth-visible map target. */
+.dates { gap: 18px; color: #d8d2b9; }
+.dates > span { display: grid; gap: 2px; text-align: right; font: 11px 'DM Mono'; letter-spacing: .04em; }
+.dates small { color: #7f897f; font: 8px 'DM Mono'; letter-spacing: .1em; }
+.dates .observed-date { color: var(--teal); border-left: 1px solid #4b584f; padding-left: 18px; }
+.build-tools .queue-build:not(:disabled) { border-color: var(--copper); color: #f0d6a7; }
+.build-tools button:disabled { cursor: not-allowed; opacity: .48; border-style: dashed; }
+button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+/* Art-directed command desk: dense instrument panels, paper correspondence, and a visible light-delay route. */
+.game-shell { background: #0a100e; background-image: linear-gradient(rgba(120, 180, 170, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 180, 170, .018) 1px, transparent 1px); background-size: 28px 28px; }
+.topbar { height: 43px; border: 1px solid #74623f; border-bottom-color: #9d8150; margin: 2px 2px 0; padding: 0 14px; background: linear-gradient(90deg, #0a100e, #111a16 50%, #090e0d); box-shadow: inset 0 1px rgba(245, 208, 140, .08); }
+.brand { color: #d0b17a; font-size: 11px; }
+.brand span { font-size: 15px; }
+.mission-name { color: #c7b38b; letter-spacing: .17em; font-size: 10px; }
+.metrics { min-height: 56px; gap: 0; padding: 0 14px; background: rgba(14, 23, 19, .94); border-bottom-color: #625c49; }
+.metrics > div { min-width: 105px; padding: 8px 18px 7px 0; margin-right: 18px; border-right: 1px solid rgba(132, 125, 97, .32); }
+.metrics > div:last-child { border-right: 0; margin-right: 0; }
+.metrics strong { margin-top: 3px; font-size: 15px; letter-spacing: .02em; }
+.metrics small { font-size: 8px; color: #9a957d; }
+.objective { padding-left: 18px !important; }
+.map-panel { border-right-color: #736443; }
+.map-panel::before { content: 'EARTH-SIDE RECONSTRUCTION · NO LIVE COLONY VIEW'; position: absolute; z-index: 3; left: 14px; top: 14px; padding: 6px 9px; color: #d2b77e; border-left: 2px solid #bd8b43; background: rgba(8, 14, 12, .72); font: 8px 'DM Mono'; letter-spacing: .12em; pointer-events: none; }
+.map-status { top: 14px; border-color: #816f48; color: #d1bd91; }
+.tutorial-card { top: 47px; width: 278px; border-left: 3px solid var(--ochre); }
+.map-hint { border-color: #675d45; color: #cbb88e; }
+.correspondence { border-left: 1px solid #887349; background-color: #0e1512; background-image: radial-gradient(rgba(195, 168, 105, .06) .6px, transparent .6px), linear-gradient(180deg, rgba(191, 141, 65, .08), transparent 28%); background-size: 5px 5px, auto; }
+.aside-head { padding: 18px 17px 13px; border-bottom-color: #645d48; background: linear-gradient(90deg, rgba(170, 121, 57, .16), transparent 72%); }
+.aside-head h2 { color: #d5bd86; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; letter-spacing: .025em; }
+.aside-head .eyebrow { color: #ad9463; font-size: 8px; }
+.mission-charter { border-bottom-color: #645d48; background: rgba(30, 34, 27, .78); }
+.letters { padding: 14px 17px 16px; scrollbar-color: #9d7947 #111814; }
+.letters > .section-label, .composer > .section-label { color: #c9a66c; padding-bottom: 7px; border-bottom: 1px solid rgba(158, 131, 80, .45); }
+.letter { position: relative; padding: 17px 17px 14px; border: 1px solid #92754a; border-left: 4px solid #bc8744; box-shadow: 0 8px 19px rgba(0, 0, 0, .26), inset 0 0 34px rgba(118, 82, 37, .11); background: linear-gradient(135deg, #d6c39c, #bea574); color: #29251e; }
+.letter::after { content: '◌'; position: absolute; right: 13px; bottom: 10px; color: rgba(74, 59, 36, .35); font-size: 24px; }
+.letter p { position: relative; z-index: 1; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.42; }
+.letter small { position: relative; z-index: 1; padding-top: 8px; border-top: 1px solid rgba(81, 66, 39, .28); color: #625438; }
+.letter.empty { border: 1px dashed #50675b; border-left: 4px solid var(--teal); box-shadow: none; background: linear-gradient(135deg, #17261f, #122019); color: #b7beaa; }
+.letter.empty::after { display: none; }
+.packet { position: relative; margin: 0; padding: 7px 0 7px 2px; border-bottom: 1px solid rgba(107, 109, 87, .25); }
+.packet-line { width: 8px; height: 8px; border-color: #c39656; box-shadow: 0 0 0 3px rgba(195, 150, 86, .1); }
+.packet strong { color: #d2c09b; letter-spacing: .06em; }
+.composer { padding: 14px 17px 17px; border-top-color: #756747; background: linear-gradient(180deg, rgba(174, 123, 54, .13), #0d1411 40%); }
+.signal-route { display: grid; grid-template-columns: auto 1fr auto; gap: 7px; align-items: center; margin: 9px 0 11px; color: #a68d5c; font: 8px 'DM Mono'; letter-spacing: .1em; }
+.signal-route i { height: 1px; background: repeating-linear-gradient(90deg, #b88948 0 4px, transparent 4px 8px); }
+.signal-route b { grid-column: 1 / -1; color: #d0a75e; font-weight: 400; text-align: center; }
+.composer textarea { min-height: 112px; border-color: #917547; box-shadow: inset 0 0 22px rgba(0, 0, 0, .28); }
+.arrival { padding: 7px 0; border-bottom: 1px solid rgba(151, 119, 70, .35); }
+.transmit { border-color: #d0a05c; background: linear-gradient(90deg, #b77b31, #d39c4b); box-shadow: inset 0 1px rgba(255,255,255,.18), 0 5px 18px rgba(0,0,0,.22); letter-spacing: .1em; }
+.bottom-deck { min-height: 128px; border-top-color: #806d48; background: linear-gradient(180deg, #111a16, #090f0d); }
+.selection, .build-tools, .time-controls { padding: 13px 16px; border-right-color: #625d48; }
+.selection { background: linear-gradient(135deg, rgba(178, 132, 67, .08), transparent 55%); }
+.selection-glyph { border-color: #bc8c48; background: rgba(189, 140, 72, .08); box-shadow: inset 0 0 16px rgba(195, 151, 83, .1); }
+.selection button { margin-top: 8px; border: 1px solid #80653d; background: #211b12; color: #e2c184; padding: 6px 8px; font: 9px 'DM Mono'; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 5px; }
+.selection button:hover, .selection button.command-active { border-color: var(--teal); color: #a9ddd3; background: #15251f; }
+.build-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-content: start; }
+.build-tools .section-label, .build-tools select { grid-column: 1 / -1; margin: 0; }
+.build-tools select { background: #111a16; border-color: #655b43; }
+.build-tools button { justify-content: center; min-height: 29px; background: linear-gradient(180deg, #26342b, #17231d); }
+.time-controls { align-content: start; }
+.speed-controls { display: inline-flex; gap: 3px; align-items: stretch; border-left: 1px solid rgba(157, 124, 76, .38); padding-left: 6px; }
+.time-controls .speed-controls button { min-width: 31px; justify-content: center; padding-inline: 7px; }
+.time-label { width: 100%; color: #c6a66d; padding-bottom: 7px; margin: 0 0 2px; border-bottom: 1px solid rgba(157, 124, 76, .38); }
+.time-label span:last-child { color: var(--teal); }
+.time-controls button { background: linear-gradient(180deg, #1d2d25, #111c17); }
+.footer-strip { border-top: 1px solid #4f5748; background: #080d0b; color: #8d927d; }
+@media (max-width: 820px) { .topbar { margin: 0; height: 50px; } .dates { gap: 8px; } .dates .observed-date { padding-left: 8px; } .metrics > div { min-width: 92px; padding-right: 10px; margin-right: 10px; } .map-panel::before { top: 12px; max-width: calc(100% - 28px); } .tutorial-card { top: 44px; } .build-tools { grid-template-columns: 1fr; } .build-tools button { grid-column: 1; } }
+
+/* Interaction layout: the map and its controls remain one reachable workflow at every width. */
+.play-body { grid-template-rows: minmax(520px, 1fr) auto; min-height: 0; }
+.map-panel, .correspondence { min-height: 0; }
+.bottom-deck { grid-column: 1 / -1; grid-row: 2; }
+.bottom-deck .selection, .bottom-deck .build-tools, .bottom-deck .time-controls { min-width: 0; }
+.selected-line small { overflow-wrap: anywhere; }
+.build-tools button, .time-controls button { min-height: 34px; touch-action: manipulation; }
+.time-controls button { padding-inline: 10px; }
+
+@media (min-width: 821px) and (max-width: 1120px) {
+  .play-body { grid-template-columns: minmax(0, 1fr) 330px; }
+  .bottom-deck { grid-template-columns: minmax(210px, 1fr) minmax(260px, 1.15fr) minmax(245px, 1fr); }
+  .selection, .build-tools, .time-controls { padding-inline: 12px; }
+  .time-controls { gap: 5px; }
+  .time-controls button { padding-inline: 8px; }
+}
+
+@media (max-width: 820px) {
+  .play-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(390px, 52vh) auto auto; }
+  .map-panel { grid-row: 1; min-height: 390px; }
+  .bottom-deck { grid-row: 2; grid-column: 1; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); min-height: 0; }
+  .selection { grid-column: 1 / -1; }
+  .build-tools { grid-column: 1; }
+  .time-controls { grid-column: 2; }
+  .correspondence { grid-row: 3; grid-column: 1; min-height: 520px; border-top: 1px solid #887349; border-left: 0; }
+  .map-hint { max-width: calc(100% - 28px); flex-wrap: wrap; gap: 7px 13px; }
+  .map-hint::after { display: none; }
+}
+
+@media (max-width: 560px) {
+  .agency-card { grid-template-columns: 1fr; }
+  .agency-card > div + div { border-left: 0; border-top: 1px solid #665334; }
+  .play-body { grid-template-rows: minmax(360px, 48vh) auto auto; }
+  .map-panel { min-height: 360px; }
+  .map-status { top: 45px; right: 10px; max-width: calc(100% - 20px); font-size: 8px; }
+  .tutorial-card { top: 78px; left: 10px; width: min(278px, calc(100% - 20px)); }
+  .bottom-deck { grid-template-columns: 1fr; }
+  .selection, .build-tools, .time-controls { grid-column: 1; border-right: 0; }
+  .selection { padding-bottom: 10px; }
+  .build-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .build-tools .section-label, .build-tools select { grid-column: 1 / -1; }
+  .build-tools button { grid-column: auto; font-size: 8px; padding-inline: 6px; }
+  .time-controls { padding-top: 10px; }
+  .time-controls button { min-height: 38px; }
+}
+
+/* Basalt field kit: an original regolith texture replaces the generic green glow. */
+body { background: #0c0d0b url('/textures/alien-regolith-v1.png') center / 680px repeat; background-blend-mode: multiply; }
+.game-shell { background-color: #0d0e0c; background-image: url('/textures/alien-regolith-v1.png'); background-size: 760px; background-repeat: repeat; background-blend-mode: soft-light; }
+.topbar { background: #11110e url('/textures/alien-regolith-v1.png') center / 380px repeat; background-blend-mode: multiply; }
+.metrics { background: #16140f url('/textures/alien-regolith-v1.png') 20% 35% / 520px repeat; background-blend-mode: soft-light; }
+.map-panel { background: #282117; box-shadow: inset 0 0 80px rgba(10, 8, 5, .48); }
+.map-panel::after { box-shadow: inset 0 0 50px rgba(13, 9, 5, .4); }
+.map-hint, .map-status { background: rgba(15, 14, 10, .84); border-color: rgba(169, 132, 73, .58); }
+.correspondence { background-color: #12110d; background-image: url('/textures/alien-regolith-v1.png'); background-size: 560px; background-blend-mode: soft-light; }
+.aside-head, .mission-charter, .composer { background: rgba(19, 17, 12, .9); }
+.letter.empty { background: #1a1a15; border-left-color: #78a99d; }
+.bottom-deck { background-color: #11110d; background-image: url('/textures/alien-regolith-v1.png'); background-size: 520px; background-blend-mode: soft-light; }
+.selection { background: rgba(42, 32, 19, .32); }
+.build-tools button, .time-controls button { background: #201b13; }
+.build-tools button:hover, .time-controls button:hover { background: #322716; }
+.build-tools select, .composer textarea { background: #12110d; }
+.footer-strip { background: #0b0b09; }
+
+/* Command workflow: expose only Earth-authored packets, but make their queue and
+   arrival legible at a glance. The physical controls are intentionally large
+   enough for a first-time player to use without hunting for a hidden shortcut. */
+.next-arrival { display: flex; gap: 9px; align-items: flex-start; margin: 12px 0 2px; padding: 9px 10px; border: 1px solid rgba(120, 180, 170, .54); border-left: 3px solid var(--teal); background: rgba(41, 83, 72, .22); color: #9fd4ca; }
+.next-arrival svg { flex: none; margin-top: 2px; }
+.next-arrival strong, .next-arrival span { display: block; }
+.next-arrival strong { font: 9px 'DM Mono'; letter-spacing: .1em; }
+.next-arrival span { margin-top: 4px; color: #c4c5ad; font: 8px/1.45 'DM Mono'; letter-spacing: .035em; }
+.packet:first-of-type { border-top: 1px solid rgba(107, 109, 87, .25); }
+.packet.delivered { opacity: .68; }
+.transmit kbd, .time-controls kbd { display: inline-block; padding: 2px 4px; border: 1px solid rgba(65, 52, 32, .55); border-radius: 2px; background: rgba(255, 247, 216, .18); color: currentColor; font: 7px 'DM Mono'; letter-spacing: 0; line-height: 1; }
+.time-controls kbd { margin-left: 2px; border-color: rgba(151, 119, 70, .5); color: #d6bd8c; background: rgba(0, 0, 0, .16); }
+.composer textarea::placeholder { color: #93866d; opacity: 1; }
+.queue-build:not(:disabled) { box-shadow: inset 0 0 0 1px rgba(224, 178, 99, .12), 0 0 14px rgba(183, 131, 85, .1); }
+.map-hint { line-height: 1.45; }
+@media (max-width: 560px) { .next-arrival { margin-top: 10px; } .transmit kbd { display: none; } }
+
+/*
+  Readable command desk
+  ---------------------
+  The first art pass treated nearly every HUD string as instrument microtype.
+  That looked suitably dense in isolation but made the desk tiring at a normal
+  1440px play size.  This pass keeps the engraved/brass language from the
+  concept painting while reserving small mono text for metadata only: headings
+  are ceremonial serif, values are clear mono, and instructions are a usable
+  sans-serif reading size.
+*/
+.game-shell {
+  --hud-paper: #ead9b3;
+  --hud-ink: #17140f;
+  --hud-brass: #d5ae6d;
+  --hud-muted: #aaa58e;
+  --hud-line: rgba(189, 157, 96, .56);
+  color: var(--hud-paper);
+}
+
+.topbar {
+  height: 50px;
+  padding-inline: 18px;
+  border-color: #8f7548;
+  border-bottom-color: #c29a5a;
+  background-image: linear-gradient(90deg, rgba(7, 10, 8, .9), rgba(28, 28, 20, .88) 48%, rgba(8, 10, 8, .9)), url('/textures/alien-regolith-v1.png');
+}
+.brand { gap: 11px; color: var(--hud-brass); }
+.brand span { font-size: 18px; line-height: 1; }
+.brand strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: .13em;
+  text-shadow: 0 1px 0 #000;
+}
+.mission-name {
+  color: #d8c49b;
+  font: 11px/1 'DM Mono', monospace;
+  letter-spacing: .16em;
+}
+.dates { gap: 22px; }
+.dates > span { font-size: 12px; line-height: 1.15; }
+.dates small { font-size: 8.5px; color: #b5aa89; }
+.dates .observed-date { border-left-color: var(--hud-line); color: #8ed0c1; }
+
+.metrics {
+  min-height: 66px;
+  padding-inline: 18px;
+  background-color: rgba(20, 19, 14, .96);
+  border-bottom-color: var(--hud-line);
+}
+.metrics > div { min-width: 120px; padding: 10px 20px 9px 0; margin-right: 20px; }
+.metrics small { font-size: 9px; letter-spacing: .12em; color: #b2ab90; }
+.metrics strong { margin-top: 5px; color: #f1e1bb; font-size: 18px; line-height: 1; letter-spacing: .035em; }
+.metrics i { font-size: 10px; color: #aaa48d; }
+.objective { min-width: 205px !important; }
+.meter { height: 5px; margin-top: 9px; background: rgba(210, 186, 128, .17); }
+
+.map-panel::before { padding: 8px 11px; font-size: 9px; color: #e2c889; border-left-width: 3px; }
+.map-status, .map-hint { font-size: 9.5px; letter-spacing: .09em; padding: 9px 11px; color: #e1d0a5; }
+.map-hint { gap: 18px; }
+.tutorial-card { width: 300px; padding: 14px 16px; }
+.tutorial-card .section-label { font-size: 10px; }
+.tut { gap: 11px; padding: 8px 0; }
+.tut span { font-size: 12px; }
+.tut strong { color: #e0d8be; font-size: 12px; line-height: 1.42; }
+
+.correspondence { border-left-color: #a08150; }
+.aside-head { padding: 20px 19px 15px; }
+.aside-head .eyebrow { font-size: 9px; letter-spacing: .13em; }
+.aside-head h2 {
+  color: #e4c98f;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: .035em;
+}
+.connected, .disconnected { font-size: 9.5px; letter-spacing: .09em; }
+.mission-charter, .demo-guide { padding: 14px 19px; }
+.section-label { font-size: 10px; line-height: 1.2; letter-spacing: .12em; }
+.mission-charter .section-label, .demo-guide .section-label { margin-bottom: 8px; }
+.mission-charter p { color: #e3dac0; font-size: 12.5px; line-height: 1.5; }
+.mission-charter small { color: #b2ad96; font-size: 9px; line-height: 1.45; }
+.demo-guide strong { color: #efe1bf; font-size: 11.5px; line-height: 1.35; }
+.demo-guide p { color: #cbc6ad; font-size: 11.5px; line-height: 1.48; }
+.demo-guide button { min-height: 34px; font-size: 10px; }
+.letters { padding: 17px 19px 18px; }
+.letters > .section-label, .composer > .section-label { padding-bottom: 9px; }
+.letter { padding: 18px 18px 16px; }
+.letter p { font-size: 15.5px; line-height: 1.46; }
+.letter small { font-size: 9px; line-height: 1.35; }
+.letter.empty p { color: #ccd0bd; font-family: Manrope, system-ui, sans-serif; font-size: 12.5px; }
+.packet { gap: 11px; padding: 9px 0 9px 2px; }
+.packet strong { font-size: 10px; line-height: 1.2; }
+.packet small { font-size: 9px; line-height: 1.45; }
+.next-arrival { margin-top: 14px; padding: 10px 11px; }
+.next-arrival strong { font-size: 9.5px; }
+.next-arrival span { font-size: 9px; line-height: 1.45; }
+
+.composer { padding: 16px 19px 19px; }
+.signal-route { margin: 10px 0 13px; font-size: 9px; }
+.composer textarea { min-height: 128px; padding: 13px; font-size: 14px; line-height: 1.55; }
+.composer textarea::placeholder { color: #b3a383; }
+.arrival { padding: 9px 0; font-size: 10px; line-height: 1.45; }
+.transmit { min-height: 42px; padding: 11px 14px; font-size: 11px; letter-spacing: .12em; }
+.protocol-compose { min-height: 35px; font-size: 10px; line-height: 1.35; }
+
+.bottom-deck { min-height: 142px; border-top-color: #9f814e; }
+.selection, .build-tools, .time-controls { padding: 15px 18px; }
+.selection .section-label, .build-tools .section-label, .time-controls .section-label { font-size: 10px; }
+.selected-line { gap: 13px; margin-top: 10px; }
+.selection-glyph { width: 43px; height: 43px; font-size: 23px; }
+.selected-line strong { color: #efe1bc; font-size: 14px; line-height: 1.25; }
+.selected-line small, .muted { color: #b6b29c; font-size: 11px; line-height: 1.42; }
+.build-tools select { min-height: 34px; padding: 8px 9px; font-size: 11px; color: #e4d4af; }
+.build-tools button, .time-controls button, .selection button {
+  min-height: 35px;
+  padding: 8px 10px;
+  font-size: 10px;
+  letter-spacing: .045em;
+}
+.time-label { padding-bottom: 9px; margin-bottom: 4px; }
+.time-controls .speed-controls button { min-width: 36px; font-size: 11px; }
+.footer-strip { min-height: 37px; padding-inline: 18px; font-size: 9px; letter-spacing: .09em; }
+
+@media (min-width: 1100px) {
+  .play-body { grid-template-columns: minmax(0, 1fr) 390px; }
+  .metrics > div { min-width: 128px; }
+}
+@media (max-width: 820px) {
+  .topbar { height: 52px; padding-inline: 13px; }
+  .brand strong { font-size: 12px; }
+  .metrics { min-height: 62px; padding-inline: 13px; }
+  .metrics > div { min-width: 105px; padding-right: 13px; margin-right: 13px; }
+  .metrics strong { font-size: 16px; }
+  .correspondence { border-left: 0; }
+}
+@media (max-width: 560px) {
+  .brand strong { font-size: 11px; letter-spacing: .09em; }
+  .dates > span { font-size: 10px; }
+  .tutorial-card { width: min(300px, calc(100% - 20px)); }
+  .aside-head h2 { font-size: 23px; }
+  .letter p { font-size: 15px; }
+  .bottom-deck { min-height: 0; }
+}
+
+/*
+  Reference lock: keep the desk feeling like a built instrument, not a themed
+  dashboard.  The colony art carries atmosphere; the HUD is deliberately
+  flat, sectional, and quiet so a player can scan it at RTS speed.
+*/
+.game-shell {
+  --hud-paper: #ded0ad;
+  --hud-ink: #16140f;
+  --hud-brass: #c9a365;
+  --hud-muted: #98947f;
+  --hud-line: #69583a;
+  background: #0b0d0b;
+}
+.topbar {
+  height: 42px;
+  margin: 2px 2px 0;
+  padding-inline: 15px;
+  background: #10110e;
+  background-image: none;
+  border: 1px solid #6f5a36;
+  border-bottom-color: #9d7a43;
+  box-shadow: none;
+}
+.brand { gap: 9px; color: #d0aa68; }
+.brand span { font-size: 15px; }
+.brand strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: .15em;
+  text-shadow: none;
+}
+.mission-name { color: #c7b28a; font-size: 10px; letter-spacing: .17em; }
+.dates { gap: 17px; }
+.dates > span { font-size: 10px; }
+.dates small { color: #92876d; font-size: 7.5px; }
+.dates .observed-date { border-left-color: #5d513d; color: #8eb9ae; }
+
+.metrics {
+  min-height: 58px;
+  padding: 0 15px;
+  gap: 0;
+  background: #141510;
+  border-bottom: 1px solid #51442e;
+}
+.metrics > div {
+  min-width: 104px;
+  margin: 0;
+  padding: 9px 16px 8px 0;
+}
+.metrics > div + div { border-left: 1px solid rgba(121, 101, 64, .32); padding-left: 16px; }
+.metrics small { color: #9f957d; font-size: 8px; letter-spacing: .1em; }
+.metrics strong { margin-top: 4px; color: #e7d8b4; font-size: 16px; letter-spacing: .02em; }
+.metrics i { color: #97917d; font-size: 9px; }
+.objective { min-width: 198px !important; }
+.meter { height: 3px; margin-top: 7px; background: #353124; }
+.meter i { background: #ba8a3e; }
+
+.map-panel { border-right-color: #665538; box-shadow: none; }
+.map-panel::after { box-shadow: inset 0 0 34px rgba(8, 8, 5, .28); }
+.map-panel::before {
+  padding: 6px 8px;
+  color: #d2b278;
+  border-left-width: 2px;
+  background: rgba(11, 12, 9, .9);
+  font-size: 8px;
+}
+.map-status, .map-hint {
+  padding: 7px 9px;
+  color: #cdbd98;
+  background: rgba(10, 11, 9, .9);
+  border-color: #5c513b;
+  box-shadow: none;
+  backdrop-filter: none;
+  font-size: 8px;
+}
+.map-hint::after { color: #8db7aa; }
+.tutorial-card {
+  width: 274px;
+  padding: 11px 13px;
+  background: rgba(13, 14, 11, .94);
+  border-color: #76613d;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.tutorial-card .section-label { font-size: 8px; }
+.tut { padding: 6px 0; gap: 9px; }
+.tut span { color: #ca9c50; font-size: 10px; }
+.tut strong { color: #d0c7ad; font-size: 10px; line-height: 1.35; }
+
+.correspondence {
+  background: #11120f;
+  border-left: 1px solid #7a623c;
+}
+.aside-head {
+  padding: 16px 17px 13px;
+  background: #10110e;
+  border-bottom-color: #4c4230;
+}
+.aside-head .eyebrow { color: #a68a57; font-size: 8px; }
+.aside-head h2 {
+  margin-top: 5px;
+  color: #d2b176;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 21px;
+  letter-spacing: .05em;
+}
+.connected, .disconnected { font-size: 8px; }
+.mission-charter, .demo-guide {
+  padding: 11px 17px;
+  background: #151510;
+  border-bottom-color: #4a402e;
+}
+.section-label { color: #b29561; font-size: 8px; letter-spacing: .11em; }
+.mission-charter p { color: #d1c3a5; font-size: 11px; line-height: 1.43; }
+.mission-charter small, .demo-guide p { color: #989681; font-size: 9px; line-height: 1.4; }
+.demo-guide strong { color: #d5c6a6; font-size: 10px; }
+.demo-guide button {
+  min-height: 29px;
+  padding: 6px 8px;
+  color: #d2af70;
+  background: #211b11;
+  border-color: #81643b;
+  box-shadow: none;
+  font-size: 8px;
+}
+.letters { padding: 14px 17px; }
+.letters > .section-label, .composer > .section-label { padding-bottom: 7px; }
+.letter {
+  padding: 15px 15px 13px;
+  background: #d9c7a3;
+  border: 1px solid #a88654;
+  border-left: 3px solid #b37b35;
+  box-shadow: none;
+}
+.letter::after { content: none; }
+.letter p { color: #292419; font-family: Georgia, 'Times New Roman', serif; font-size: 13px; line-height: 1.4; }
+.letter small { color: #6c5838; font-size: 8px; }
+.report-kind { margin-bottom: 6px; color: #8b6230; font: 9px 'DM Mono', monospace; letter-spacing: .12em; }
+.letter .report-transit { display: block; margin-top: 4px; color: #81704d; }
+.letter.empty { background: #191b16; border: 1px solid #4d5447; border-left: 3px solid #6f9a90; }
+.letter.empty p { color: #a7aa98; font-family: Manrope, system-ui, sans-serif; font-size: 10px; }
+.packet { padding: 7px 0 7px 1px; gap: 9px; }
+.packet strong { color: #c3b798; font-size: 8.5px; }
+.packet small { color: #888b7b; font-size: 8px; }
+.next-arrival { padding: 8px 9px; background: #171812; border-color: #69583b; }
+.next-arrival strong { color: #c7a66b; font-size: 8px; }
+.next-arrival span { color: #aaa28b; font-size: 8px; }
+
+.composer { padding: 13px 17px 16px; background: #10110e; border-top-color: #554831; }
+.signal-route { margin: 8px 0 10px; color: #a88956; font-size: 8px; }
+.composer textarea {
+  min-height: 104px;
+  padding: 10px;
+  color: #ded2b5;
+  background: #0c0d0b;
+  border-color: #7f6239;
+  box-shadow: none;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.composer textarea::placeholder { color: #86785f; }
+.arrival { padding: 7px 0; color: #c49c59; font-size: 9px; }
+.transmit {
+  min-height: 37px;
+  color: #22190d;
+  background: #b98842;
+  border-color: #d5aa62;
+  box-shadow: none;
+  font-size: 9px;
+}
+.transmit:not(:disabled):hover { background: #c99a51; box-shadow: none; }
+.protocol-compose { min-height: 30px; background: #131914; border-style: solid; font-size: 8px; }
+
+.bottom-deck { min-height: 112px; background: #10110e; border-top-color: #80663e; }
+.selection, .build-tools, .time-controls { padding: 12px 15px; border-right-color: #4d4230; }
+.selection .section-label, .build-tools .section-label, .time-controls .section-label { font-size: 8px; }
+.selected-line { margin-top: 7px; gap: 10px; }
+.selection-glyph { width: 38px; height: 38px; color: #c6a062; border-color: #82643c; font-size: 18px; }
+.selected-line strong { color: #d8caab; font-size: 12px; }
+.selected-line small, .muted { color: #979783; font-size: 9px; }
+.build-tools select { min-height: 30px; padding: 6px 8px; background: #191912; border-color: #625438; color: #cfc09f; font-size: 9px; }
+.build-tools button, .time-controls button, .selection button {
+  min-height: 30px;
+  padding: 6px 8px;
+  background: #1a1911;
+  border-color: #625238;
+  color: #cbb98f;
+  box-shadow: none;
+  font-size: 8px;
+}
+.build-tools button:hover, .time-controls button:hover, .selection button:hover { background: #272215; border-color: #b58a48; }
+
+/* Decision support: a build order is a delayed commitment, so its resource effect is
+   visible at the chooser instead of hidden in a rules sheet. */
+.project-impact { display: grid; gap: 3px; margin: 2px 0 7px; padding: 7px 8px; border-left: 2px solid #7da79b; background: #121914; color: #c8c7b2; font: 8px/1.25 'DM Mono', monospace; letter-spacing: .035em; }
+.project-impact .impact-head { display: flex; justify-content: space-between; gap: 8px; color: #8fa39b; font-size: 7px; }
+.project-impact .impact-head b { color: #c8a56c; font-weight: 500; text-align: right; }
+.project-impact > strong { color: #e6d8b4; font-size: 9px; font-weight: 500; letter-spacing: .065em; }
+.project-impact > span { color: #b9b69f; }
+.project-impact > small { color: #849189; font: inherit; font-size: 7px; }
+.facility-readout { display: grid; gap: 2px; margin-top: 7px; padding: 5px 7px; border-left: 2px solid #b58a48; color: #aaa993; font: 7px/1.3 'DM Mono', monospace; letter-spacing: .04em; }
+.facility-readout b { color: #d9c38f; font-weight: 500; }
+.facility-readout span:first-of-type { color: #88b6a8; }
+@media (max-width: 820px) { .project-impact .impact-head { display: grid; gap: 3px; } .project-impact .impact-head b { text-align: left; } }
+
+/* Readability floor. The command desk can be dense, but it must be operable from a normal
+   desktop distance; only decorative telemetry stays below 10 px. */
+.topbar .brand, .mission-name { font-size: 12px; }
+.dates, .dates > span { font-size: 11px; }
+.dates small, .metrics small { font-size: 9px; }
+.metrics strong { font-size: 17px; }
+.map-status, .map-hint { font-size: 10px; line-height: 1.35; }
+.tutorial-card .section-label, .tutorial-card .tut strong { font-size: 11px; line-height: 1.45; }
+.aside-head .eyebrow, .section-label { font-size: 10px; }
+.mission-charter p, .demo-guide p { font-size: 12px; line-height: 1.45; }
+.mission-charter small, .demo-guide strong, .demo-guide button { font-size: 10px; }
+.letters > .section-label, .composer > .section-label { font-size: 10px; }
+.packet strong, .packet small, .arrival, .signal-route { font-size: 10px; line-height: 1.4; }
+.composer textarea { font-size: 13px; line-height: 1.5; }
+.selection .section-label, .build-tools .section-label, .time-controls .section-label { font-size: 10px; }
+.selected-line small, .muted { font-size: 11px; }
+.build-tools select { font-size: 11px; }
+.build-tools button, .time-controls button, .selection button { font-size: 10px; line-height: 1.25; }
+.project-impact { font-size: 9px; line-height: 1.35; }
+.project-impact .impact-head { font-size: 8px; }
+.project-impact > strong { font-size: 10px; }
+.project-impact > small, .facility-readout { font-size: 8px; line-height: 1.4; }
+.footer-strip { font-size: 10px; }
+
+/* Live-screen correction: these are the controls a player must read while reacting,
+   not ornamental cockpit labels. Give the deck room instead of compressing it. */
+.bottom-deck { min-height: 160px; }
+.selection, .build-tools, .time-controls { padding: 15px 18px; }
+.section-label, .selection .section-label, .build-tools .section-label, .time-controls .section-label { font-size: 11px; }
+.selected-line strong { font-size: 14px; }
+.selected-line small, .muted { font-size: 12px; line-height: 1.45; }
+.build-tools select { min-height: 38px; font-size: 12px; }
+.build-tools button, .time-controls button, .selection button { min-height: 38px; font-size: 11px; }
+.time-controls .speed-controls button { min-width: 40px; font-size: 12px; }
+.project-impact { gap: 4px; margin: 4px 0 9px; padding: 9px 10px; font-size: 10px; }
+.project-impact .impact-head { font-size: 9px; }
+.project-impact > strong { font-size: 11px; }
+.project-impact > small, .facility-readout { font-size: 9px; }
+.project-impact em { font: 9px/1.35 'DM Mono', monospace; font-style: normal; letter-spacing: .035em; }
+.project-impact .site-valid { color: #8cc7b5; }
+.project-impact .site-blocked { color: #e28373; }
+.facility-readout .facility-live { color: #8cc7b5; }
+.facility-readout .facility-warning { color: #e28373; }
+.aside-head h2 { font-size: 24px; }
+.mission-charter p, .demo-guide p { font-size: 13px; }
+.mission-charter small, .demo-guide strong, .demo-guide button { font-size: 11px; }
+.letter p { font-size: 15px; }
+.packet strong, .packet small, .arrival, .signal-route { font-size: 11px; }
+.map-status, .map-hint { font-size: 11px; }
+
+/* The game is a fixed command console. Keep scrolling inside intentionally scrollable
+   data regions, but never let the document grow a browser scrollbar or let textarea
+   resizing break the tactical layout. */
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+.game-shell { width: 100%; min-width: 0; height: 100dvh; min-height: 0; max-height: 100dvh; overflow: hidden; }
+.topbar, .metrics, .play-body, .bottom-deck { min-width: 0; max-width: 100%; }
+.topbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
+.topbar > *, .metrics > *, .play-body > *, .bottom-deck > * { min-width: 0; }
+.dates { overflow: hidden; }
+.dates > span { min-width: 0; }
+.play-body { min-height: 0; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; }
+.map-panel, .correspondence { min-height: 0; }
+.correspondence { min-width: 0; overflow: hidden; }
+.aside-head h2 { overflow-wrap: anywhere; }
+.letters { min-height: 0; scrollbar-width: none; }
+.letters::-webkit-scrollbar { display: none; }
+.composer textarea { resize: none; }
+.title-screen, .onboard, .debrief { max-height: 100dvh; overflow: hidden; }
+
+/* Relay tabs reserve the full desk for one job at a time: either brief Earth or
+   read/write correspondence. The default relay tab puts telemetry in immediate view. */
+.relay-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-bottom: 1px solid #625238; background: #0d100d; }
+.relay-tabs button { min-height: 34px; border: 0; border-right: 1px solid #4d4230; background: transparent; color: #96886a; font: 10px 'DM Mono', monospace; letter-spacing: .12em; }
+.relay-tabs button:last-child { border-right: 0; }
+.relay-tabs button.active { color: #e0c081; background: #191810; box-shadow: inset 0 -2px #c0904b; }
+.correspondence > .letters { flex: 1 1 auto; }
+
+/* Simulation is a top-level command. Keep every speed and jump control at the
+   top of the console, rather than competing with placement feedback below. */
+.game-shell { position: relative; }
+.bottom-deck { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.time-controls { position: absolute; z-index: 8; top: 47px; right: 12px; width: min(800px, calc(100% - 560px)); min-height: 0; height: 54px; padding: 5px 0 0; display: flex; align-content: start; justify-content: flex-end; gap: 4px; border: 0; background: transparent; }
+.time-controls::before { content: 'SIM'; align-self: center; margin-right: 3px; color: #bda16a; font: 9px 'DM Mono', monospace; letter-spacing: .1em; }
+.time-controls .time-label { display: none; }
+.time-controls button { min-height: 27px; height: 27px; padding: 4px 7px; font-size: 9px; white-space: nowrap; }
+.time-controls .speed-controls { gap: 2px; padding-left: 4px; }
+.time-controls .speed-controls button { min-width: 28px; padding-inline: 5px; font-size: 9px; }
+@media (min-width: 1101px) { .time-controls button { padding-inline: 5px; } .time-controls button:last-child { min-width: 25px; padding-inline: 4px; } }
+@media (max-width: 1100px) {
+  .bottom-deck { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(220px, .9fr); }
+  .time-controls { position: static; width: auto; height: auto; padding: 12px 15px; border-left: 1px solid #4d4230; background: #10110e; }
+  .time-controls::before { display: none; }
+  .time-controls .time-label { display: flex; }
+  .time-controls button { min-height: 38px; height: auto; font-size: 11px; }
+}
+.road-active, .time-controls .road-active { background: #342815 !important; border-color: #c0924d !important; color: #ead09a !important; }
+.time-controls .speed-controls button { min-width: 31px; font-size: 9px; }
+.footer-strip { min-height: 31px; background: #090a08; color: #777867; font-size: 8px; }
+
+/* The in-play Daneel prompt is a hand-off document, not a tiny tooltip. */
+.daneel-prompt-modal { width: min(880px, 94vw); }
+.daneel-prompt-modal .prompt-card { max-width: none; }
+.daneel-prompt-modal pre { max-height: min(56vh, 560px); font-size: 12px; line-height: 1.58; }
+
+@media (max-width: 820px) {
+  .topbar { height: 48px; margin: 0; }
+  .metrics { min-height: 58px; padding-inline: 12px; }
+  .metrics > div { min-width: 96px; padding-right: 12px; }
+  .metrics > div + div { padding-left: 12px; }
+  .correspondence { border-left: 0; }
+}

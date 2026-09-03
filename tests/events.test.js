@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, isFlooded } from '../src/game/state.js';
 import { integrate, constructBuilding, queueLocalSurvey } from '../src/game/engine.js';
+import { SOLAR_OUTPUT_PER_DAY } from '../src/game/constants.js';
 
 test('flood tiles are deterministic per seed and depend on the local day', () => {
   const a = createGame('firstLight'); const b = createGame('firstLight');
@@ -45,6 +46,22 @@ test('power outage excludes the seeded source for exactly its window', () => {
   // Day 360 onward solar-1 is back.
   s = integrate(s, 1);
   assert.equal(s.mission.interruption.sustained, true);
+});
+
+test('Mission III life-support fault disables its named solar facility for the authored window', () => {
+  let faulted = createGame('rightToDecide');
+  // Isolate the facility event at day 400: solar-1 is connected, and zero
+  // population makes the fault's lost solar generation directly observable.
+  faulted.localDay = 399;
+  faulted.resources.population = 0;
+  faulted.resources.power = 100;
+  const healthy = structuredClone(faulted);
+  healthy.pendingEvents = healthy.pendingEvents.filter((event) => event.type !== 'life-support-fault');
+
+  faulted = integrate(faulted, 1);
+  const uninterrupted = integrate(healthy, 1);
+
+  assert.ok(Math.abs((uninterrupted.resources.power - faulted.resources.power) - SOLAR_OUTPUT_PER_DAY) < 1e-9);
 });
 
 test('collapse is deterministic: sixty zero-power days end the mission', () => {

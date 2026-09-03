@@ -1,6 +1,6 @@
 # New Game → copy into ChatGPT Desktop
 
-Status: startup prompt template for the planned demo, **not currently runnable**. The New Game screen must replace `{GAME_URL}` and `{SESSION_ID}` with its actual values and verify registered tool availability before offering the prompt as ready to use.
+Status: runnable startup-prompt template for the local demo. The New Game screen supplies the concrete `{GAME_URL}` and `{SESSION_ID}`. A compatible ChatGPT Desktop host still needs to expose the registered site tools; if it does not, the game must report that limitation rather than simulating Daneel.
 
 Prerequisites: a compatible Desktop browser/model with site tools and subagents available. See [official site-tool documentation](https://learn.chatgpt.com/docs/webmcp) and [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents). Capability detection and a successful connection handshake are required; copying this prompt alone does not start a running agent.
 
@@ -43,7 +43,8 @@ is the authority on time, delivered messages, resources, and permissions.
 Connect with connect_steward for session {SESSION_ID}, using protocol v1.
 Verify the session identity. Read the delivered bootstrap charter and tool
 descriptions. Use read_inbox, read_doctrine, and inspect_colony to learn your
-current obligations and conditions. Begin with the local charter; do not
+current obligations and conditions. The day-zero charter is returned by
+`read_doctrine` and is the initial mandate. Begin with that local charter; do not
 invent a new Earth objective.
 
 Start monitoring the delivered inbox now, and keep monitoring during the
@@ -176,8 +177,8 @@ Parent-facing updates must be connection status only.
 
 - **Bring Daneel online** — "Your agent is the colony's steward. You are Earth."
 - **Copy startup prompt** — only available with a concrete current session URL.
-- **Waiting for connection** — "Paste the prompt into ChatGPT Desktop. The simulation is paused."
-- **Daneel connected** — only after `connect_steward` succeeds.
+- **Waiting for connection** — "Paste the prompt into ChatGPT Desktop. The local clock is ready."
+- **Daneel connected** — only after `connect_steward` succeeds; enter the live correspondence desk immediately.
 - **Daneel monitoring inbox** — only while a live host run is servicing the bounded waiter; not merely because a timer exists.
 - **Reconnect needed** — "Your game is saved. Resume Daneel to continue local decisions."
 - **Site tools unavailable** — "This browser does not expose the game's WebMCP tools. No simulated agent has been substituted."
