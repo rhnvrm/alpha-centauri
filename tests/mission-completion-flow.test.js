@@ -28,3 +28,11 @@ test('mission debrief timing uses confirmed packet dates and keeps the projectio
   assert.match(debriefGrid, /dayLabel\(projection\.observedDay\)/);
   assert.doesNotMatch(debriefGrid, /CONFIRMED THROUGH/);
 });
+
+test('mission debrief keeps the complete received timeline reachable inside the fixed shell', () => {
+  assert.match(app, /const timelineEvents = state\.events\.slice\(-14\)/);
+  assert.match(app, /className="timeline-scroll" aria-label="All received mission events"/);
+  assert.match(app, /scroll within panel/);
+  assert.match(styles, /\.timeline-scroll \{[\s\S]*?max-height: 172px;[\s\S]*?overflow-y: auto;/);
+  assert.match(styles, /\.debrief \{[\s\S]*?padding: 30px 7vw 22px;/);
+});

@@ -643,6 +643,7 @@ export default function App({ store }) {
     const refBits = bitsForPayload({
       text: `adopt ${RESILIENCE_24.reference}`,
     });
+    const timelineEvents = state.events.slice(-14);
     return (
       <main className="debrief">
         <p className="eyebrow">MISSION COMPLETE · CONFIRMED DOWNLINK</p>
@@ -742,14 +743,19 @@ export default function App({ store }) {
           </div>
         </div>
         <div className="debrief-timeline">
-          <div className="section-label">RECEIVED TIMELINE</div>
-          {state.events.slice(-14).map((e) => (
-            <div className="timeline-row" key={e.id}>
-              <span>DAY {e.day}</span>
-              <strong>{e.type.replace(/_/g, " ")}</strong>
-              {e.reason && <small>{e.reason}</small>}
-            </div>
-          ))}
+          <div className="section-label">
+            <span>RECEIVED TIMELINE</span>
+            <span>{timelineEvents.length} events · scroll within panel</span>
+          </div>
+          <div className="timeline-scroll" aria-label="All received mission events">
+            {timelineEvents.map((e) => (
+              <div className="timeline-row" key={e.id}>
+                <span>DAY {e.day}</span>
+                <strong>{e.type.replace(/_/g, " ")}</strong>
+                {e.reason && <small>{e.reason}</small>}
+              </div>
+            ))}
+          </div>
         </div>
         <button className="primary" onClick={() => setScreen("title")}>
           Choose another mission <ChevronRight size={17} />
