@@ -1,75 +1,136 @@
-# The Intent Horizon
+# THE INTENT HORIZON
 
-The Intent Horizon is a three-mission isometric strategy game about governing a colony from four light-years away.
+### A city builder where distance forces intelligence.
 
-You are Earth. The colony is Aurora, a fictional world in the Alpha Centauri system. R. Daneel Olivaw is the local steward: a real connected agent that can inspect the colony and act through the page's WebMCP tools.
+[Play the live demo →](https://rhnvrm.github.io/alpha-centauri/)
 
-The premise is simple:
+You are Earth. A colony is growing four light-years away. Every command you send takes **1,595 simulation days** to arrive.
 
-> The farther away a system is, the less useful imperative commands become.
+By the time Earth learns what happened, another 4.37 years have passed.
 
-Every human order and every written instruction crosses the same 1,595-day one-way delay. Earth sees an old reconstruction of the colony, not its current state. Daneel receives a delivered instruction, inspects the colony as it exists now, and turns the human's intent into local, contingent work.
+![The Intent Horizon main-play visual direction](docs/concepts/main-play-v1.png)
 
-This is not an AI that clicks through a game for you. It is a shared visual world with two complementary participants:
+*Visual direction: the human sees a reconstructed colony; amber ghosts mark instructions still in transit.*
 
-- The human sees the colony's shape, history, risks, and consequences, then supplies judgment, priorities, constraints, and values.
-- Daneel gets structured WebMCP affordances for inspection and action, then handles local planning, adaptation, and execution.
+## The problem
 
-WebMCP is therefore the game mechanic. The demo asks how much worthwhile change a short instruction can cause without saying something the player did not mean.
+Traditional city-builder controls assume the world is waiting for your next click.
 
-## The demo thesis
+At Alpha Centauri, a click is an outdated guess by the time it arrives.
 
-The game turns a communication problem into a strategy loop:
+The colony may have flooded. A reactor may have failed. A better water source may have been discovered. Your fixed instruction cannot adapt.
+
+## The other way
+
+The colony has a local steward: **R. Daneel Olivaw**.
+
+Daneel receives the same message, at the same speed—but he receives it alongside the colony's current local state. Through WebMCP, he can inspect the world and make many contingent decisions locally.
+
+You do not ask him to click buttons for you.
+
+You tell him what must remain true.
 
 ```text
-observe an old world → decide what must remain true → transmit intent
-→ let local agency operate → receive consequences → revise intent
+“Maintain 24 months of food.
+Keep power reserves above 20%.
+Protect the wetlands.
+Prefer expanding existing agricultural clusters.”
 ```
 
-The advantage of an agent is not a faster radio or more bandwidth. It is local intelligence operating against current conditions. Instead of transmitting thousands of brittle clicks, Earth can transmit a goal, constraints, and preferences; Daneel can produce a policy of action that responds to what he actually finds.
+Daneel turns that intent into surveys, roads, construction, maintenance, production changes, and reports—using the actual game tools and the actual local simulation.
 
-That creates three linked ideas:
+## One world. Two kinds of intelligence.
 
-- Distance forces abstraction: commands become tasks, goals, policies, and values.
-- Shared vocabulary increases useful meaning per bit, without increasing Shannon channel capacity.
-- Delegation is also governance: the player must decide what Daneel may do autonomously, what requires permission, and what must never happen.
+| Earth | Daneel |
+| --- | --- |
+| Sees an old, received reconstruction | Sees the current local colony |
+| Supplies visual judgment and values | Supplies local planning and adaptation |
+| Chooses goals, constraints, and authority | Chooses feasible actions within that authority |
+| Receives consequences too late to undo them | Lives with the consequences of every decision |
 
-The human remains essential because visual judgment is not reduced to a tool call. The agent remains essential because a fixed command cannot anticipate a world that changes during transmission.
+The human is not removed from the loop. The human decides what the agent is allowed to mean.
 
-## The three missions
+## The game loop
 
-1. **The First Light** — learn that an order aimed at an old map is not a plan for the present colony. Build connected housing and redundant power for 100 settlers, then survive a seeded interruption.
-2. **The Meaning of Enough** — express a goal with reserve floors, ecological constraints, and preferences. Maintain 24 months of food and a 20% power reserve without losing protected wetlands, within a 2,800-bit transmission window.
-3. **The Right to Decide** — define an autonomy envelope. Launch 1,000 tonnes of iridium while maintaining life support and protecting native habitat; asking for permission is itself delayed and costly.
+```text
+observe an old world
+        ↓
+decide what must remain true
+        ↓
+transmit intent
+        ↓
+let local agency operate
+        ↓
+receive consequences
+        ↓
+revise intent
+```
 
-The game is intentionally bounded: three authored missions, roughly 20–30 minutes depending on agent response time, and no endless-mode economy. The ending is a functioning colony and an unresolved political question—not a claim that Earth should govern forever.
+WebMCP is not an automation layer added to a finished game. **It is the game mechanic.**
 
-## What is implemented
+## Three missions. One progression.
 
-The current playable slice includes:
+### I · THE FIRST LIGHT
 
-- A deterministic browser simulation with delayed uplink/downlink packets, transmission windows, seeded events, construction jobs, robot labor, roads, power/water/food networks, and mission outcomes.
-- A real Three.js isometric colony with selectable geometry, shadows, moving robots, minimap, planned-order ghosts, ecology, and an Earth-only observed-world projection.
-- A shared-codebook protocol for Mission II, authorization round-trips for Mission III, delayed reports, yearly telemetry, coast-to-arrival controls, and a received-event debrief.
-- Native `document.modelContext.registerTool` feature detection and a structured Daneel tool surface. The page never substitutes a scripted steward when native tools are unavailable.
-- Browser-only persistence in versioned localStorage. There is no game backend, database, cloud save, independent MCP server, or model API owned by the game.
+**Can you do what I say?**
 
-Local tests and the production build pass. Native Daneel gameplay still needs verification in a compatible ChatGPT Desktop/browser environment; see [implementation status](docs/IMPLEMENTATION-STATUS.md).
+Build connected housing and redundant power for 100 settlers. Learn why an order aimed at an old map is not a plan for the present colony.
 
-## Design and implementation notes
+### II · THE MEANING OF ENOUGH
 
-The documentation is part of the project because this repo is both a game and a WebMCP demonstration:
+**Can you say what you mean?**
 
-- [Design specification](DESIGN.md) — story, causal model, missions, gameplay, scoring, UI, and acceptance criteria.
-- [WebMCP contract](docs/WEBMCP.md) — session lifecycle, tool surface, authority, message accounting, and native integration boundary.
-- [Browser-only state](docs/LOCAL-STATE.md) — localStorage persistence, one owning tab, recovery, and save guarantees.
-- [Daneel startup/resume prompt](docs/DANEEL-START-PROMPT.md) — the intended human-agent onboarding flow.
-- [Implementation status](docs/IMPLEMENTATION-STATUS.md) — local evidence versus native-agent evidence.
-- [Implementation handoff](docs/IMPLEMENTATION-HANDOFF.md) — the original execution plan and acceptance tests.
+Maintain 24 months of food and a 20% power reserve without losing protected wetlands. Goals, constraints, preferences, and a shared codebook become more powerful than individual commands.
+
+### III · THE RIGHT TO DECIDE
+
+**Can I trust you to act without me?**
+
+Launch 1,000 tonnes of iridium while protecting life support and native habitat. Asking for permission is itself a delayed action. Autonomy becomes governance.
+
+> Distance forces abstraction: commands → tasks → goals → policies → values.
+
+## What this demonstrates
+
+The radio does not get faster. The channel does not get wider.
+
+What changes is the amount of useful, contingent work that can be caused by a transmitted instruction. Local intelligence turns a brittle command into a policy that can respond to reality.
+
+The game explores:
+
+- **Semantic bandwidth** — useful meaning per transmitted bit, without claiming Shannon capacity increased.
+- **Shared vocabulary** — a protocol definition can be expensive to transmit once and cheap to reuse later.
+- **Alignment through play** — vague objectives create consequences because the agent fulfills the words, not the intention in your head.
+- **Delegation and trust** — every autonomy grant is a choice about what another intelligence may decide.
+- **Two-way compression** — Daneel also decides what Earth needs to know and sends back concise, delayed reports.
+
+The thesis is simple:
+
+> **Intelligence at the receiver is semantic leverage over a constrained channel.**
+
+## Built for the demo
+
+- Fully client-side static app; game state persists in versioned `localStorage`.
+- Deterministic simulation with delayed packets, transmission windows, seeded events, construction jobs, robot labor, networks, authority, and authored outcomes.
+- Real Three.js isometric colony with selectable geometry, moving robots, minimap, planned-order ghosts, ecology, and Earth-only observed-world rendering.
+- Native `document.modelContext.registerTool` detection and a structured Daneel tool surface.
+- No game backend, database, cloud save, independent MCP server, or game-owned model API.
+
+Local tests and the production build pass. Native Daneel gameplay remains an explicit compatibility gate in the target Desktop/browser environment; see [implementation status](docs/IMPLEMENTATION-STATUS.md).
+
+## See the thinking behind it
+
+This repository is both a game and a design argument:
+
+- [Design specification](DESIGN.md) — story, missions, causal model, scoring, UI, and acceptance criteria.
+- [WebMCP contract](docs/WEBMCP.md) — the tool surface, authority model, message accounting, and integration boundary.
+- [Browser-only state](docs/LOCAL-STATE.md) — persistence, one owning tab, recovery, and save guarantees.
+- [Daneel startup/resume prompt](docs/DANEEL-START-PROMPT.md) — intended human-agent onboarding.
+- [Implementation status](docs/IMPLEMENTATION-STATUS.md) — what is locally verified and what still needs native evidence.
 - [Art direction](docs/ART-DIRECTION.md) and [asset provenance](docs/ASSET-PROMPTS.md) — visual language and concept-art boundaries.
-- [Screenshot archive](docs/progress/) — progress evidence and visual targets.
+- [Implementation handoff](docs/IMPLEMENTATION-HANDOFF.md) — the original execution plan.
 
-## Run locally
+## Run it
 
 ```sh
 npm install
@@ -77,33 +138,13 @@ npm test
 npm run dev -- --port 4173
 ```
 
-Open `http://localhost:4173/`. Manual play is always available. A real connected host agent is required for Daneel; the page never fakes that connection.
-
-For a production build:
+Open `http://localhost:4173/`. Manual play is always available. A real connected host agent is required for Daneel; the page never substitutes a scripted steward.
 
 ```sh
 npm run build
 npm run preview -- --port 4174
 ```
 
-For the browser smoke test, install `playwright-core` (or `puppeteer-core`) and provide a Chromium binary:
+The public build is deployed at [rhnvrm.github.io/alpha-centauri](https://rhnvrm.github.io/alpha-centauri/). GitHub Pages runs the test suite and production build before publishing `dist/`.
 
-```sh
-npm i playwright-core
-npm run dev -- --port 4173 &
-BROWSER_PATH=/path/to/chromium node scripts/e2e.mjs
-```
-
-## Deployment
-
-The public demo is deployed through GitHub Pages:
-
-<https://rhnvrm.github.io/alpha-centauri/>
-
-The Pages workflow runs the test suite and production build before publishing `dist/`. The app is static; game state remains local to the browser origin where a player starts it.
-
-## Native integration boundary
-
-The remaining acceptance test is a real Daneel session in a supported Desktop/browser environment: discover the page tools, connect to the correct session, observe only delivered mail, perform a local action, send a causally delayed report, exercise bounded wait/resume, and verify cleanup. The current host has a documented Browser plugin version mismatch, so local JavaScript tests are reported separately from native-agent evidence.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository's Conventional Commits policy.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the Conventional Commits policy.
