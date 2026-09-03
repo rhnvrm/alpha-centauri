@@ -326,6 +326,21 @@ function lineBetween(ax, az, bx, bz, color, y = .3) {
   const line = new THREE.Line(geo, mat); line.renderOrder = 2; return line;
 }
 
+/** A Superposition-only marker makes real work legible without leaking Daneel's
+ * private job list into Earth's delayed reconstruction. */
+function meshLocalWorkMarker(job) {
+  const group = new THREE.Group(); group.name = 'local-work-marker'; group.userData.activity = true;
+  const [wx, wz] = cell(job.target.x, job.target.y);
+  const color = job.type === 'construct' ? 0xf0c56b : job.type === 'survey' ? 0x72d9ce : 0x91bc72;
+  const outer = new THREE.Mesh(new THREE.RingGeometry(.54, .63, 20), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .86, side: THREE.DoubleSide }));
+  outer.rotation.x = -Math.PI / 2; outer.position.y = .34; group.add(outer);
+  const inner = new THREE.Mesh(new THREE.RingGeometry(.22, .27, 16), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .5, side: THREE.DoubleSide }));
+  inner.rotation.x = -Math.PI / 2; inner.position.y = .35; group.add(inner);
+  const beacon = new THREE.Mesh(new THREE.CylinderGeometry(.025, .06, .88, 8, 1, true), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .32, side: THREE.DoubleSide }));
+  beacon.position.y = .78; group.add(beacon);
+  group.position.set(wx, 0, wz); return group;
+}
+
 function meshBuildGhost(packet, spec, textures) {
   const group = new THREE.Group(); group.userData = { id: `${packet.id}-ghost`, kind: 'ghost' };
   const [w, d] = spec.footprint; const h = packet.payload.type === 'relay' ? 1.65 : .95;
@@ -569,6 +584,7 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
           if (!rover) continue;
           const [fromX, fromZ] = cell(rover.x, rover.y); const [toX, toZ] = cell(j.target.x, j.target.y);
           world.add(lineBetween(fromX, fromZ, toX, toZ, j.type === 'cargo' ? 0xd17e47 : 0x72d9ce, .38));
+          world.add(meshLocalWorkMarker(j));
         }
       }
       for (const b of (obs.buildings || [])) world.add(meshBuilding({ ...b, status: b.status || 'complete', health: b.health ?? 100, level: 0, origin: latest.current.viewMode }, spriteTextures));
@@ -690,6 +706,11 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
         }
         const marker = world.getObjectByName('tactical-selection');
         if (marker) { const phase = performance.now() * .003; marker.children[0].scale.setScalar(1 + Math.sin(phase) * .08); marker.children[1].rotation.z -= .03; }
+        for (const group of world.children.filter((x) => x.userData.activity)) {
+          const phase = now * .004;
+          group.children[0]?.scale.setScalar(1 + Math.sin(phase) * .14);
+          if (group.children[2]) group.children[2].scale.y = .78 + Math.sin(phase) * .16;
+        }
       }
       renderer.render(scene, camera); };
     animate(); let renderedState = latest.current.state; let renderedViewMode = latest.current.viewMode; let renderedPreview = latest.current.previewBuild;

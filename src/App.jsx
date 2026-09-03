@@ -216,6 +216,7 @@ export default function App({ store }) {
   const superpositionActive = superpositionClock.activeUntil > superpositionClock.now;
   const superpositionSeconds = Math.max(0, Math.ceil((superpositionClock.activeUntil - superpositionClock.now) / 1000));
   const superpositionCooldown = Math.max(0, Math.ceil((superpositionClock.cooldownUntil - superpositionClock.now) / 1000));
+  const localActivity = state.jobs.filter((job) => ["queued", "active", "awaiting-labor"].includes(job.status));
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
   const receivedRobots = state.observedWorld?.robots || [];
@@ -942,12 +943,23 @@ export default function App({ store }) {
             </div>
           ) : superpositionActive ? (
             <div className="map-status" role="status" style={{ top: 54 }}>
-              <span className="status-dot amber" /> SUPERPOSITION · LIVE LOCAL VIEW · {superpositionSeconds}s · READ ONLY
+              <span className="status-dot amber" /> SUPERPOSITION · LIVE LOCAL VIEW · {superpositionSeconds}s · {localActivity.length} ACTIVE OP{localActivity.length === 1 ? "" : "S"} · READ ONLY
             </div>
           ) : (
-            <button className="map-status" style={{ top: 54 }} onClick={activateSuperposition} disabled={superposition.passes < 1 || superpositionCooldown > 0} title="Spend one of two persistent parity passes for a 30-second local visual diagnostic.">
-              SUPERPOSITION · {superposition.passes} PASS{superposition.passes === 1 ? "" : "ES"}{superpositionCooldown ? ` · ${superpositionCooldown}s` : " · 30s LOCAL VIEW"}
+            <button className={`map-status superposition-cta ${state.connection.status === "connected" && !state.paused ? "link-live" : ""}`} style={{ top: 54 }} onClick={activateSuperposition} disabled={superposition.passes < 1 || superpositionCooldown > 0} title="Spend one of two persistent parity passes for a 30-second read-only local diagnostic. This is the only view that reveals Daneel's current workers and construction.">
+              {state.connection.status === "connected" && !state.paused ? "DANEEL ACTIVE · " : ""}SUPERPOSITION · {superposition.passes} PASS{superposition.passes === 1 ? "" : "ES"}{superpositionCooldown ? ` · ${superpositionCooldown}s` : " · OPEN LIVE VIEW"}
             </button>
+          )}
+          {superpositionActive && localActivity.length > 0 && (
+            <div className="local-activity-card" aria-live="polite">
+              <span className="section-label">LIVE LOCAL OPERATIONS</span>
+              {localActivity.slice(0, 3).map((job) => (
+                <div key={job.id}>
+                  <strong>{job.type.toUpperCase()}</strong>
+                  <small>{job.robotId ? `${job.robotId} · ` : ""}{Math.max(0, job.completeDay - state.localDay)}D REMAINING</small>
+                </div>
+              ))}
+            </div>
           )}
           {tutorial.length > 0 && (
             <div className="tutorial-card">
