@@ -238,7 +238,9 @@ function addFacilitySprite(group, type, textures) {
 }
 
 function meshBuilding(b, spriteTextures) {
-  const group = new THREE.Group(); group.userData = { id: b.id, kind: 'building' };
+  // Coordinates are part of selection data as well as rendering data. Earth must only
+  // select received entities, so the raycast gate needs their observed location.
+  const group = new THREE.Group(); group.userData = { id: b.id, kind: 'building', x: b.x, y: b.y };
   const footprint = BUILDINGS[b.type]?.footprint || [2, 2];
   const w = footprint[0] * 1.02; const d = footprint[1] * 1.02;
   const seed = [...String(b.id)].reduce((value, char) => value + char.charCodeAt(0), 0);
@@ -295,7 +297,9 @@ function robotSpriteKey(r) {
   return choices[[...String(r.id)].reduce((sum, char) => sum + char.charCodeAt(0), 0) % choices.length];
 }
 function meshRobot(r, textures) {
-  const g = new THREE.Group(); g.userData = { id: r.id, kind: 'robot' };
+  // Keep the current observed coordinates on the selectable parent, rather than
+  // allowing its underlying transparent tile target to be the only eligible hit.
+  const g = new THREE.Group(); g.userData = { id: r.id, kind: 'robot', x: r.x, y: r.y };
   const key = robotSpriteKey(r); const hasSprite = addSprite(g, textures[key], key, { y: .12, centerY: .12, order: 4 });
   const lifecycle = r.lifecycle || r.status;
   const role = lifecycle === 'en-route' || r.status === 'moving' ? 0x72d9ce : lifecycle === 'working' ? 0xf0c56b : r.type === 'construction' ? 0xd9a455 : r.type === 'survey' ? 0x5bb7c7 : r.type === 'cargo' ? 0xd17e47 : r.type === 'maintenance' ? 0x91bc72 : 0xc6b680;
@@ -615,10 +619,16 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
     const click = (e) => {
       if (latest.current.readOnly) return;
       const rect = renderer.domElement.getBoundingClientRect(); pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1; pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1; raycaster.setFromCamera(pointer, camera);
-      // Skip decorative/selection meshes; select the first actual world object beneath them.
+      // Skip decorative/selection meshes. A tile's transparent pick box spans the whole
+      // cell and otherwise wins the distance-sorted raycast over a rover or facility
+      // standing on it, which made units impossible to inspect. Prefer actual entities;
+      // fall back to the tile only when the click did not land on one.
+      const priority = { building: 3, robot: 2, tile: 1 };
       const selectable = raycaster.intersectObjects(world.children, true).map((hit) => {
         let obj = hit.object; while (obj.parent && !obj.userData.id) obj = obj.parent; return obj.userData.id ? obj : null;
-      }).filter(Boolean).find((object) => latest.current.viewMode === 'local' || surveyedCell(surveyed(), object.userData.x, object.userData.y));
+      }).filter(Boolean)
+        .filter((object) => priority[object.userData.kind] && (latest.current.viewMode === 'local' || surveyedCell(surveyed(), object.userData.x, object.userData.y)))
+        .sort((a, b) => priority[b.userData.kind] - priority[a.userData.kind])[0];
       if (selectable) {
         tacticalSelection = selectable.userData;
         renderWorld(); drawMinimap(); resize();
