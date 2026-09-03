@@ -1,0 +1,3 @@
+import { LIGHT_DELAY_DAYS, LIGHT_DELAY_YEARS } from './constants.js';
+export const earthProjection = (state) => ({ localDay: state.localDay, observedDay: state.telemetry.captureDay, observationLabel: state.telemetry.label, resources: state.observedResources, reports: state.reports.filter((r) => r.receivedDay <= state.localDay), packets: state.packets.map(({ id, kind, direction, bits, windows, bytes, createdDay, departureDay, arrivalDay, status }) => ({ id, kind, direction, bits, windows, bytes, createdDay, departureDay, arrivalDay, status })) });
+export const lightCopy = `${LIGHT_DELAY_YEARS} years one way · ${LIGHT_DELAY_DAYS} simulation days`;
