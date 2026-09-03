@@ -647,6 +647,16 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .map-panel, .correspondence { min-height: 0; }
 .correspondence { min-width: 0; overflow: hidden; }
 .aside-head h2 { overflow-wrap: anywhere; }
+/* The correspondence rail is fixed-width, but its title shares a row with the
+   connection badge. Keep the identity fully legible at wide and embedded
+   desktop sizes instead of letting the later display-scale rule clip it. */
+.aside-head h2 {
+  max-width: 100%;
+  font-size: clamp(18px, 1.45vw, 21px);
+  line-height: 1.12;
+  letter-spacing: .02em;
+  text-wrap: balance;
+}
 .letters { min-height: 0; scrollbar-width: none; }
 .letters::-webkit-scrollbar { display: none; }
 .composer textarea { resize: none; }
