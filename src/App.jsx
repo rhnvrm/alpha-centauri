@@ -807,6 +807,35 @@ export default function App({ store }) {
           </div>
         </section>
       )}
+      {missionStatus.complete && (
+        <section className="completion-banner" aria-label="Mission confirmed">
+          <div className="completion-banner-copy">
+            <div className="completion-kicker"><ShieldCheck size={16} /> CONFIRMED DOWNLINK</div>
+            <strong>Mission result received on Earth.</strong>
+            <span>Review the evidence from the colony, or return to mission selection.</span>
+          </div>
+          <div className="completion-actions">
+            <button
+              className="primary"
+              onClick={() => {
+                store.pause();
+                setScreen("debrief");
+              }}
+            >
+              Review mission debrief <ChevronRight size={17} />
+            </button>
+            <button
+              className="secondary-action"
+              onClick={() => {
+                store.pause();
+                setScreen("title");
+              }}
+            >
+              Return to mission selection
+            </button>
+          </div>
+        </section>
+      )}
       <div className="play-body">
         <section className="map-panel">
           <ColonyScene
