@@ -24,7 +24,7 @@ The colony may have flooded. A reactor may have failed. A better water source ma
 
 The colony has a local steward: **R. Daneel Olivaw**.
 
-Daneel receives the same message, at the same speed—but he receives it alongside the colony's current local state. Through WebMCP, he can inspect the world and make many contingent decisions locally.
+Daneel receives the same message at the same speed, alongside the colony's current local state. Through WebMCP, he can inspect the world and make many contingent decisions locally.
 
 You do not ask him to click buttons for you.
 
@@ -37,7 +37,7 @@ Protect the wetlands.
 Prefer expanding existing agricultural clusters.”
 ```
 
-Daneel turns that intent into surveys, roads, construction, maintenance, production changes, and reports—using the actual game tools and the actual local simulation.
+Daneel turns that intent into surveys, roads, construction, maintenance, production changes, and reports using the actual game tools and local simulation.
 
 ## One world. Two kinds of intelligence.
 
@@ -98,11 +98,11 @@ What changes is the amount of useful, contingent work that can be caused by a tr
 
 The game explores:
 
-- **Semantic bandwidth** — useful meaning per transmitted bit, without claiming Shannon capacity increased.
-- **Shared vocabulary** — a protocol definition can be expensive to transmit once and cheap to reuse later.
-- **Alignment through play** — vague objectives create consequences because the agent fulfills the words, not the intention in your head.
-- **Delegation and trust** — every autonomy grant is a choice about what another intelligence may decide.
-- **Two-way compression** — Daneel also decides what Earth needs to know and sends back concise, delayed reports.
+- **Semantic bandwidth:** useful meaning per transmitted bit, without claiming Shannon capacity increased.
+- **Shared vocabulary:** a protocol definition can be expensive to transmit once and cheap to reuse later.
+- **Alignment through play:** vague objectives create consequences because the agent fulfills the words, not the intention in your head.
+- **Delegation and trust:** every autonomy grant is a choice about what another intelligence may decide.
+- **Two-way compression:** Daneel also decides what Earth needs to know and sends back concise, delayed reports.
 
 The thesis is simple:
 
@@ -122,13 +122,14 @@ Local tests and the production build pass. Native Daneel gameplay remains an exp
 
 This repository is both a game and a design argument:
 
-- [Design specification](DESIGN.md) — story, missions, causal model, scoring, UI, and acceptance criteria.
-- [WebMCP contract](docs/WEBMCP.md) — the tool surface, authority model, message accounting, and integration boundary.
-- [Browser-only state](docs/LOCAL-STATE.md) — persistence, one owning tab, recovery, and save guarantees.
-- [Daneel startup/resume prompt](docs/DANEEL-START-PROMPT.md) — intended human-agent onboarding.
-- [Implementation status](docs/IMPLEMENTATION-STATUS.md) — what is locally verified and what still needs native evidence.
-- [Art direction](docs/ART-DIRECTION.md) and [asset provenance](docs/ASSET-PROMPTS.md) — visual language and concept-art boundaries.
-- [Implementation handoff](docs/IMPLEMENTATION-HANDOFF.md) — the original execution plan.
+- [Design specification](DESIGN.md): story, missions, causal model, scoring, UI, and acceptance criteria.
+- [Lore and setting](docs/LORE.md): the real Alpha Centauri sky, the fictional Aurora, and Daneel's place in the story.
+- [WebMCP contract](docs/WEBMCP.md): the tool surface, authority model, message accounting, and integration boundary.
+- [Browser-only state](docs/LOCAL-STATE.md): persistence, one owning tab, recovery, and save guarantees.
+- [Daneel startup/resume prompt](docs/DANEEL-START-PROMPT.md): intended human-agent onboarding.
+- [Implementation status](docs/IMPLEMENTATION-STATUS.md): what is locally verified and what still needs native evidence.
+- [Art direction](docs/ART-DIRECTION.md) and [asset provenance](docs/ASSET-PROMPTS.md): visual language and concept-art boundaries.
+- [Implementation handoff](docs/IMPLEMENTATION-HANDOFF.md): the original execution plan.
 
 ## Run it
 
