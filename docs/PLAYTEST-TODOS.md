@@ -243,3 +243,11 @@
 - **Actual:** The scene and controls provide no contextual hover language, so the player must guess whether a vehicle is useful or what a command will consume.
 - **Fix:** Add accessible hover/focus tooltips for buildings, service vehicles, survey tiles, and primary actions; keep the same information available in the selected-object panel for keyboard and touch users.
 - **Resolution (live verified):** The rendered scout now exposes `scout · PATROLLING · Perimeter sweep of the civic service corridor` on hover, while building/tile and command controls expose their own context. Capture: `docs/playtest-captures/vehicle-hover-live.png`.
+
+### 28. Correspondence rail heading clips at the embedded desktop width
+
+- **Role / moment:** Earth, fresh Mission 1 command desk after entering from the onboarding screen.
+- **Expected:** The relay identity should be fully legible so the player can immediately distinguish Daneel correspondence from Earth-side controls.
+- **Actual:** The right rail fits its container, but the `Daneel / Correspondence` heading is truncated beside the connection badge (`Daneel / Correspond...`), reducing hierarchy and polish.
+- **Capture:** Fresh live command-desk screenshot from the in-app browser during this pass.
+- **Fix:** Make the rail heading container-aware: allow a controlled wrap or compact type treatment, preserve the connection badge, and keep tabs/composer inside the same fixed-width rail.

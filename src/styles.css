@@ -741,7 +741,16 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .play-body { grid-template-columns: minmax(0, 1fr) var(--correspondence-width); }
   .aside-head { align-items: flex-start; gap: 10px; padding-inline: 14px; }
   .aside-head > div { min-width: 0; flex: 1 1 auto; }
-  .aside-head h2 { font-size: 20px; line-height: 1.08; overflow-wrap: normal; }
+  /* At the embedded desktop width the badge shares a narrow title row. Let
+     the identity wrap at its word boundary instead of clipping behind it. */
+  .aside-head h2 {
+    max-width: 100%;
+    font-size: 18px;
+    line-height: 1.15;
+    letter-spacing: .02em;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
   .aside-head > .connected, .aside-head > .disconnected { flex: 0 0 auto; white-space: nowrap; }
 
   .time-controls {
