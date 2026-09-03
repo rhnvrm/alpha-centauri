@@ -825,6 +825,34 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .mission-card { min-height: 142px; }
   .title-foot { margin-top: 22px; line-height: 1.5; }
 }
+
+/* Keep the desktop landing surface fully readable in shorter embedded viewports.
+   The cards retain their hierarchy while giving the footer and lower copy room
+   to clear the fixed viewport edge; the mobile layout remains independently
+   scrollable above. */
+@media (min-width: 821px) and (max-height: 1200px) {
+  .title-screen {
+    padding-top: clamp(24px, 4.5vh, 54px);
+    padding-bottom: 16px;
+  }
+  .title-screen h1 {
+    font-size: clamp(58px, 8vw, 112px);
+    margin-bottom: 18px;
+  }
+  .title-intro .title-mark { margin-bottom: 20px; }
+  .title-rule { margin-top: 22px; }
+  .title-signal { padding: 18px 20px 17px; }
+  .title-signal strong { margin-top: 25px; }
+  .title-signal p { margin: 12px 0 20px; }
+  .mission-card {
+    min-height: 136px;
+    padding: 15px 18px 14px;
+  }
+  .mission-card strong { margin-top: 19px; font-size: 17px; }
+  .mission-card p { margin: 6px 0 0; font-size: 12px; line-height: 1.4; }
+  .mission-card svg { right: 15px; bottom: 15px; }
+  .title-foot { margin-top: 10px; }
+}
 /* Confirmed mission debrief: evidence comes from the received result packet. */
 .mission-evidence { width: min(680px, 100%); margin: 28px 0; border: 1px solid #3d473f; background: #141b19; padding: 16px 18px; }
 .evidence-list { display: grid; gap: 1px; margin-top: 12px; background: #3d473f; }
