@@ -327,6 +327,7 @@ export default function App({ store }) {
     setScreen("onboard");
     setSelected(null);
     setMoveRobotId(null);
+    setCopied(false);
   };
   const copyPrompt = async () => {
     await navigator.clipboard?.writeText(prompt);
@@ -561,18 +562,44 @@ export default function App({ store }) {
             </div>
             <footer>SAME 2,800-BIT RADIO WINDOW · NO FASTER-THAN-LIGHT CHANNEL</footer>
           </section>
-          <div className="prompt-card">
-            <div className="card-heading">
-              <span>SESSION-SPECIFIC STARTUP PROMPT</span>
-              <button onClick={copyPrompt}>
-                <Copy size={14} /> {copied ? "Copied" : "Copy prompt"}
-              </button>
+          <section className="handoff-card" aria-label="Daneel handoff steps">
+            <div className="section-label">
+              <span>THREE STEPS TO HAND OFF</span>
+              <span>SESSION {state.sessionId.slice(0, 8)}</span>
             </div>
-            <pre>{prompt}</pre>
-          </div>
+            <div className="handoff-steps">
+              <div className="handoff-step">
+                <span>01</span>
+                <strong>Copy the Daneel brief</strong>
+                <p>It is prepared for this mission and session.</p>
+              </div>
+              <div className="handoff-step">
+                <span>02</span>
+                <strong>Paste it into Daneel</strong>
+                <p>Keep this game tab open so native tools can connect.</p>
+              </div>
+              <div className="handoff-step">
+                <span>03</span>
+                <strong>Open the command desk</strong>
+                <p>Watch the colony act locally while Earth waits for reports.</p>
+              </div>
+            </div>
+            <div className="handoff-actions">
+              <button className="primary" onClick={copyPrompt}>
+                <Copy size={16} /> {copied ? "Daneel brief copied" : "Copy Daneel brief"}
+              </button>
+              <details className="brief-inspection">
+                <summary>Inspect full brief</summary>
+                <pre>{prompt}</pre>
+              </details>
+              <span className="copy-confirmation" role="status" aria-live="polite">
+                {copied ? "Ready to paste into Daneel." : "Copy once, then hand off."}
+              </span>
+            </div>
+          </section>
           <div className="onboard-actions">
-            <button className="primary" onClick={goPlay}>
-              Enter correspondence desk <ChevronRight size={17} />
+            <button className="start-command" onClick={goPlay}>
+              Start command desk <ChevronRight size={17} />
             </button>
             <span className={native.supported ? "native-ok" : "native-muted"}>
               <span className="status-dot" />
