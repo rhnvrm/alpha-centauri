@@ -207,7 +207,7 @@ function meshIslandAtmosphere(viewMode) {
   const soil = viewMode === 'local' ? 0x5e6556 : 0x6d624b;
   for (let i = 0; i < 19; i += 1) {
     const angle = i * 2.3999632297; const radius = 3.2 + (i * 7.13 % 14.2);
-    const patch = new THREE.Mesh(new THREE.CircleGeometry(1.1 + (i % 4) * .42, 12), new THREE.MeshStandardMaterial({ color: soil, transparent: true, opacity: .11 + (i % 3) * .025, roughness: 1, depthWrite: false }));
+    const patch = new THREE.Mesh(new THREE.CircleGeometry(1.1 + (i % 4) * .42, 12), new THREE.MeshStandardMaterial({ color: soil, transparent: true, opacity: .15 + (i % 3) * .03, roughness: 1, depthWrite: false }));
     patch.rotation.x = -Math.PI / 2; patch.rotation.z = angle * .64;
     patch.position.set(Math.cos(angle) * radius, .192, Math.sin(angle) * radius * .82);
     patch.renderOrder = 0; group.add(patch);
@@ -393,11 +393,17 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
   const [glError, setGlError] = useState(null); const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (!host.current) return undefined;
-    const el = host.current; const scene = new THREE.Scene(); scene.background = new THREE.Color(0x283437); scene.fog = new THREE.Fog(0x283437, 38, 76);
-    // Begin at a settlement-first RTS framing. The old wide shot exposed too much
-    // empty island and made the authored facilities read like detached map icons.
-    const camera = new THREE.OrthographicCamera(-19, 19, 14, -14, .1, 100); camera.zoom = 1.72;
-    const focus = new THREE.Vector3(0, 0, 0); let azimuth = 0;
+    const el = host.current; const scene = new THREE.Scene(); scene.background = new THREE.Color(0x283437); scene.fog = new THREE.Fog(0x283437, 44, 86);
+    // Frame the known settlement, not the logical board origin. This keeps the opening
+    // view useful for the first decision while leaving room for the authored frontier.
+    const camera = new THREE.OrthographicCamera(-19, 19, 14, -14, .1, 100); camera.zoom = 2.04;
+    const initialObserved = state.observedWorld?.buildings || state.buildings || [];
+    const initialCenter = initialObserved.length
+      ? initialObserved.reduce((center, building) => { center.x += building.x; center.y += building.y; return center; }, { x: 0, y: 0 })
+      : { x: 16, y: 16 };
+    if (initialObserved.length) { initialCenter.x /= initialObserved.length; initialCenter.y /= initialObserved.length; }
+    const [initialFocusX, initialFocusZ] = cell(initialCenter.x, initialCenter.y);
+    const focus = new THREE.Vector3(initialFocusX, 0, initialFocusZ); let azimuth = 0;
     const placeCamera = () => { const a = azimuth * Math.PI / 2 + Math.PI / 4; camera.position.set(focus.x + Math.cos(a) * 36, 34, focus.z + Math.sin(a) * 36); camera.lookAt(focus.x, 0, focus.z); };
     placeCamera();
     let renderer;
@@ -490,13 +496,13 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       // An irregular shelf keeps the logical 32×32 grid from reading as a literal board.
       // It is scenery only: the transparent tile meshes above remain the authoritative
       // selectable world and retain their exact simulation coordinates.
-      const water = new THREE.Mesh(new THREE.CircleGeometry(31, 64), material(0x214d4b, { roughness: .46, metalness: .3 }));
+      const water = new THREE.Mesh(new THREE.CircleGeometry(38, 72), material(0x214d4b, { roughness: .46, metalness: .3 }));
       water.rotation.x = -Math.PI / 2; water.position.y = -.2; water.receiveShadow = true; world.add(water);
-      const shallow = new THREE.Mesh(new THREE.RingGeometry(22.1, 28.6, 64), new THREE.MeshStandardMaterial({ color: 0x46766c, transparent: true, opacity: .42, roughness: .42, metalness: .16, side: THREE.DoubleSide }));
+      const shallow = new THREE.Mesh(new THREE.RingGeometry(24, 34.5, 72), new THREE.MeshStandardMaterial({ color: 0x46766c, transparent: true, opacity: .55, roughness: .42, metalness: .16, side: THREE.DoubleSide }));
       shallow.rotation.x = -Math.PI / 2; shallow.position.y = -.165; shallow.renderOrder = 0; world.add(shallow);
       const coast = [
-        [-22, -8], [-18, -18], [-7, -22], [8, -21], [19, -16], [22, -5],
-        [21, 9], [16, 20], [5, 22], [-10, 21], [-20, 16], [-22, 5],
+        [-27, -10], [-23, -22], [-10, -27], [7, -25], [21, -19], [27, -6],
+        [25, 10], [17, 24], [4, 27], [-12, 25], [-24, 17], [-27, 4],
       ];
       const island = new THREE.Shape(); island.moveTo(...coast[0]);
       for (const point of coast.slice(1)) island.lineTo(...point);
@@ -509,6 +515,13 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
         metalness: .02,
       }));
       land.position.y = -.04; land.receiveShadow = true; world.add(land);
+      // Layer a few non-selectable coastal shelves over the plate. They make the
+      // map read as an irregular place at a glance; survey cells remain the only
+      // source of terrain knowledge and the only tile click targets.
+      for (const [radius, color, opacity] of [[22.8, 0x6d765c, .34], [25.2, 0x7e7558, .22]]) {
+        const shelf = new THREE.Mesh(new THREE.RingGeometry(radius - 1.15, radius, 72), new THREE.MeshStandardMaterial({ color, transparent: true, opacity, roughness: 1, side: THREE.DoubleSide, depthWrite: false }));
+        shelf.rotation.x = -Math.PI / 2; shelf.position.y = .015; shelf.renderOrder = 0; world.add(shelf);
+      }
       world.add(meshIslandAtmosphere(latest.current.viewMode));
       world.add(viewBoundaryMarker(latest.current.viewMode));
       for (const t of state.tiles) {
