@@ -32,6 +32,17 @@ export default function App({ store }) {
   const openQuestions = state.pendingQuestions.filter((q) => !q.answered);
   useEffect(() => { const controller = new AbortController(); registerNativeTools(createToolSet(store), { signal: controller.signal }).then(setNative).catch((error) => setNative({ supported: false, registered: [], reason: error.message })); return () => controller.abort(); }, [store, state.sessionId]);
   useEffect(() => { if (!showDoctrine) return undefined; const onKey = (e) => { if (e.key === 'Escape') setShowDoctrine(false); }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); }, [showDoctrine]);
+  // Escape is the reliable, non-destructive route from an active correspondence desk
+  // back to mission selection. Starting a mission there creates a fresh local session.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && screen === 'play' && !showDoctrine) {
+        store.pause(); setScreen('title');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [screen, showDoctrine, store]);
   const deliveredRef = useRef(0);
   useEffect(() => {
     const delivered = state.packets.filter((p) => p.status === 'delivered').length;
