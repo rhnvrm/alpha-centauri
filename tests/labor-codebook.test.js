@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/game/state.js';
-import { integrate, constructBuilding, cancelJob, assignRobots, queueHumanRoad, queueHumanProtocol, queueHumanIntent, queueLocalRoad } from '../src/game/engine.js';
+import { integrate, constructBuilding, cancelJob, assignRobots, queueHumanRoad, queueHumanProtocol, queueHumanIntent, queueLocalRoad, queueLocalSurvey, queueLocalCargo, scheduleMaintenance } from '../src/game/engine.js';
 import { LIGHT_DELAY_DAYS, RESILIENCE_24, bitsForPayload } from '../src/game/constants.js';
 import { buildLocal } from './helpers.js';
 
@@ -60,6 +60,31 @@ test('cancelling a construction job releases its robot', () => {
   s = cancelJob(s, j.id);
   assert.equal(s.robots.find((r) => r.id === robot.id).status, 'idle');
   assert.equal(s.robots.find((r) => r.id === robot.id).assignedJob, null);
+});
+
+test('specialist jobs bind routes and lifecycle to their matching robots', () => {
+  let s = createGame('rightToDecide');
+  s = queueLocalSurvey(s, 'ridge');
+  const survey = s.jobs.at(-1); const rover = s.robots.find((r) => r.type === 'survey');
+  assert.equal(survey.robotId, rover.id); assert.equal(rover.lifecycle, 'en-route');
+  assert.deepEqual(survey.target, { x: 23, y: 10 }); assert.ok(survey.path.length > 0);
+  s = integrate(s, survey.travelDays);
+  assert.equal(s.robots.find((r) => r.id === rover.id).lifecycle, 'working');
+  assert.equal(s.jobs.find((j) => j.id === survey.id).status, 'active');
+
+  s = queueLocalCargo(s, 100); const cargo = s.jobs.at(-1); const hauler = s.robots.find((r) => r.type === 'cargo');
+  assert.equal(cargo.robotId, hauler.id); assert.equal(hauler.lifecycle, 'en-route');
+  s = integrate(s, 90); const finishedHauler = s.robots.find((r) => r.id === hauler.id);
+  assert.equal(s.mission.exported, 100); assert.equal(finishedHauler.status, 'idle'); assert.equal(finishedHauler.lifecycle, 'idle');
+});
+
+test('maintenance uses the maintenance specialist and releases it', () => {
+  let s = createGame('rightToDecide');
+  s = scheduleMaintenance(s, 'launch-1');
+  const j = s.jobs.at(-1); const drone = s.robots.find((r) => r.type === 'maintenance');
+  assert.equal(j.robotId, drone.id); assert.equal(drone.lifecycle, 'en-route');
+  s = integrate(s, 30); const finishedDrone = s.robots.find((r) => r.id === drone.id);
+  assert.equal(s.jobs.at(-1).status, 'complete'); assert.equal(finishedDrone.status, 'idle');
 });
 
 test('a human road order is validated again at arrival', () => {

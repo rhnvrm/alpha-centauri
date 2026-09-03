@@ -285,17 +285,19 @@ function robotSpriteKey(r) {
 function meshRobot(r, textures) {
   const g = new THREE.Group(); g.userData = { id: r.id, kind: 'robot' };
   const key = robotSpriteKey(r); const hasSprite = addSprite(g, textures[key], key, { y: .12, centerY: .12, order: 4 });
-  const role = r.status === 'moving' ? 0x72d9ce : r.type === 'construction' ? 0xd9a455 : r.type === 'survey' ? 0x5bb7c7 : r.type === 'cargo' ? 0xd17e47 : r.type === 'maintenance' ? 0x91bc72 : 0xc6b680;
+  const lifecycle = r.lifecycle || r.status;
+  const role = lifecycle === 'en-route' || r.status === 'moving' ? 0x72d9ce : lifecycle === 'working' ? 0xf0c56b : r.type === 'construction' ? 0xd9a455 : r.type === 'survey' ? 0x5bb7c7 : r.type === 'cargo' ? 0xd17e47 : r.type === 'maintenance' ? 0x91bc72 : 0xc6b680;
   // A small role halo is intentionally visible from the default camera, so rovers don't read
   // as interchangeable decoration when the player is choosing a target.
   const halo = new THREE.Mesh(new THREE.RingGeometry(.33, .39, 16), new THREE.MeshBasicMaterial({ color: role, transparent: true, opacity: .82, side: THREE.DoubleSide }));
   halo.rotation.x = -Math.PI / 2; halo.position.y = .18; halo.renderOrder = 3; g.add(halo);
   const beacon = addMesh(g, new THREE.CylinderGeometry(.025, .045, .22, 7), role, [0, .49, 0], { emissive: role, emissiveIntensity: 1.8, roughness: .35 });
   beacon.castShadow = false;
+  if (r.type === 'cargo' && lifecycle === 'working') addSprite(g, textures.vehiclePallet, 'vehiclePallet', { y: .52, centerY: .12, order: 5, scale: .62 });
   if (!hasSprite) {
     addMesh(g, new THREE.BoxGeometry(.68, .22, .48), 0xd9d4ba, [0, .25, 0], { metalness: .45, roughness: .48 });
     for (const x of [-.25, .25]) addMesh(g, new THREE.CylinderGeometry(.11, .11, .5, 10), 0x303634, [x, .14, 0], { metalness: .55 });
-    addMesh(g, new THREE.CylinderGeometry(.055, .09, .38, 8), r.status === 'assigned' ? 0x78b4aa : 0xb78355, [0, .55, 0], { metalness: .7, emissive: r.status === 'assigned' ? 0x164d4b : 0x000000 });
+    addMesh(g, new THREE.CylinderGeometry(.055, .09, .38, 8), lifecycle === 'en-route' ? 0x72d9ce : lifecycle === 'working' ? 0xf0c56b : 0xb78355, [0, .55, 0], { metalness: .7, emissive: lifecycle === 'en-route' ? 0x164d4b : lifecycle === 'working' ? 0x6b4b16 : 0x000000 });
   }
   const [wx, wz] = cell(r.x, r.y); g.position.set(wx, 0, wz); g.userData.to = null; return g;
 }
@@ -514,12 +516,11 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       }
       for (const id of roverMotion.keys()) if (!seenRovers.has(id)) roverMotion.delete(id);
       if (latest.current.viewMode === 'local') {
-        for (const j of state.jobs.filter((job) => job.type === 'move' && ['queued', 'active'].includes(job.status))) {
+        for (const j of state.jobs.filter((job) => ['queued', 'active'].includes(job.status) && job.target)) {
           const rover = (obs.robots || []).find((robot) => robot.id === j.robotId);
-          const waypoint = j.path?.[0];
-          if (!rover || !waypoint) continue;
-          const [fromX, fromZ] = cell(rover.x, rover.y); const [toX, toZ] = cell(waypoint.x, waypoint.y);
-          world.add(lineBetween(fromX, fromZ, toX, toZ, 0x72d9ce, .38));
+          if (!rover) continue;
+          const [fromX, fromZ] = cell(rover.x, rover.y); const [toX, toZ] = cell(j.target.x, j.target.y);
+          world.add(lineBetween(fromX, fromZ, toX, toZ, j.type === 'cargo' ? 0xd17e47 : 0x72d9ce, .38));
         }
       }
       for (const b of (obs.buildings || [])) world.add(meshBuilding({ ...b, status: b.status || 'complete', health: b.health ?? 100, level: 0, origin: latest.current.viewMode }, spriteTextures));

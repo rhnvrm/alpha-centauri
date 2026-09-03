@@ -17,16 +17,43 @@ function job(state, data, labor = false) {
   return j;
 }
 
-/** Deterministic labor gate: construction needs one idle robot; otherwise the job waits. */
+const roleForJob = (j) => ({ construct: 'construction', survey: 'survey', cargo: 'cargo', maintenance: 'maintenance' }[j.type] || null);
+const targetForJob = (state, j) => {
+  if (j.type === 'construct') { const b = state.buildings.find((x) => x.id === j.buildingId); return b ? { x: b.x, y: b.y } : null; }
+  if (j.type === 'cargo') { const b = state.buildings.find((x) => x.type === 'launch' && x.status === 'complete'); return b ? { x: b.x, y: b.y } : null; }
+  if (j.type === 'maintenance') { const b = state.buildings.find((x) => x.id === j.facilityId); return b ? { x: b.x, y: b.y } : null; }
+  if (j.type === 'survey') return ({ ridge: { x: 23, y: 10 }, 'southern-aquifer': { x: 22, y: 24 }, 'northern-reach': { x: 25, y: 7 } }[j.region] || { x: 23, y: 10 });
+  return null;
+};
+function pathToTarget(state, robot, target) {
+  if (!target) return [];
+  const path = []; let x = robot.x; let y = robot.y;
+  while (x !== target.x) { x += Math.sign(target.x - x); path.push({ x, y }); }
+  while (y !== target.y) { y += Math.sign(target.y - y); path.push({ x, y }); }
+  return path;
+}
+/** Deterministic role-specific labor gate. Jobs keep their target and route so the
+ * renderer and inspectors can show the physical work rather than a decorative sprite. */
 function assignFreeRobot(state, j) {
-  const robot = state.robots.find((r) => r.status === 'idle');
-  if (robot) { robot.status = 'assigned'; robot.assignedJob = j.id; j.status = 'queued'; j.startDay = state.localDay; }
+  const role = roleForJob(j);
+  // Construction can use any idle platform as a deterministic fallback: early
+  // scenarios intentionally have a mixed fleet with only one builder. Specialist
+  // work (survey, cargo, maintenance) never falls back to another role.
+  const robot = j.type === 'construct'
+    ? state.robots.find((r) => r.status === 'idle')
+    : state.robots.find((r) => r.status === 'idle' && (!role || r.type === role));
+  if (robot) {
+    const target = targetForJob(state, j); const path = pathToTarget(state, robot, target);
+    robot.status = 'assigned'; robot.lifecycle = path.length ? 'en-route' : 'working'; robot.assignedJob = j.id; robot.path = path;
+    j.robotId = robot.id; j.target = target; j.path = path; j.travelDays = path.length; j.workStartDay = state.localDay + path.length;
+    j.status = 'queued'; j.startDay = state.localDay;
+  }
   else j.status = 'awaiting-labor';
 }
 
 function freeRobotFor(state, jobId) {
   const robot = state.robots.find((r) => r.assignedJob === jobId);
-  if (robot) { robot.status = 'idle'; robot.assignedJob = null; }
+  if (robot) { robot.status = 'idle'; robot.lifecycle = 'idle'; robot.assignedJob = null; robot.path = []; }
 }
 
 export function assignRobots(state, jobId, robotIds = []) {
@@ -37,7 +64,14 @@ export function assignRobots(state, jobId, robotIds = []) {
     const r = next.robots.find((k) => k.id === rid);
     if (!r || r.assignedJob && r.assignedJob !== jobId) throw Object.assign(new Error('ROBOT_BUSY'), { code: 'ROBOT_BUSY', reason: 'Robot is unavailable or already assigned.' });
   }
-  for (const rid of robotIds) { const r = next.robots.find((k) => k.id === rid); if (r && !r.assignedJob) { r.status = 'assigned'; r.assignedJob = jobId; } }
+  for (const rid of robotIds) {
+    const r = next.robots.find((k) => k.id === rid);
+    if (r && !r.assignedJob) {
+      r.status = 'assigned'; r.lifecycle = 'en-route'; r.assignedJob = jobId;
+      const target = targetForJob(next, j); r.path = pathToTarget(next, r, target);
+      j.robotId = r.id; j.target = target; j.path = r.path; j.travelDays = r.path.length; j.workStartDay = next.localDay + r.path.length;
+    }
+  }
   if (j.status === 'awaiting-labor') { j.status = 'queued'; j.startDay = next.localDay; }
   event(next, 'robots_assigned', { jobId, robotIds }); return markRevision(next);
 }
@@ -81,6 +115,13 @@ export function integrate(state, days = 0) {
     for (const j of next.jobs) {
       if (j.status === 'awaiting-labor') assignFreeRobot(next, j);
       if (j.status === 'queued' && next.localDay >= j.startDay) j.status = 'active';
+      if (j.status === 'active' && j.robotId) {
+        const worker = next.robots.find((r) => r.id === j.robotId);
+        const step = Math.min(j.path?.length || 0, Math.max(0, next.localDay - j.startDay));
+        const waypoint = step > 0 ? j.path[step - 1] : null;
+        if (worker && waypoint) { worker.x = waypoint.x; worker.y = waypoint.y; worker.path = j.path.slice(step); }
+        if (worker && next.localDay >= (j.workStartDay ?? j.startDay)) worker.lifecycle = 'working';
+      }
       // Movement is a local, physical job rather than a coordinate teleport.
       // The route is canonical and advances one terrain tile per simulation day.
       if (j.type === 'move' && j.status === 'active' && Array.isArray(j.path)) {
@@ -167,7 +208,8 @@ function applyJob(state, j) {
     if (robot) { robot.x = j.x; robot.y = j.y; robot.path = []; }
   }
   if (j.type === 'mine' && j.special !== true) { /* handled by construct above */ }
-  if (j.type === 'cargo') { state.mission.exported = (state.mission.exported || 0) + (j.quantity || 0); event(state, 'cargo_launched', { quantity: j.quantity }); }
+  if (j.type === 'cargo') { state.mission.exported = (state.mission.exported || 0) + (j.quantity || 0); event(state, 'cargo_launched', { quantity: j.quantity, robotId: j.robotId }); }
+  if (j.type === 'maintenance') { const facility = state.buildings.find((b) => b.id === j.facilityId); if (facility) facility.health = 100; }
 }
 function deliverDue(state) {
   for (const p of state.packets) if (p.status === 'in-transit' && p.arrivalDay <= state.localDay) {
@@ -294,7 +336,7 @@ export function queueLocalCargo(state, quantity) {
   if (!next.buildings.some((b) => b.type === 'launch' && b.status === 'complete')) throw Object.assign(new Error('NO_PAD'), { code: 'NO_PAD', reason: 'No completed launch pad exists.' });
   const qty = Math.min(Math.max(0, Math.floor(quantity || 0)), next.resources.iridium);
   if (qty <= 0) throw Object.assign(new Error('INVALID_QUANTITY'), { code: 'INVALID_QUANTITY' });
-  next.resources.iridium -= qty; job(next, { type: 'cargo', status: 'queued', startDay: next.localDay, completeDay: next.localDay + 90, quantity: qty });
+  next.resources.iridium -= qty; job(next, { type: 'cargo', status: 'queued', startDay: next.localDay, completeDay: next.localDay + 90, quantity: qty }, true);
   event(next, 'cargo_job_queued', { quantity: qty }); return markRevision(next);
 }
 
@@ -338,8 +380,14 @@ export function queueLocalRobotMove(state, robotId, x, y) {
 
 /** Local survey job: scheduled rover survey with deterministic discovery on completion. */
 export function queueLocalSurvey(state, region = 'ridge') {
-  const next = copyGame(state); job(next, { type: 'survey', status: 'queued', startDay: next.localDay, completeDay: next.localDay + 45, region });
+  const next = copyGame(state); job(next, { type: 'survey', status: 'queued', startDay: next.localDay, completeDay: next.localDay + 45, region }, true);
   event(next, 'survey_queued', { region }); return markRevision(next);
+}
+export function scheduleMaintenance(state, facilityId) {
+  const next = copyGame(state); const facility = next.buildings.find((b) => b.id === facilityId && b.status === 'complete');
+  if (!facility) throw Object.assign(new Error('FACILITY_UNAVAILABLE'), { code: 'FACILITY_UNAVAILABLE' });
+  const j = job(next, { type: 'maintenance', facilityId, status: 'queued', startDay: next.localDay, completeDay: next.localDay + 30 }, true);
+  event(next, 'maintenance_queued', { jobId: j.id, facilityId, robotId: j.robotId || null }); return markRevision(next);
 }
 export function sendReport(state, text, kind = 'status') { const next = copyGame(state); packet(next, kind, { text, ...telemetryFor(next) }, 'downlink', next.localDay, 'daneel'); event(next, 'report_queued', { kind }); return markRevision(next); }
 export function sendAuthorizationRequest(state, payload) { const next = copyGame(state); packet(next, 'authorization', { ...payload, capturedDay: next.localDay }, 'downlink', next.localDay, 'daneel'); return markRevision(next); }
@@ -372,5 +420,5 @@ function localBuildSites(state, type, limit = 3) {
 
 export function inspectProjection(state) {  const s = scenarioFor(state); const foodMonths = state.resources.food / Math.max(1, state.resources.population * 0.02);
   const safeBuildSites = Object.fromEntries(Object.keys(BUILDINGS).map((type) => [type, localBuildSites(state, type)]));
-  return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, charter: state.doctrine.charter, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status }) => ({ id, type, x, y, status })), jobs: state.jobs.map(({ id, type, status, completeDay }) => ({ id, type, status, completeDay })), safeBuildSites, productionRates: { ...(state.productionRates || {}) }, metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
+  return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, charter: state.doctrine.charter, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path }) => ({ id, type, x, y, status, lifecycle: lifecycle || status, assignedJob: assignedJob || null, path: path || [] })), jobs: state.jobs.map(({ id, type, status, completeDay, robotId, target, workStartDay }) => ({ id, type, status, completeDay, robotId: robotId || null, target: target || null, workStartDay: workStartDay ?? null, remainingDays: Math.max(0, completeDay - state.localDay) })), safeBuildSites, productionRates: { ...(state.productionRates || {}) }, metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
 }

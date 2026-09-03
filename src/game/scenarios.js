@@ -113,7 +113,7 @@ export const SCENARIOS = {
     ],
     flows: { foodPerGreenhouse: 2, waterPerReservoir: 3, foodPerHabitat: 0, iridiumPerMineDay: 4 },
     buildings: [building('relay-1', 'relay', 15, 15), building('hab-1', 'habitat', 12, 14), building('solar-1', 'solar', 18, 13), building('mine-1', 'mine', 24, 12), building('launch-1', 'launch', 7, 21)],
-    robots: [robot('rover-1', 'survey', 9, 13), robot('builder-1', 'construction', 19, 18), robot('hauler-1', 'cargo', 22, 16)],
+    robots: [robot('rover-1', 'survey', 9, 13), robot('builder-1', 'construction', 19, 18), robot('hauler-1', 'cargo', 22, 16), robot('maintenance-1', 'maintenance', 18, 17)],
     resources: { material: 240, food: 125000, water: 185000, power: 340, powerCapacity: 480, population: 330, capacity: 420, iridium: 320 },
   },
 };

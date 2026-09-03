@@ -224,6 +224,8 @@ export default function App({ store }) {
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
   const selectedBuilding = selected?.kind === "building" ? receivedBuildings.find((building) => building.id === selected.id) : null;
+  const selectedRobot = selected?.kind === "robot" ? state.robots.find((robot) => robot.id === selected.id) : null;
+  const selectedRobotJob = selectedRobot?.assignedJob ? state.jobs.find((job) => job.id === selectedRobot.assignedJob) : null;
   const projectImpact = buildingImpact(buildType, state);
   const goal = missionTarget(state.missionId, projection.resources);
   const selectedImpact = selectedBuilding ? buildingImpact(selectedBuilding.type, state) : null;
@@ -1006,7 +1008,11 @@ export default function App({ store }) {
                   {selected.kind === "tile"
                     ? `Received map tile ${selected.x}, ${selected.y} · ready for an Earth order`
                     : selected.kind === "robot"
-                      ? "Received rover position · a literal move command still crosses the light-delay"
+                      ? superpositionActive && selectedRobotJob
+                        ? `${selectedRobot.type} · ${(selectedRobot.lifecycle || selectedRobot.status).toUpperCase()} · ${selectedRobotJob.type} · ${Math.max(0, selectedRobotJob.completeDay - state.localDay)}d remaining`
+                        : superpositionActive
+                          ? `${selectedRobot?.type || "rover"} · IDLE · available for local work`
+                          : "Received rover position · a literal move command still crosses the light-delay"
                       : "Selectable from reconstructed telemetry"}
                 </small>
                 {selectedImpact && (
