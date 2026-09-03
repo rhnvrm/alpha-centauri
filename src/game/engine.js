@@ -1,5 +1,6 @@
 import { BUILDINGS, LIGHT_DELAY_DAYS, SOLAR_OUTPUT_PER_DAY, bitsForPayload, windowsFor } from './constants.js';
 import { copyGame, markRevision, occupied, tileAt, updateProgress, scenarioFor, isFlooded, telemetryFor } from './state.js';
+import { surveyRegion } from './scenarios.js';
 import { gridConsumers, powerSources, isGridConnected } from './networks.js';
 
 const now = () => Date.now();
@@ -201,7 +202,13 @@ function applyJob(state, j) {
     if (b.type === 'mine') state.resources.iridium += 720;
     if (b.type === 'launch') { /* launch pad: no direct stock */ }
   }
-  if (j.type === 'survey') { event(state, 'survey_complete', { region: j.region, discovery: state.pendingEvents.find((e) => e.type === 'survey-discovery')?.target || 'safe-ridge' }); }
+  if (j.type === 'survey') {
+    const region = surveyRegion(j.region);
+    const known = new Set(state.localKnowledge?.surveyedTiles || []);
+    for (const tile of state.tiles) if (Math.abs(tile.x - region.center.x) + Math.abs(tile.y - region.center.y) <= region.radius) known.add(`${tile.x},${tile.y}`);
+    state.localKnowledge = { surveyedTiles: [...known], regions: [...(state.localKnowledge?.regions || []).filter((entry) => entry.id !== j.region), { id: j.region, name: region.name, finding: region.finding, discoveredDay: state.localDay }] };
+    event(state, 'survey_complete', { region: j.region, name: region.name, discovery: state.pendingEvents.find((e) => e.type === 'survey-discovery')?.target || region.finding });
+  }
   if (j.type === 'road') { for (const cell of (j.path || [])) { const [x, y] = Array.isArray(cell) ? [Math.floor(cell[0]), Math.floor(cell[1])] : [Math.floor(cell.x), Math.floor(cell.y)]; const t = tileAt(state, x, y); if (t && t.terrain === 'regolith' && !floodFilter(state, state.localDay)(x, y) && !state.roads.some((r) => (Array.isArray(r) ? r[0] === x && r[1] === y : r.x === x && r.y === y))) state.roads.push({ x, y }); } }
   if (j.type === 'move') {
     const robot = state.robots.find((candidate) => candidate.id === j.robotId);
@@ -244,7 +251,7 @@ function deliverDue(state) {
     } else {
       if (p.kind === 'mission-result') { state.mission.status = 'confirmed'; state.mission.earthOutcome = p.payload.outcome; state.mission.confirmedAt = state.localDay; event(state, 'mission_confirmed', { outcome: p.payload.outcome }); }
       else if (p.kind === 'authorization') { state.pendingQuestions.push({ packetId: p.id, question: p.payload.question, options: p.payload.options, safeDefault: p.payload.safeDefault, receivedDay: state.localDay, answered: false, answerDay: state.localDay + LIGHT_DELAY_DAYS }); event(state, 'authorization_question', { packetId: p.id }); }
-      else { state.reports.push({ ...p, receivedDay: state.localDay }); if (p.payload?.capturedDay !== undefined) { state.telemetry.captureDay = p.payload.capturedDay; state.telemetry.arrivalDay = state.localDay; state.telemetry.label = `Captured day ${p.payload.capturedDay}`; if (p.payload.observedResources) state.observedResources = p.payload.observedResources; } if (p.payload?.observedWorld) state.observedWorld = p.payload.observedWorld; event(state, 'report_received', { packetId: p.id }); }
+      else { state.reports.push({ ...p, receivedDay: state.localDay }); if (p.payload?.capturedDay !== undefined) { state.telemetry.captureDay = p.payload.capturedDay; state.telemetry.arrivalDay = state.localDay; state.telemetry.label = `Captured day ${p.payload.capturedDay}`; if (p.payload.observedResources) state.observedResources = p.payload.observedResources; } if (p.payload?.observedWorld) state.observedWorld = p.payload.observedWorld; if (p.payload?.observedKnowledge) state.observedKnowledge = p.payload.observedKnowledge; event(state, 'report_received', { packetId: p.id }); }
     }
   }
 }
@@ -420,5 +427,5 @@ function localBuildSites(state, type, limit = 3) {
 
 export function inspectProjection(state) {  const s = scenarioFor(state); const foodMonths = state.resources.food / Math.max(1, state.resources.population * 0.02);
   const safeBuildSites = Object.fromEntries(Object.keys(BUILDINGS).map((type) => [type, localBuildSites(state, type)]));
-  return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, charter: state.doctrine.charter, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path }) => ({ id, type, x, y, status, lifecycle: lifecycle || status, assignedJob: assignedJob || null, path: path || [] })), jobs: state.jobs.map(({ id, type, status, completeDay, robotId, target, workStartDay }) => ({ id, type, status, completeDay, robotId: robotId || null, target: target || null, workStartDay: workStartDay ?? null, remainingDays: Math.max(0, completeDay - state.localDay) })), safeBuildSites, productionRates: { ...(state.productionRates || {}) }, metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
+  return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, charter: state.doctrine.charter, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path }) => ({ id, type, x, y, status, lifecycle: lifecycle || status, assignedJob: assignedJob || null, path: path || [] })), jobs: state.jobs.map(({ id, type, status, completeDay, robotId, target, workStartDay }) => ({ id, type, status, completeDay, robotId: robotId || null, target: target || null, workStartDay: workStartDay ?? null, remainingDays: Math.max(0, completeDay - state.localDay) })), surveyedRegions: structuredClone(state.localKnowledge?.regions || []), safeBuildSites, productionRates: { ...(state.productionRates || {}) }, metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
 }

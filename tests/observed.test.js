@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/game/state.js';
-import { integrate, sendReport, nextEarthArrivalDay, queueHumanIntent, constructBuilding, queueLocalRoad } from '../src/game/engine.js';
+import { integrate, sendReport, nextEarthArrivalDay, queueHumanIntent, constructBuilding, queueLocalRoad, queueLocalSurvey, inspectProjection } from '../src/game/engine.js';
 import { loadGame, saveGame } from '../src/game/storage.js';
 import { createStore } from '../src/game/store.js';
 import { earthDemoGuide, earthMissionStatus, earthProjection } from '../src/game/projections.js';
@@ -30,6 +30,21 @@ test('queued local builds (not yet complete) never leak into telemetry', () => {
   s = constructBuilding(s, 'battery', 28, 3, 'daneel'); // queued, not complete
   const payload = sendReport(s, 'status').packets.at(-1).payload;
   assert.equal(payload.observedWorld.buildings.some((b) => b.type === 'battery'), false);
+});
+
+test('a rover survey expands Daneel knowledge first, then Earth knowledge only after its telemetry arrives', () => {
+  let s = createGame('rightToDecide');
+  const initiallyObserved = new Set(s.observedKnowledge.surveyedTiles);
+  s = queueLocalSurvey(s, 'ridge');
+  s = integrate(s, 60);
+  const localRegion = inspectProjection(s).surveyedRegions.find((region) => region.id === 'ridge');
+  assert.equal(localRegion?.name, 'Cobalt Ridge');
+  assert.ok(s.localKnowledge.surveyedTiles.some((key) => !initiallyObserved.has(key)), 'Daneel has a newly surveyed area');
+  assert.deepEqual(s.observedKnowledge.surveyedTiles, [...initiallyObserved], 'Earth has not received the survey');
+  s = sendReport(s, 'Cobalt Ridge survey complete.');
+  s = integrate(s, s.packets.at(-1).arrivalDay - s.localDay);
+  assert.ok(s.observedKnowledge.regions.some((region) => region.name === 'Cobalt Ridge'));
+  assert.deepEqual(s.observedKnowledge.surveyedTiles, s.localKnowledge.surveyedTiles);
 });
 
 test('autonomous telemetry is filed on a fixed yearly cadence and arrives with the normal delay', () => {

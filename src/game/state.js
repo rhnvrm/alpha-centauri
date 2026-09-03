@@ -1,5 +1,5 @@
 import { LIGHT_DELAY_DAYS, SAVE_VERSION, clamp } from './constants.js';
-import { SCENARIOS, scenarioTiles, seededRoads, scenarioFloodKeys } from './scenarios.js';
+import { SCENARIOS, scenarioTiles, seededRoads, scenarioFloodKeys, initialSurveyKnowledge } from './scenarios.js';
 import { powerSources } from './networks.js';
 
 const id = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -13,6 +13,10 @@ export function createGame(missionId = 'firstLight', sessionId = id('session')) 
     connection: { status: 'not-connected', leaseId: null, expiresAt: 0, agentLabel: null },
     channel: { uplinkBits: 0, downlinkBits: 0, uplinkPackets: 0, downlinkPackets: 0 },
     resources: { ...scenario.resources }, observedResources: { ...scenario.resources }, buildings: structuredClone(scenario.buildings), robots: structuredClone(scenario.robots),
+    // These two ledgers are deliberately independent: Daneel can act on a completed
+    // rover scan immediately, while Earth must wait for the corresponding downlink.
+    localKnowledge: { surveyedTiles: initialSurveyKnowledge(scenario), regions: [{ id: 'landing-perimeter', name: 'Landing relay perimeter', discoveredDay: 0 }] },
+    observedKnowledge: { surveyedTiles: initialSurveyKnowledge(scenario), regions: [{ id: 'landing-perimeter', name: 'Landing relay perimeter', discoveredDay: 0 }] },
     observedWorld: { buildings: scenario.buildings.map(({ id, type, x, y }) => ({ id, type, x, y, status: 'complete' })), robots: structuredClone(scenario.robots).map(({ id, type, x, y, status }) => ({ id, type, x, y, status })), roads: seededRoads(scenario).map((r) => ({ x: r.x, y: r.y })) },
     tiles: scenarioTiles(scenario), floodKeys: [...scenarioFloodKeys(scenario)], roads: seededRoads(scenario), jobs: [], packets: [], inbox: [], reports: [], observations: [], events: [], logs: [], receipts: {},
     pendingEvents: structuredClone(scenario.events || []),
@@ -63,6 +67,7 @@ export function telemetryFor(state) {
       robots: state.robots.map(({ id, type, x, y, status }) => ({ id, type, x, y, status: 'idle' })),
       roads: state.roads.map((r) => ({ x: Array.isArray(r) ? r[0] : r.x, y: Array.isArray(r) ? r[1] : r.y })),
     },
+    observedKnowledge: structuredClone(state.localKnowledge || { surveyedTiles: [], regions: [] }),
   };
 }
 export function validateGame(state) {

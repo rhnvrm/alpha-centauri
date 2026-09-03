@@ -101,10 +101,12 @@ const receivedPlacement = (state, target, type) => {
   if (!spec) return { valid: false, reason: "UNKNOWN FACILITY." };
   const [width, height] = spec.footprint;
   const observed = state.observedWorld?.buildings || [];
+  const surveyed = new Set(state.observedKnowledge?.surveyedTiles || []);
   for (let dy = 0; dy < height; dy += 1) for (let dx = 0; dx < width; dx += 1) {
     const x = target.x + dx; const y = target.y + dy;
     const tile = state.tiles.find((candidate) => candidate.x === x && candidate.y === y);
     if (!tile) return { valid: false, reason: "BLOCKED · FOOTPRINT LEAVES RECEIVED MAP." };
+    if (!surveyed.has(`${x},${y}`)) return { valid: false, reason: "UNSURVEYED · WAIT FOR A DANEEL DOWNLINK." };
     if (tile.terrain === "rock") return { valid: false, reason: "BLOCKED · RECEIVED TERRAIN IS ROCK." };
     if (tile.terrain === "wetland" && !state.doctrine.authority.habitatLoss) return { valid: false, reason: "BLOCKED · PROTECTED WETLAND NEEDS AUTHORITY." };
     if (observed.some((building) => x < building.x + (building.type === "greenhouse" || building.type === "launch" ? 3 : 2) && x + 1 > building.x && y < building.y + 2 && y + 1 > building.y)) return { valid: false, reason: "BLOCKED · OBSERVED FACILITY OCCUPIES FOOTPRINT." };

@@ -440,6 +440,10 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       if (mode === 'local') return { buildings: current.buildings.filter((b) => b.status !== 'cancelled'), robots: current.robots, roads: current.roads };
       return current.observedWorld || { buildings: [], robots: [], roads: [] };
     };
+    const surveyed = () => {
+      const { state: current, viewMode: mode } = latest.current;
+      return new Set((mode === 'local' ? current.localKnowledge : current.observedKnowledge)?.surveyedTiles || []);
+    };
     let tacticalSelection = null;
     // The simulation advances in discrete days (and can advance several days per visual
     // tick). Retaining a render-side rover position turns those canonical tile steps into
@@ -450,6 +454,7 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
     const renderWorld = () => {
       const { state } = latest.current;
       const obs = observed();
+      const surveyedTiles = surveyed();
       const neededSprites = new Set(['terrainRock', 'terrainWetland', 'terrainRoadSignal']);
       for (const b of (obs.buildings || [])) neededSprites.add(b.type);
       for (const r of (obs.robots || [])) neededSprites.add(robotSpriteKey(r));
@@ -489,11 +494,16 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
         const m = new THREE.Mesh(new THREE.BoxGeometry(1.1, .1, 1.1), pickMaterial);
         const [wx, wz] = cell(t.x, t.y); m.position.set(wx, .08, wz);
         m.userData = tileData(t.x, t.y); world.add(m);
-        if (!observedRoadKeys.has(`${t.x},${t.y}`)) world.add(meshTerrainDetail(t, m.userData, spriteTextures));
+        const visible = surveyedTiles.has(`${t.x},${t.y}`);
+        if (visible && !observedRoadKeys.has(`${t.x},${t.y}`)) world.add(meshTerrainDetail(t, m.userData, spriteTextures));
         // Flood-risk contour: the old map showed seasonal floodplains; the briefing warned about them.
-        if (floodKeys.has(`${t.x},${t.y}`)) {
+        if (visible && floodKeys.has(`${t.x},${t.y}`)) {
           const contour = new THREE.Mesh(new THREE.BoxGeometry(1.04, .06, 1.04), new THREE.MeshBasicMaterial({ color: 0xd9b46b, transparent: true, opacity: .18, wireframe: true }));
           contour.position.set(wx, .13, wz); contour.userData = m.userData; world.add(contour);
+        }
+        if (!visible) {
+          const fog = new THREE.Mesh(new THREE.BoxGeometry(1.08, .09, 1.08), new THREE.MeshBasicMaterial({ color: 0x111817, transparent: true, opacity: .9 }));
+          fog.position.set(wx, .16, wz); fog.userData = m.userData; world.add(fog);
         }
       }
       // Roads and connectivity are derived solely from received telemetry. A local relay
@@ -565,8 +575,9 @@ export function ColonyScene({ state, onSelect, reducedMotion = false, rendererFa
       if (!mctx) return;
       const { state } = latest.current;
       const obs = observed();
+      const surveyedTiles = surveyed();
       const s = 150 / 32; mctx.clearRect(0, 0, 150, 150);
-      for (const t of state.tiles) { mctx.fillStyle = palette[t.terrain] != null ? `#${palette[t.terrain].toString(16).padStart(6, '0')}` : '#3b433e'; mctx.fillRect(t.x * s, t.y * s, s + .4, s + .4); }
+      for (const t of state.tiles) { mctx.fillStyle = surveyedTiles.has(`${t.x},${t.y}`) && palette[t.terrain] != null ? `#${palette[t.terrain].toString(16).padStart(6, '0')}` : '#101716'; mctx.fillRect(t.x * s, t.y * s, s + .4, s + .4); }
       for (const r of (obs.roads || [])) { mctx.fillStyle = '#8a7f66'; mctx.fillRect(r.x * s, r.y * s, s + .4, s + .4); }
       for (const b of (obs.buildings || [])) { mctx.fillStyle = '#e8e2c8'; mctx.fillRect(b.x * s, b.y * s, (s + .4) * (b.type === 'greenhouse' || b.type === 'launch' ? 3 : 2), (s + .4) * 2); }
       for (const r of (obs.robots || [])) { mctx.fillStyle = '#d98f4e'; mctx.beginPath(); mctx.arc((r.x + .5) * s, (r.y + .5) * s, 2.2, 0, Math.PI * 2); mctx.fill(); }

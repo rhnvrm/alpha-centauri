@@ -127,4 +127,21 @@ export function seededRoads(scenario) {
 
 export function scenarioTiles(scenario) { return baseTiles(scenario.seed); }
 export function scenarioFloodKeys(scenario) { return scenario.events?.some((e) => e.type === 'flood') ? floodKeys(scenario.seed) : new Set(); }
+
+// Survey is intentionally authored, rather than a generic "reveal everything"
+// switch.  The names are what Daneel can report and what Earth eventually sees.
+export function surveyRegion(region) {
+  const definitions = {
+    ridge: { name: 'Cobalt Ridge', center: { x: 23, y: 10 }, radius: 5, finding: 'A stable ridge corridor with exposed iridium-bearing regolith.' },
+    'southern-aquifer': { name: 'Southern Aquifer', center: { x: 22, y: 24 }, radius: 5, finding: 'A shallow aquifer margin; seasonal flooding constrains heavy construction.' },
+    'northern-reach': { name: 'Northern Reach', center: { x: 25, y: 7 }, radius: 5, finding: 'A cold northern shelf with a safe expansion apron.' },
+  };
+  return definitions[region] || definitions.ridge;
+}
+
+export function initialSurveyKnowledge(scenario) {
+  const relay = scenario.buildings.find((building) => building.type === 'relay') || { x: 15, y: 15 };
+  return scenarioTiles(scenario).filter((tile) => Math.abs(tile.x - relay.x) + Math.abs(tile.y - relay.y) <= 6)
+    .map(({ x, y }) => `${x},${y}`);
+}
 export function scenarioFor(state) { return SCENARIOS[state.missionId] || SCENARIOS.firstLight; }
