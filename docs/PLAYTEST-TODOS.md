@@ -1,7 +1,9 @@
 # Live playtest findings — Northern Reach
 
-**Run:** Earth and Daneel, native in-app browser + WebMCP, `session-m1vad6h`  
-**Result:** Daneel launched 1,000t of iridium with standing export authority; Earth received the mission result and displayed `COMPLETE · CONFIRMED`.
+**Runs:** Earth and Daneel, native in-app browser + WebMCP  
+**Valid result:** Fresh Northern Reach session `session-jxevh4w`: Daneel surveyed the ridge, launched 1,000t of iridium at day 260, cargo completed day 350, and Earth received `TRUST EARNED` at day 2325. `COMPLETE · CONFIRMED` is now grounded in a successful current-balance run.
+
+**Invalidated observation:** The earlier retained session `session-m1vad6h` had already collapsed at day 178 under the pre-balance save. Its old mission-result packet arrived later, so it could not validate the subsequent cargo action. It was discarded rather than treated as a successful run.
 
 ## Findings for the next implementation pass
 
