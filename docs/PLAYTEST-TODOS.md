@@ -234,6 +234,7 @@
 - **Expected:** The colony view should remain the visual focus; time controls should be available without covering the settlement or critical map status.
 - **Actual:** The top-docked clock, pace, and event buttons sit over the upper map edge and compete with the settlement framing.
 - **Fix:** Collapse or dock the time controls into a compact, clearly labeled HUD zone that does not cover the playable map, while preserving pause, pace, and event access.
+- **Resolution (live verified):** `fix: dock simulation controls and expose map context` moves the clock, pace, and event clusters into the bottom command deck; the live browser map remains unobstructed and the viewport stays scrollbar-free. Capture: `docs/playtest-captures/command-desk-docked-live.png`.
 
 ### 27. World entities have no hover affordance
 
@@ -241,3 +242,4 @@
 - **Expected:** Hover/focus should explain what an entity does, its current status, and the consequence or cost of the available action.
 - **Actual:** The scene and controls provide no contextual hover language, so the player must guess whether a vehicle is useful or what a command will consume.
 - **Fix:** Add accessible hover/focus tooltips for buildings, service vehicles, survey tiles, and primary actions; keep the same information available in the selected-object panel for keyboard and touch users.
+- **Resolution (live verified):** The rendered scout now exposes `scout · PATROLLING · Perimeter sweep of the civic service corridor` on hover, while building/tile and command controls expose their own context. Capture: `docs/playtest-captures/vehicle-hover-live.png`.
