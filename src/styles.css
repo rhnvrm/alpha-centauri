@@ -923,3 +923,71 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .debrief > .primary {
   margin-top: 0;
 }
+
+/* The desktop shell can be hosted in a narrower embedded surface than the
+   browser viewport. Let the rail respond to its own measured width so its
+   heading and controls remain readable without changing the narrow-screen
+   map/rail stacking breakpoint. */
+.correspondence {
+  container-type: inline-size;
+  container-name: correspondence-rail;
+}
+.correspondence > *,
+.aside-head > *,
+.letters > *,
+.composer > *,
+.packet > div,
+.next-arrival > div {
+  min-width: 0;
+}
+.aside-head h2,
+.letter p,
+.letter small,
+.packet strong,
+.packet small,
+.next-arrival strong,
+.next-arrival span {
+  overflow-wrap: anywhere;
+}
+.relay-tabs button {
+  min-width: 0;
+  padding-inline: 6px;
+  overflow-wrap: anywhere;
+}
+
+@container correspondence-rail (max-width: 300px) {
+  .aside-head {
+    display: block;
+    padding: 13px 12px 11px;
+  }
+  .aside-head h2 {
+    font-size: 18px;
+    line-height: 1.1;
+  }
+  .aside-head > .connected,
+  .aside-head > .disconnected {
+    display: block;
+    margin-top: 8px;
+  }
+  .relay-tabs button {
+    min-height: 32px;
+    font-size: 9px;
+    letter-spacing: .08em;
+  }
+  .letters,
+  .composer {
+    padding-inline: 12px;
+  }
+  .letter {
+    padding: 13px 12px 11px;
+  }
+  .composer textarea {
+    min-height: 88px;
+    padding: 9px;
+  }
+  .protocol-compose,
+  .transmit {
+    white-space: normal;
+    line-height: 1.3;
+  }
+}
