@@ -1076,11 +1076,7 @@ export default function App({ store }) {
               <div className="section-label">MISSION TERMINAL · READ ONLY</div>
               <strong>Earth received the confirmed outcome.</strong>
               <p>{reportSummary(relayHero)}</p>
-              <small>Relay history is retained above as the complete Earth-side evidence record. No later order can change this mission.</small>
-              <div className="terminal-actions">
-                <button className="primary" onClick={() => setScreen("debrief")}>REVIEW MISSION DEBRIEF <ChevronRight size={15} /></button>
-                <button onClick={() => { store.pause(); setScreen("title"); }}>RETURN TO MISSIONS</button>
-              </div>
+              <small>Relay history is retained above as the complete Earth-side evidence record. No later order can change this mission. Use the confirmation banner above to review the debrief or choose another mission.</small>
             </section>
           ) : <div className="composer">
             <div className="section-label">
@@ -1202,11 +1198,10 @@ export default function App({ store }) {
             </div>
           )}
         </div>
-        {missionConfirmed ? <div className="terminal-deck-panel" aria-label="Mission terminal navigation">
+        {missionConfirmed ? <div className="terminal-deck-panel" aria-label="Mission terminal status">
           <div className="section-label">EARTH COMMAND CLOSED</div>
           <strong>Confirmed missions are sealed.</strong>
-          <small>Orders, construction, and authority changes are unavailable after confirmation.</small>
-          <button onClick={() => setScreen("debrief")}>OPEN DEBRIEF <ChevronRight size={14} /></button>
+          <small>Orders, construction, and authority changes are unavailable after confirmation. Review and mission selection remain available in the confirmation banner above.</small>
         </div> : <div className="build-tools">
           <div className="section-label">
             EARTH ORDER · MODE: {interactionMode.toUpperCase()}
@@ -1280,8 +1275,7 @@ export default function App({ store }) {
         {missionConfirmed ? <div className="terminal-deck-panel terminal-time-panel" aria-label="Simulation terminal state">
           <div className="section-label">SIMULATION TERMINAL</div>
           <strong>Clock paused at confirmation.</strong>
-          <small>The final result and relay record are stable for review.</small>
-          <button onClick={() => setScreen("title")}>CHOOSE ANOTHER MISSION <ChevronRight size={14} /></button>
+          <small>The final result and relay record are stable for review. Use the confirmation banner above for the next action.</small>
         </div> : <div className="time-controls">
           <div className="section-label time-label">
             <span>SIMULATION CONTROLS</span>

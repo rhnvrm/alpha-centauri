@@ -9,8 +9,22 @@ test('confirmed command desk switches to a terminal read-only state', () => {
   const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
   assert.match(app, /const missionConfirmed = missionStatus\.complete/);
   assert.match(app, /MISSION TERMINAL · READ ONLY/);
-  assert.match(app, /REVIEW MISSION DEBRIEF/);
+  assert.match(app, /Review mission debrief/);
+  assert.match(app, /Return to mission selection/);
   assert.match(app, /EARTH COMMAND CLOSED/);
   assert.match(app, /SIMULATION TERMINAL/);
   assert.match(app, /screen !== "play" \|\| missionConfirmed/);
+
+  const correspondenceStart = app.indexOf('aria-label="Confirmed mission result"');
+  const correspondenceEnd = app.indexOf(') : <div className="composer">', correspondenceStart);
+  const correspondenceTerminal = app.slice(correspondenceStart, correspondenceEnd);
+  assert.doesNotMatch(correspondenceTerminal, /<button/);
+  const commandStart = app.indexOf('aria-label="Mission terminal status"');
+  const commandEnd = app.indexOf('</div> : <div className="build-tools">', commandStart);
+  const commandTerminal = app.slice(commandStart, commandEnd);
+  assert.doesNotMatch(commandTerminal, /<button/);
+  const simulationStart = app.indexOf('aria-label="Simulation terminal state"');
+  const simulationEnd = app.indexOf('</div> : <div className="time-controls">', simulationStart);
+  const simulationTerminal = app.slice(simulationStart, simulationEnd);
+  assert.doesNotMatch(simulationTerminal, /<button/);
 });
