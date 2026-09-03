@@ -89,3 +89,11 @@
 - **Actual:** The badge fell from 30 seconds to 8 and then 1 during a short live observation (well under a 30-second wall-clock pass). It did not remain a dependable observation window.
 - **Captures:** `docs/playtest-captures/first-light-superposition-live.png`, `docs/playtest-captures/first-light-superposition-ended-early.png`
 - **Fix:** Drive the pass from a monotonic real-time deadline, not simulation advances or render ticks; keep the countdown legible and restore the normal Earth reconstruction only at expiry.
+
+### 11. Home screen does not use the available viewport as a mission entry point
+
+- **Role / moment:** Earth, title screen, live in-app browser at the normal desktop viewport.
+- **Expected:** The opening screen should establish a composed, legible mission-control atmosphere and make continuing or choosing one of three scenarios feel intentional.
+- **Actual:** The hero composition is confined to a narrow central/left column with a large dead black area on the right. Mission and footer copy are dim/small, and the Continue card visibly truncates an opaque session identifier.
+- **Capture:** `docs/playtest-captures/home-screen-before-spruce.png`
+- **Fix:** Rebalance the full-viewport title composition while retaining the existing hero art; raise typography and interactive-card hierarchy, give the entry actions clear focus/hover states, and suppress implementation-only session identifiers.
