@@ -4,7 +4,7 @@ import { createGame } from '../src/game/state.js';
 import { integrate, sendReport, nextEarthArrivalDay, queueHumanIntent, constructBuilding, queueLocalRoad, queueLocalSurvey, inspectProjection } from '../src/game/engine.js';
 import { loadGame, saveGame } from '../src/game/storage.js';
 import { createStore } from '../src/game/store.js';
-import { earthDemoGuide, earthMissionStatus, earthProjection } from '../src/game/projections.js';
+import { earthDemoGuide, earthMissionStatus, earthProjection, eventControlCopy } from '../src/game/projections.js';
 import { buildLocal } from './helpers.js';
 
 function fakeStorage(initial = {}) {
@@ -155,4 +155,17 @@ test('demo guide only advances from Earth-known connection and received relay fa
   assert.equal(earthDemoGuide(s).action, 'wait');
   s.reports.push({ id: 'received-report', receivedDay: s.localDay, payload: { text: 'received' } });
   assert.equal(earthDemoGuide(s).action, 'intent');
+});
+
+test('Earth NEXT controls do not expose Daneel local schedule before telemetry', () => {
+  const s = createGame('firstLight');
+  s.jobs.push({ id: 'local-construction', type: 'construct', status: 'active', completeDay: 42 });
+  s.pendingEvents.push({ type: 'power-outage', day: 84, days: 3 });
+  const earth = eventControlCopy(s, { nextLocalBoundary: 42, nextEarthBoundary: 365 });
+  assert.equal(earth.next, 'NEXT EVENT');
+  assert.equal(earth.earth, 'RECEIVE: NEXT EARTH RECEIPT');
+  assert.doesNotMatch(`${earth.next} ${earth.earth}`, /42|365|CONSTRUCTION|POWER|LOCAL/i);
+
+  const local = eventControlCopy(s, { local: true, nextLocalBoundary: 42, nextEarthBoundary: 365 });
+  assert.match(local.next, /CONSTRUCTION COMPLETE · DAY 42/);
 });

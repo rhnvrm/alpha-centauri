@@ -1,4 +1,36 @@
 import { LIGHT_DELAY_DAYS, LIGHT_DELAY_YEARS } from './constants.js';
+
+const localEventBoundaryLabel = (state, day) => {
+  const packet = state.packets.find((candidate) => candidate.status === 'in-transit' && candidate.arrivalDay === day);
+  if (packet) {
+    const names = { 'mission-result': 'MISSION RESULT RECEIPT', telemetry: 'TELEMETRY RECEIPT', 'cargo-order': 'CARGO ORDER ARRIVAL', intent: 'INTENT ARRIVAL' };
+    return names[packet.kind] || `${packet.kind.toUpperCase()} ARRIVAL`;
+  }
+  const job = state.jobs.find((candidate) => ['queued', 'active', 'awaiting-labor'].includes(candidate.status) && candidate.completeDay === day);
+  if (job) return ({ cargo: 'CARGO LAUNCH', survey: 'SURVEY COMPLETE', construct: 'CONSTRUCTION COMPLETE', road: 'ROAD COMPLETE' }[job.type] || `${job.type.toUpperCase()} COMPLETE`);
+  const authored = state.pendingEvents.find((candidate) => candidate.day === day);
+  if (authored) return ({ 'survey-discovery': 'SURVEY DISCOVERY', 'power-outage': 'POWER INTERRUPTION', flood: 'FLOOD WINDOW', drought: 'DROUGHT WINDOW', 'equipment-fault': 'EQUIPMENT FAULT', 'life-support-fault': 'LIFE-SUPPORT FAULT' }[authored.type] || authored.type.toUpperCase());
+  if (state.mission.deadlineDay === day) return 'MISSION DEADLINE';
+  if (state.mission.sustainDays === day) return 'RESERVE CHECK';
+  return 'NEXT LOCAL BOUNDARY';
+};
+
+/** Copy for time controls. Earth must not disclose Daneel's unreceived local schedule. */
+export const eventControlCopy = (state, { local = false, nextLocalBoundary, nextEarthBoundary } = {}) => {
+  if (!local) {
+    return {
+      next: 'NEXT EVENT',
+      earth: nextEarthBoundary === null ? 'EARTH: NO RECEIPT AHEAD' : 'RECEIVE: NEXT EARTH RECEIPT',
+    };
+  }
+  return {
+    next: `NEXT: ${localEventBoundaryLabel(state, nextLocalBoundary)} · DAY ${nextLocalBoundary}`,
+    earth: nextEarthBoundary === null
+      ? 'EARTH: NO RECEIPT AHEAD'
+      : `RECEIVE: ${localEventBoundaryLabel(state, nextEarthBoundary)} · DAY ${nextEarthBoundary}`,
+  };
+};
+
 /** The status Earth may honestly display without peeking at Daneel's local state. */
 export const earthMissionStatus = (state) => state.mission.earthOutcome
   ? { label: 'COMPLETE · CONFIRMED', complete: true }

@@ -26,7 +26,7 @@ import {
   WINDOW_BITS,
   RESILIENCE_24,
 } from "./game/constants.js";
-import { earthDemoGuide, earthMissionStatus, earthProjection, earthRelayHero } from "./game/projections.js";
+import { earthDemoGuide, earthMissionStatus, earthProjection, earthRelayHero, eventControlCopy } from "./game/projections.js";
 import { nextSimulationBoundaryDay, nextEarthArrivalDay } from "./game/engine.js";
 import { createStartupPrompt } from "./webmcp/prompt.js";
 import { createToolSet } from "./webmcp/tools.js";
@@ -74,20 +74,6 @@ const reportTiming = (report) => {
     received: Number.isFinite(received) ? received : "—",
     transit: transit === null ? null : `${transit} DAYS / ${(transit / 365).toFixed(2)} Y IN FLIGHT`,
   };
-};
-const eventBoundaryLabel = (state, day) => {
-  const packet = state.packets.find((candidate) => candidate.status === "in-transit" && candidate.arrivalDay === day);
-  if (packet) {
-    const names = { "mission-result": "MISSION RESULT RECEIPT", telemetry: "TELEMETRY RECEIPT", "cargo-order": "CARGO ORDER ARRIVAL", intent: "INTENT ARRIVAL" };
-    return names[packet.kind] || `${packet.kind.toUpperCase()} ARRIVAL`;
-  }
-  const job = state.jobs.find((candidate) => ["queued", "active", "awaiting-labor"].includes(candidate.status) && candidate.completeDay === day);
-  if (job) return ({ cargo: "CARGO LAUNCH", survey: "SURVEY COMPLETE", construct: "CONSTRUCTION COMPLETE", road: "ROAD COMPLETE" }[job.type] || `${job.type.toUpperCase()} COMPLETE`);
-  const authored = state.pendingEvents.find((candidate) => candidate.day === day);
-  if (authored) return ({ "survey-discovery": "SURVEY DISCOVERY", "power-outage": "POWER INTERRUPTION", flood: "FLOOD WINDOW", drought: "DROUGHT WINDOW", "equipment-fault": "EQUIPMENT FAULT", "life-support-fault": "LIFE-SUPPORT FAULT" }[authored.type] || authored.type.toUpperCase());
-  if (state.mission.deadlineDay === day) return "MISSION DEADLINE";
-  if (state.mission.sustainDays === day) return "RESERVE CHECK";
-  return "NEXT LOCAL BOUNDARY";
 };
 const observedPowerPercent = (resources) => Math.round(100 * (resources.power || 0) / Math.max(1, resources.powerCapacity || 0));
 const missionTarget = (missionId, resources) => {
@@ -219,10 +205,6 @@ export default function App({ store }) {
   const nextOutbound = outboundPackets[0];
   const nextLocalBoundary = nextSimulationBoundaryDay(state);
   const nextEarthBoundary = nextEarthArrivalDay(state);
-  const nextEventButton = `NEXT: ${eventBoundaryLabel(state, nextLocalBoundary)} · DAY ${nextLocalBoundary}`;
-  const earthEventButton = nextEarthBoundary === null
-    ? "EARTH: NO RECEIPT AHEAD"
-    : `RECEIVE: ${eventBoundaryLabel(state, nextEarthBoundary)} · DAY ${nextEarthBoundary}`;
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
   const selectedBuilding = selected?.kind === "building" ? receivedBuildings.find((building) => building.id === selected.id) : null;
@@ -239,6 +221,9 @@ export default function App({ store }) {
   const superpositionActive = superposition.activeUntilMs > superpositionNow;
   const superpositionSeconds = Math.max(0, Math.ceil((superposition.activeUntilMs - superpositionNow) / 1000));
   const superpositionCooldown = Math.max(0, Math.ceil((superposition.lastActivatedAtMs + 60_000 - superpositionNow) / 1000));
+  const eventCopy = eventControlCopy(state, { local: superpositionActive, nextLocalBoundary, nextEarthBoundary });
+  const nextEventButton = eventCopy.next;
+  const earthEventButton = eventCopy.earth;
   useEffect(() => {
     if (!superpositionActive && superpositionCooldown <= 0) return undefined;
     const tick = setInterval(() => setSuperpositionNow(Date.now()), 250);
