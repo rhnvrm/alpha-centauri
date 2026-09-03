@@ -95,7 +95,7 @@ export function isFlooded(state, day) {
 
 export function updateProgress(state) {
   const r = state.resources;
-  const foodMonths = r.food / Math.max(1, r.population * 0.02);
+  const foodMonths = r.food / Math.max(1, r.population * 0.02) / 30;
   const powerReserve = r.powerCapacity ? clamp(r.power / r.powerCapacity, 0, 1) : 0;
   const m = state.mission;
   const binding = diagnoseConstraints(state)[0];
@@ -110,7 +110,7 @@ export function updateProgress(state) {
   }
   if (state.missionId === 'enough') {
     const floors = {
-      atDay0: r.food / Math.max(1, r.population * 0.02) >= 24 && powerReserve >= 0.2 && m.protectionLost === 0,
+      atDay0: r.food / Math.max(1, r.population * 0.02) / 30 >= 24 && powerReserve >= 0.2 && m.protectionLost === 0,
     };
     const base = floors.atDay0 ? 1 : 0;
     const dayShare = m.sustainDays ? clamp(state.localDay / m.sustainDays, 0, 1) : 1;

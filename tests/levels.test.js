@@ -37,8 +37,15 @@ test('Mission II winning fixture: reserve floors for two local years', () => {
   assert.equal(s.mission.status, 'pending-confirmation');
   assert.equal(s.mission.outcome, 'objective-secured');
   assert.equal(s.mission.protectionLost, 0);
-  assert.ok(s.resources.food / (s.resources.population * 0.02) >= 24, 'food floor held at the end');
+  assert.ok(s.resources.food / (s.resources.population * 0.02) / 30 >= 24, 'food floor held at the end');
   assert.ok(s.resources.powerCapacity ? s.resources.power / s.resources.powerCapacity >= 0.2 : false, 'power reserve held at the end');
+});
+
+test('Mission II cannot be won by waiting on a fresh colony', () => {
+  const s = integrate(createGame('enough'), 730);
+  assert.equal(s.mission.status, 'pending-confirmation');
+  assert.equal(s.mission.outcome, 'reserves-broken');
+  assert.notEqual(s.mission.outcome, 'objective-secured');
 });
 
 test('Mission II losing fixture: building across protected wetland loses the wetlands outcome', () => {

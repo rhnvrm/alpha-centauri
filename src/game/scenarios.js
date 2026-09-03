@@ -97,9 +97,13 @@ export const SCENARIOS = {
       building('workshop-3', 'workshop', 13, 19), building('workshop-4', 'workshop', 10, 20),
     ],
     robots: [robot('rover-1', 'survey', 8, 12), robot('builder-1', 'construction', 17, 18), robot('hauler-1', 'cargo', 20, 17)],
-    // Reserve policy is intentionally long-horizon: drought and faults create the
-    // pressure here, not a colony that was doomed before Earth could hear from it.
-    resources: { material: 180, food: 30000, water: 50000, power: 210, powerCapacity: 310, population: 180, capacity: 240, iridium: 0 },
+    // The reserve floor is close enough to demand that Daneel must act locally:
+    // there is food and water for a little over two years, not decades.  Productive
+    // buildings also draw on the grid, making resilience a production/network
+    // decision rather than a single-resource build queue.
+    resources: { material: 180, food: 3000, water: 4500, power: 50, powerCapacity: 180, population: 180, capacity: 240, iridium: 0 },
+    powerDrawPerGreenhouse: 0.35,
+    powerDrawPerReservoir: 0.25,
   },
   rightToDecide: {
     id: 'rightToDecide', title: 'The Right to Decide', location: 'Northern Reach', subtitle: 'Earth expects a shipment. The colony expects a future.',

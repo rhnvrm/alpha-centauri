@@ -89,6 +89,27 @@ test('Daneel production controls change local facility output and remain inspect
   assert.ok(Math.abs((uninterrupted.resources.food - state.resources.food) - 2) < 1e-9, 'the throttled greenhouse no longer produces its 2 food/day');
 });
 
+test('Daneel can win Mission II with a local production and grid response', async () => {
+  let state = createGame('enough');
+  const store = { getState: () => state, commit: (next) => { state = next; } };
+  const tools = createToolSet(store);
+  const connected = await tools.find((tool) => tool.name === 'connect_steward').execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
+  const construct = tools.find((tool) => tool.name === 'construct_building');
+  for (const type of ['solar', 'greenhouse', 'reservoir']) {
+    const cell = placeBuildingNearRoad(state, type)[0];
+    const result = await construct.execute({
+      sessionId: state.sessionId, leaseId: connected.result.leaseId, expectedRevision: state.revision,
+      operationId: `mission-two-${type}`, type, ...cell,
+    });
+    assert.equal(result.ok, true, `${type} construction was accepted`);
+    state = store.getState();
+  }
+  state = integrate(state, 730);
+  assert.equal(state.mission.status, 'pending-confirmation');
+  assert.equal(state.mission.outcome, 'objective-secured');
+  assert.equal(state.mission.protectionLost, 0);
+});
+
 test('next-event integration reaches a completion boundary', () => { let s = constructBuilding(createGame(), 'battery', 5, 5); s = advanceToNextEvent(s); assert.equal(s.jobs[0].status, 'complete'); });
 
 test('WebMCP action schemas expose the inputs their handlers require', () => {

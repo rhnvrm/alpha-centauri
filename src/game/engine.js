@@ -94,7 +94,15 @@ function powerFlow(state) {
   const outage = new Set(activeOutage(state, state.localDay));
   for (const id of faultedFacilities(state, state.localDay)) outage.add(id);
   const supply = powerSources(state).filter((s) => !outage.has(s.id)).reduce((a, s) => a + (s.type === 'solar' ? SOLAR_OUTPUT_PER_DAY : 0), 0);
-  const demand = state.resources.population * 0.01 + gridConsumers(state).length * 0.12;
+  const scenario = scenarioFor(state);
+  const productionDemand = state.buildings
+    .filter((building) => building.status === 'complete' && isGridConnected(state, building))
+    .reduce((total, building) => {
+      const draw = building.type === 'greenhouse' ? scenario.powerDrawPerGreenhouse
+        : building.type === 'reservoir' ? scenario.powerDrawPerReservoir : 0;
+      return total + (draw || 0) * (state.productionRates?.[building.id] ?? 1);
+    }, 0);
+  const demand = state.resources.population * 0.01 + gridConsumers(state).length * 0.12 + productionDemand;
   return { supply, demand, outage };
 }
 
@@ -166,7 +174,7 @@ function finalizeMission(state, outcome) {
   const evidence = state.missionId === 'firstLight'
     ? { capacity: r.capacity, independentPower: powerSources(state).length, interruptionDays: state.mission.interruption.sustained === true ? state.mission.interruption.endAt - state.mission.interruption.startedAt + 1 : 0 }
     : state.missionId === 'enough'
-      ? { foodMonths: r.food / Math.max(1, r.population * 0.02), powerPercent: r.power / Math.max(1, r.powerCapacity) * 100, protectedWetlandLoss: state.mission.protectionLost }
+      ? { foodMonths: r.food / Math.max(1, r.population * 0.02) / 30, powerPercent: r.power / Math.max(1, r.powerCapacity) * 100, protectedWetlandLoss: state.mission.protectionLost }
       : { exported: state.mission.exported, lifeSupport: state.mission.collapsedAt === null, protectedHabitatLoss: state.mission.protectionLost };
   packet(state, 'mission-result', { missionId: state.missionId, outcome, capturedDay: state.localDay, snapshot: { population: r.population, capacity: r.capacity, power: r.power, powerCapacity: r.powerCapacity }, evidence }, 'downlink', state.localDay, 'daneel');
   event(state, 'mission_objective_met', { outcome });
@@ -182,7 +190,7 @@ function resolveMission(state) {
     const sourceCount = powerSources(state).length;
     if (capacityOK && sourceCount >= 2 && m.interruption.sustained === true && state.localDay >= m.interruption.endAt) finalizeMission(state, 'objective-secured');
   } else if (state.missionId === 'enough') {
-    const foodOK = r.food / Math.max(1, r.population * 0.02) >= 24;
+    const foodOK = r.food / Math.max(1, r.population * 0.02) / 30 >= 24;
     const powerOK = r.powerCapacity ? r.power / r.powerCapacity >= 0.2 : false;
     if (m.sustainDays && state.localDay >= m.sustainDays) {
       if (m.protectionLost === 0 && foodOK && powerOK) finalizeMission(state, 'objective-secured');
@@ -432,7 +440,7 @@ function localBuildSites(state, type, limit = 3) {
   return results;
 }
 
-export function inspectProjection(state) {  const s = scenarioFor(state); const foodMonths = state.resources.food / Math.max(1, state.resources.population * 0.02);
+export function inspectProjection(state) {  const s = scenarioFor(state); const foodMonths = state.resources.food / Math.max(1, state.resources.population * 0.02) / 30;
   const safeBuildSites = Object.fromEntries(Object.keys(BUILDINGS).map((type) => [type, localBuildSites(state, type)]));
   return { sessionId: state.sessionId, missionId: state.missionId, mission: s.title, charter: state.doctrine.charter, localDay: state.localDay, resources: { ...state.resources }, buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, health })), robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path }) => ({ id, type, x, y, status, lifecycle: lifecycle || status, assignedJob: assignedJob || null, path: path || [] })), jobs: state.jobs.map(({ id, type, status, completeDay, robotId, target, workStartDay }) => ({ id, type, status, completeDay, robotId: robotId || null, target: target || null, workStartDay: workStartDay ?? null, remainingDays: Math.max(0, completeDay - state.localDay) })), constraints: diagnoseConstraints(state), surveyedRegions: structuredClone(state.localKnowledge?.regions || []), safeBuildSites, productionRates: { ...(state.productionRates || {}) }, metrics: { foodReserveMonths: foodMonths, powerReservePercent: state.resources.powerCapacity ? state.resources.power / state.resources.powerCapacity * 100 : 0 }, doctrine: state.doctrine, channel: { uplinkBits: state.channel.uplinkBits, downlinkBits: state.channel.downlinkBits } };
 }
