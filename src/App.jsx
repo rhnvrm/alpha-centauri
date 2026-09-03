@@ -213,8 +213,13 @@ export default function App({ store }) {
   const nextEarthBoundary = nextEarthArrivalDay(state);
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
+  const receivedRobots = state.observedWorld?.robots || [];
   const selectedBuilding = selected?.kind === "building" ? receivedBuildings.find((building) => building.id === selected.id) : null;
-  const selectedRobot = selected?.kind === "robot" ? state.robots.find((robot) => robot.id === selected.id) : null;
+  // Outside a deliberate local diagnostic, the selected unit is the last
+  // received rover snapshot. Do not let the desk narrate an unreceived job.
+  const selectedRobot = selected?.kind === "robot"
+    ? (superpositionActive ? state.robots.find((robot) => robot.id === selected.id) : receivedRobots.find((robot) => robot.id === selected.id))
+    : null;
   const selectedRobotJob = selectedRobot?.assignedJob ? state.jobs.find((job) => job.id === selectedRobot.assignedJob) : null;
   const projectImpact = buildingImpact(buildType, state);
   const goal = missionTarget(state.missionId, projection.resources);
@@ -1154,10 +1159,10 @@ export default function App({ store }) {
                     ? `Received map tile ${selected.x}, ${selected.y} · ready for an Earth order`
                     : selected.kind === "robot"
                       ? superpositionActive && selectedRobotJob
-                        ? `${selectedRobot.type} · ${(selectedRobot.lifecycle || selectedRobot.status).toUpperCase()} · ${selectedRobotJob.type} · ${Math.max(0, selectedRobotJob.completeDay - state.localDay)}d remaining`
+                        ? `${selectedRobot.type} · ${(selectedRobot.lifecycle || selectedRobot.status).toUpperCase()} · ${selectedRobotJob.type.toUpperCase()} · ${Math.max(0, selectedRobotJob.completeDay - state.localDay)}d remaining`
                         : superpositionActive
                           ? `${selectedRobot?.type || "rover"} · IDLE · available for local work`
-                          : "Received rover position · a literal move command still crosses the light-delay"
+                          : `${selectedRobot?.type || "rover"} · ${(selectedRobot?.lifecycle || selectedRobot?.status || "idle").toUpperCase()}${selectedRobot?.routeRemaining ? ` · ${selectedRobot.routeRemaining} received route tiles remaining` : ""} · last received position; a move order still crosses the light-delay`
                       : "Selectable from reconstructed telemetry"}
                 </small>
                 {selectedImpact && (
@@ -1171,6 +1176,7 @@ export default function App({ store }) {
                 {selected.kind === "robot" && (
                   <button
                     className={moveRobotId === selected.id ? "command-active" : ""}
+                    disabled={!superpositionActive && selectedRobot && selectedRobot.status !== "idle"}
                     onClick={() => {
                       setRoadStart(null);
                       const cancelling = moveRobotId === selected.id;

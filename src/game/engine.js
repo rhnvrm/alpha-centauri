@@ -19,9 +19,12 @@ function job(state, data, labor = false) {
   return j;
 }
 
-const roleForJob = (j) => ({ construct: 'construction', survey: 'survey', cargo: 'cargo', maintenance: 'maintenance' }[j.type] || null);
+const roleForJob = (j) => ({ construct: 'construction', road: 'construction', survey: 'survey', cargo: 'cargo', maintenance: 'maintenance' }[j.type] || null);
 const targetForJob = (state, j) => {
   if (j.type === 'construct') { const b = state.buildings.find((x) => x.id === j.buildingId); return b ? { x: b.x, y: b.y } : null; }
+  // A road crew starts at the first unbuilt cell and lays the contiguous corridor
+  // from there. The work path remains separate from the rover's travel route.
+  if (j.type === 'road') return (j.workPath || j.path || [])[0] || null;
   if (j.type === 'cargo') { const b = state.buildings.find((x) => x.type === 'launch' && x.status === 'complete'); return b ? { x: b.x, y: b.y } : null; }
   if (j.type === 'maintenance') { const b = state.buildings.find((x) => x.id === j.facilityId); return b ? { x: b.x, y: b.y } : null; }
   if (j.type === 'survey') return ({ ridge: { x: 23, y: 10 }, 'southern-aquifer': { x: 22, y: 24 }, 'northern-reach': { x: 25, y: 7 } }[j.region] || { x: 23, y: 10 });
@@ -34,6 +37,21 @@ function pathToTarget(state, robot, target) {
   while (y !== target.y) { y += Math.sign(target.y - y); path.push({ x, y }); }
   return path;
 }
+const roadKeys = (state) => new Set(state.roads.map((road) => `${Array.isArray(road) ? road[0] : road.x},${Array.isArray(road) ? road[1] : road.y}`));
+// Roads deliberately improve local work without making units teleport: a road cell
+// consumes half a local day of travel budget, while open regolith consumes one.
+function routeProgress(route, elapsedDays, roads) {
+  let spent = 0; let reached = 0;
+  for (const waypoint of route || []) {
+    spent += roads.has(`${waypoint.x},${waypoint.y}`) ? .5 : 1;
+    if (spent > elapsedDays) break;
+    reached += 1;
+  }
+  return reached;
+}
+function routeTravelDays(route, roads) {
+  return Math.ceil((route || []).reduce((days, waypoint) => days + (roads.has(`${waypoint.x},${waypoint.y}`) ? .5 : 1), 0));
+}
 /** Deterministic role-specific labor gate. Jobs keep their target and route so the
  * renderer and inspectors can show the physical work rather than a decorative sprite. */
 function assignFreeRobot(state, j) {
@@ -41,13 +59,18 @@ function assignFreeRobot(state, j) {
   // Construction can use any idle platform as a deterministic fallback: early
   // scenarios intentionally have a mixed fleet with only one builder. Specialist
   // work (survey, cargo, maintenance) never falls back to another role.
+  const specialist = state.robots.find((r) => r.status === 'idle' && (!role || r.type === role));
+  // Existing construction keeps its flexible labor pool. Roads are deliberately
+  // different: they prefer the construction unit, so a corridor is visible work
+  // rather than an abstract map mutation.
   const robot = j.type === 'construct'
     ? state.robots.find((r) => r.status === 'idle')
-    : state.robots.find((r) => r.status === 'idle' && (!role || r.type === role));
+    : specialist || (j.type === 'road' ? state.robots.find((r) => r.status === 'idle') : null);
   if (robot) {
     const target = targetForJob(state, j); const path = pathToTarget(state, robot, target);
+    const travelDays = routeTravelDays(path, roadKeys(state));
     robot.status = 'assigned'; robot.lifecycle = path.length ? 'en-route' : 'working'; robot.assignedJob = j.id; robot.path = path;
-    j.robotId = robot.id; j.target = target; j.path = path; j.travelDays = path.length; j.workStartDay = state.localDay + path.length;
+    j.robotId = robot.id; j.target = target; j.route = path; if (j.type !== 'road') j.path = path; j.travelDays = travelDays; j.workStartDay = state.localDay + travelDays;
     j.status = 'queued'; j.startDay = state.localDay;
   }
   else j.status = 'awaiting-labor';
@@ -71,7 +94,8 @@ export function assignRobots(state, jobId, robotIds = []) {
     if (r && !r.assignedJob) {
       r.status = 'assigned'; r.lifecycle = 'en-route'; r.assignedJob = jobId;
       const target = targetForJob(next, j); r.path = pathToTarget(next, r, target);
-      j.robotId = r.id; j.target = target; j.path = r.path; j.travelDays = r.path.length; j.workStartDay = next.localDay + r.path.length;
+      const travelDays = routeTravelDays(r.path, roadKeys(next));
+      j.robotId = r.id; j.target = target; j.route = r.path; if (j.type !== 'road') j.path = r.path; j.travelDays = travelDays; j.workStartDay = next.localDay + travelDays;
     }
   }
   if (j.status === 'awaiting-labor') { j.status = 'queued'; j.startDay = next.localDay; }
@@ -127,16 +151,17 @@ export function integrate(state, days = 0) {
       if (j.status === 'queued' && next.localDay >= j.startDay) j.status = 'active';
       if (j.status === 'active' && j.robotId) {
         const worker = next.robots.find((r) => r.id === j.robotId);
-        const step = Math.min(j.path?.length || 0, Math.max(0, next.localDay - j.startDay));
-        const waypoint = step > 0 ? j.path[step - 1] : null;
-        if (worker && waypoint) { worker.x = waypoint.x; worker.y = waypoint.y; worker.path = j.path.slice(step); }
+        const route = j.route || (j.type === 'road' ? [] : j.path) || [];
+        const step = routeProgress(route, Math.max(0, next.localDay - j.startDay), roadKeys(next));
+        const waypoint = step > 0 ? route[step - 1] : null;
+        if (worker && waypoint) { worker.x = waypoint.x; worker.y = waypoint.y; worker.path = route.slice(step); }
         if (worker && next.localDay >= (j.workStartDay ?? j.startDay)) worker.lifecycle = 'working';
       }
       // Movement is a local, physical job rather than a coordinate teleport.
       // The route is canonical and advances one terrain tile per simulation day.
       if (j.type === 'move' && j.status === 'active' && Array.isArray(j.path)) {
         const rover = next.robots.find((candidate) => candidate.id === j.robotId);
-        const step = Math.min(j.path.length, Math.max(0, next.localDay - j.startDay));
+        const step = routeProgress(j.path, Math.max(0, next.localDay - j.startDay), roadKeys(next));
         const waypoint = step > 0 ? j.path[step - 1] : null;
         if (rover && waypoint) { rover.x = waypoint.x; rover.y = waypoint.y; rover.path = j.path.slice(step); }
       }
@@ -224,7 +249,7 @@ function applyJob(state, j) {
     state.localKnowledge = { surveyedTiles: [...known], regions: [...(state.localKnowledge?.regions || []).filter((entry) => entry.id !== j.region), { id: j.region, name: region.name, finding: region.finding, discoveredDay: state.localDay }] };
     event(state, 'survey_complete', { region: j.region, name: region.name, discovery: state.pendingEvents.find((e) => e.type === 'survey-discovery')?.target || region.finding });
   }
-  if (j.type === 'road') { for (const cell of (j.path || [])) { const [x, y] = Array.isArray(cell) ? [Math.floor(cell[0]), Math.floor(cell[1])] : [Math.floor(cell.x), Math.floor(cell.y)]; const t = tileAt(state, x, y); if (t && t.terrain === 'regolith' && !floodFilter(state, state.localDay)(x, y) && !state.roads.some((r) => (Array.isArray(r) ? r[0] === x && r[1] === y : r.x === x && r.y === y))) state.roads.push({ x, y }); } }
+  if (j.type === 'road') { for (const cell of (j.workPath || j.path || [])) { const [x, y] = Array.isArray(cell) ? [Math.floor(cell[0]), Math.floor(cell[1])] : [Math.floor(cell.x), Math.floor(cell.y)]; const t = tileAt(state, x, y); if (t && t.terrain === 'regolith' && !floodFilter(state, state.localDay)(x, y) && !state.roads.some((r) => (Array.isArray(r) ? r[0] === x && r[1] === y : r.x === x && r.y === y))) state.roads.push({ x, y }); } }
   if (j.type === 'move') {
     const robot = state.robots.find((candidate) => candidate.id === j.robotId);
     if (robot) { robot.x = j.x; robot.y = j.y; robot.path = []; }
@@ -375,8 +400,11 @@ export function queueLocalRoad(state, path) {
       if (Math.abs(x - previous.x) + Math.abs(y - previous.y) !== 1) throw Object.assign(new Error('INVALID_PATH'), { code: 'INVALID_PATH', reason: 'Road tiles must form one contiguous corridor.' });
     }
   }
-  job(next, { type: 'road', status: 'queued', startDay: next.localDay, completeDay: next.localDay + 20, path: cells });
-  event(next, 'road_queued', { cells: cells.length }); return markRevision(next);
+  const j = job(next, {
+    type: 'road', status: 'queued', startDay: next.localDay,
+    completeDay: next.localDay + Math.max(12, cells.length * 2), workPath: cells,
+  }, true);
+  event(next, 'road_queued', { jobId: j.id, cells: cells.length, robotId: j.robotId || null }); return markRevision(next);
 }
 
 /** Schedule a physical rover movement in local time.  This is shared by a
@@ -393,7 +421,7 @@ export function queueLocalRobotMove(state, robotId, x, y) {
   let px = robot.x; let py = robot.y;
   while (px !== target.x) { px += Math.sign(target.x - px); path.push({ x: px, y: py }); }
   while (py !== target.y) { py += Math.sign(target.y - py); path.push({ x: px, y: py }); }
-  const travelDays = Math.max(1, path.length);
+  const travelDays = Math.max(1, routeTravelDays(path, roadKeys(next)));
   const movement = job(next, { type: 'move', robotId: robot.id, x: target.x, y: target.y, path, startDay: next.localDay, completeDay: next.localDay + travelDays });
   robot.status = 'moving'; robot.assignedJob = movement.id; robot.path = path;
   event(next, 'robot_move_queued', { jobId: movement.id, robotId: robot.id, x: target.x, y: target.y, travelDays });

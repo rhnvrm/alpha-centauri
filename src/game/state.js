@@ -66,7 +66,12 @@ export function telemetryFor(state) {
     observedResources: { ...state.resources },
     observedWorld: {
       buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, status: 'complete', health })),
-      robots: state.robots.map(({ id, type, x, y, status }) => ({ id, type, x, y, status: 'idle' })),
+      // This is a captured local status, not a live Earth-side peek. It lets a
+      // received rover remain meaningfully inspectable until the next downlink.
+      robots: state.robots.map(({ id, type, x, y, status, lifecycle, assignedJob, path }) => ({
+        id, type, x, y, status, lifecycle: lifecycle || status, assignedJob: assignedJob || null,
+        routeRemaining: (path || []).length,
+      })),
       roads: state.roads.map((r) => ({ x: Array.isArray(r) ? r[0] : r.x, y: Array.isArray(r) ? r[1] : r.y })),
     },
     observedKnowledge: structuredClone(state.localKnowledge || { surveyedTiles: [], regions: [] }),

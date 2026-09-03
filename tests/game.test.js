@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/game/state.js';
-import { advanceToNextEvent, constructBuilding, integrate, queueHumanIntent, sendReport, cancelJob } from '../src/game/engine.js';
+import { advanceToNextEvent, constructBuilding, integrate, queueHumanIntent, sendReport, cancelJob, queueLocalRoad } from '../src/game/engine.js';
 import { createToolSet } from '../src/webmcp/tools.js';
 import { placeBuildingNearRoad } from './helpers.js';
 
@@ -12,6 +12,23 @@ test('one-way packets are absent before exact arrival and present at arrival', (
 
 test('local construction reserves material and completes only after labor time', () => {
   let s = createGame(); const material = s.resources.material; s = constructBuilding(s, 'habitat', 5, 5); assert.equal(s.resources.material, material - 18); assert.equal(s.buildings.at(-1).status, 'queued'); s = integrate(s, 89); assert.equal(s.buildings.at(-1).status, 'queued'); s = integrate(s, 1); assert.equal(s.buildings.at(-1).status, 'complete'); assert.equal(s.jobs.at(-1).status, 'complete');
+});
+
+test('road work assigns the construction unit, preserves its work path, and becomes a faster route on completion', () => {
+  let s = createGame('firstLight');
+  const existingRoads = new Set(s.roads.map((road) => `${road.x},${road.y}`));
+  const first = s.tiles.find((tile) => tile.terrain === 'regolith' && !existingRoads.has(`${tile.x},${tile.y}`)
+    && s.tiles.some((next) => next.terrain === 'regolith' && Math.abs(next.x - tile.x) + Math.abs(next.y - tile.y) === 1 && !existingRoads.has(`${next.x},${next.y}`)));
+  const second = s.tiles.find((tile) => tile.terrain === 'regolith' && Math.abs(tile.x - first.x) + Math.abs(tile.y - first.y) === 1 && !existingRoads.has(`${tile.x},${tile.y}`));
+  s = queueLocalRoad(s, [first, second]);
+  const job = s.jobs.at(-1); const builder = s.robots.find((robot) => robot.id === 'builder-1');
+  assert.equal(job.robotId, builder.id);
+  assert.deepEqual(job.workPath, [{ x: first.x, y: first.y }, { x: second.x, y: second.y }]);
+  assert.ok(job.route.length > 0, 'the construction unit has a physical route to its road work');
+  s = integrate(s, job.completeDay - s.localDay);
+  assert.equal(s.jobs.at(-1).status, 'complete');
+  assert.equal(s.roads.some((road) => road.x === first.x && road.y === first.y), true);
+  assert.equal(s.robots.find((robot) => robot.id === builder.id).status, 'idle');
 });
 
 test('cancellation is recoverable and refunds most reserved material', () => { let s = createGame(); s = constructBuilding(s, 'battery', 5, 5); const j = s.jobs.at(-1); s = cancelJob(s, j.id); assert.equal(s.jobs.at(-1).status, 'cancelled'); assert.equal(s.buildings.at(-1).status, 'cancelled'); assert.equal(s.resources.material, 118); });
