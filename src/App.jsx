@@ -196,6 +196,7 @@ export default function App({ store }) {
   const projection = useMemo(() => earthProjection(state), [state]);
   const relayHero = useMemo(() => earthRelayHero(state), [state]);
   const missionStatus = useMemo(() => earthMissionStatus(state), [state]);
+  const missionConfirmed = missionStatus.complete;
   const demoGuide = useMemo(() => earthDemoGuide(state), [state]);
   const prompt = useMemo(
     () => createStartupPrompt(state, window.location.href),
@@ -265,10 +266,10 @@ export default function App({ store }) {
   // Demo pace is presentation-only: each tick calls the same bounded, deterministic
   // store step that manual controls use, so no event or lightspeed arrival is skipped.
   useEffect(() => {
-    if (screen !== "play" || !state.demoPace || state.paused || superpositionActive) return undefined;
+    if (screen !== "play" || missionConfirmed || !state.demoPace || state.paused || superpositionActive) return undefined;
     const timer = window.setInterval(() => store.demoStep(), 1000 / timeScale);
     return () => window.clearInterval(timer);
-  }, [screen, state.demoPace, state.paused, store, superpositionActive, timeScale]);
+  }, [screen, missionConfirmed, state.demoPace, state.paused, store, superpositionActive, timeScale]);
   // Escape is the reliable, non-destructive route from an active correspondence desk
   // back to mission selection. Starting a mission there creates a fresh local session.
   useEffect(() => {
@@ -277,7 +278,7 @@ export default function App({ store }) {
         store.pause();
         setScreen("title");
       }
-      if (screen !== "play" || showDoctrine || e.defaultPrevented) return;
+      if (screen !== "play" || missionConfirmed || showDoctrine || e.defaultPrevented) return;
       const editable = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName);
       if (editable || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.toLowerCase() === "i") {
@@ -296,7 +297,7 @@ export default function App({ store }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [screen, showDoctrine, store]);
+  }, [screen, missionConfirmed, showDoctrine, store]);
   const deliveredRef = useRef(0);
   useEffect(() => {
     const delivered = state.packets.filter(
@@ -380,6 +381,7 @@ export default function App({ store }) {
     );
   };
   const onSelectTile = (obj) => {
+    if (missionConfirmed) return;
     if (moveRobotId && obj.kind === "tile") {
       store.moveRobot(moveRobotId, obj.x, obj.y);
       setToast(`ROVER ORDER QUEUED · ${moveRobotId} → ${obj.x},${obj.y} · arrives in ${LIGHT_DELAY_YEARS}Y.`);
@@ -777,7 +779,7 @@ export default function App({ store }) {
           )}
         </div>
       </section>
-      {openQuestions.length > 0 && (
+      {!missionConfirmed && openQuestions.length > 0 && (
         <section className="auth-banner">
           <MessageCircleQuestion size={16} />
           <div>
@@ -840,12 +842,16 @@ export default function App({ store }) {
         <section className="map-panel">
           <ColonyScene
             state={state}
-            onSelect={onSelectTile}
+            onSelect={missionConfirmed ? undefined : onSelectTile}
             viewMode={superpositionActive ? "local" : "earth"}
-            readOnly={superpositionActive}
-            previewBuild={selectedTile && !superpositionActive ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
+            readOnly={superpositionActive || missionConfirmed}
+            previewBuild={selectedTile && !superpositionActive && !missionConfirmed ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
           />
-          {superpositionActive ? (
+          {missionConfirmed ? (
+            <div className="map-status terminal-map-status" role="status" style={{ top: 54 }}>
+              <span className="status-dot teal" /> TERMINAL RESULT · EARTH VIEW · READ ONLY
+            </div>
+          ) : superpositionActive ? (
             <div className="map-status" role="status" style={{ top: 54 }}>
               <span className="status-dot amber" /> SUPERPOSITION · LIVE LOCAL VIEW · {superpositionSeconds}s · READ ONLY
             </div>
@@ -874,16 +880,20 @@ export default function App({ store }) {
             </div>
           )}
           <div className="map-hint">
-            <span>LEFT CLICK SELECT</span>
-            <span>Q / E ROTATE</span>
-            <span>SCROLL ZOOM</span>
-            {roadMode && (
+            {missionConfirmed ? (
+              <span>FINAL RECEIVED WORLD · INSPECTION ONLY</span>
+            ) : <>
+              <span>LEFT CLICK SELECT</span>
+              <span>Q / E ROTATE</span>
+              <span>SCROLL ZOOM</span>
+            </>}
+            {roadMode && !missionConfirmed && (
               <span className="road-hint">ROAD: CLICK START … CLICK END</span>
             )}
-            {moveRobotId && (
+            {moveRobotId && !missionConfirmed && (
               <span className="road-hint">ROVER MOVE: CLICK A RECEIVED TILE</span>
             )}
-            {state.packets.length === 0 && !roadMode && (
+            {!missionConfirmed && state.packets.length === 0 && !roadMode && (
               <span className="road-hint">
                 SELECT A TILE · QUEUE A BUILD → ARRIVES IN {LIGHT_DELAY_YEARS}Y
               </span>
@@ -999,7 +1009,18 @@ export default function App({ store }) {
               </div>
             )}
           </div>
-          <div className="composer">
+          {missionConfirmed ? (
+            <section className="terminal-panel" aria-label="Confirmed mission result">
+              <div className="section-label">MISSION TERMINAL · READ ONLY</div>
+              <strong>Earth received the confirmed outcome.</strong>
+              <p>{reportSummary(relayHero)}</p>
+              <small>Relay history is retained above as the complete Earth-side evidence record. No later order can change this mission.</small>
+              <div className="terminal-actions">
+                <button className="primary" onClick={() => setScreen("debrief")}>REVIEW MISSION DEBRIEF <ChevronRight size={15} /></button>
+                <button onClick={() => { store.pause(); setScreen("title"); }}>RETURN TO MISSIONS</button>
+              </div>
+            </section>
+          ) : <div className="composer">
             <div className="section-label">
               WRITE AN INTENT{" "}
               <span>
@@ -1051,7 +1072,7 @@ export default function App({ store }) {
             >
               <Send size={15} /> TRANSMIT INTENT <kbd>CTRL/⌘↵</kbd>
             </button>
-          </div>
+          </div>}
           </>}
         </aside>
         <section className="bottom-deck">
@@ -1118,7 +1139,12 @@ export default function App({ store }) {
             </div>
           )}
         </div>
-        <div className="build-tools">
+        {missionConfirmed ? <div className="terminal-deck-panel" aria-label="Mission terminal navigation">
+          <div className="section-label">EARTH COMMAND CLOSED</div>
+          <strong>Confirmed missions are sealed.</strong>
+          <small>Orders, construction, and authority changes are unavailable after confirmation.</small>
+          <button onClick={() => setScreen("debrief")}>OPEN DEBRIEF <ChevronRight size={14} /></button>
+        </div> : <div className="build-tools">
           <div className="section-label">
             EARTH ORDER · {selectedTile ? "TARGET LOCKED" : "TARGET REQUIRED"}
           </div>
@@ -1179,8 +1205,13 @@ export default function App({ store }) {
           <button onClick={() => setShowDaneelPrompt(true)}>
             <Eye size={15} /> DANEEL PROMPT
           </button>
-        </div>
-        <div className="time-controls">
+        </div>}
+        {missionConfirmed ? <div className="terminal-deck-panel terminal-time-panel" aria-label="Simulation terminal state">
+          <div className="section-label">SIMULATION TERMINAL</div>
+          <strong>Clock paused at confirmation.</strong>
+          <small>The final result and relay record are stable for review.</small>
+          <button onClick={() => setScreen("title")}>CHOOSE ANOTHER MISSION <ChevronRight size={14} /></button>
+        </div> : <div className="time-controls">
           <div className="section-label time-label">
             <span>SIMULATION CONTROLS</span>
             <span>{state.paused ? "PAUSED" : state.demoPace ? `${timeScale}× AUTO` : "READY"}</span>
@@ -1233,7 +1264,7 @@ export default function App({ store }) {
           >
             <RotateCcw size={15} />
           </button>
-        </div>
+        </div>}
         </section>
       </div>
       <footer className="footer-strip">
