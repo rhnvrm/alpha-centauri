@@ -199,3 +199,29 @@
 - **Captures:** `docs/playtest-captures/build-selection-before.png`, `docs/playtest-captures/build-selection-tile-armed.png`
 - **Fix:** Add mutually exclusive Select / Build / Road / Rover-move interaction modes. Keep Select as the default, never show a build ghost outside Build mode, make build controls explicitly arm/cancel the mode, and give the map hint and selected-object panel an unambiguous current-mode label. In the scene raycast, prioritize buildings/robots over their transparent underlying tile target, then fall back to the tile.
 - **Resolution (live verified):** `fix: make Earth construction mode explicit` adds the explicit command modes. The scene selector now carries entity coordinates and ranks robot/building hits above tile targets. In the current WebMCP session, clicking the visible rover selected `rover-1`; entering Build mode showed the placement instructions, and cancelling returned the desk to Select mode. Capture: `docs/playtest-captures/build-selection-live-verified.png`.
+
+## Fresh Mission 2 visual command-desk pass — session restarted after successful local-response run
+
+### 23. The playable colony is a small diamond surrounded by a dead, uncomposed void
+
+- **Role / moment:** Earth, fresh `The Meaning of Enough` desk at the normal embedded desktop viewport, compared with `docs/concepts/main-play-v1.png`.
+- **Expected:** The active camera should feel like the authored isometric settlement in the visual target: world-scale terrain and coastline occupy the frame, infrastructure has spatial context, and the player’s attention stays on a dense playable frontier.
+- **Actual:** The received settlement occupies a small diamond in the middle-left of a vast dark void. The procedural diamond edge and empty surrounding space make the scene read as a board test area rather than a world, even though the building sprites are present.
+- **Capture:** `docs/playtest-captures/mission-2-fresh-map-visual-gap.png`
+- **Fix:** Recompose the Earth camera and terrain plate around the received colony: enlarge/extend the authored playable land, use irregular coastline/background texture beyond the surveyed cells, and give early Mission 2 a settlement-first framing that spends the available map area without revealing unreceived information.
+
+### 24. The correspondence rail is visually clipped at the real embedded width
+
+- **Role / moment:** Earth, same fresh Mission 2 desk.
+- **Expected:** The relay heading, tabs, packet controls, and composer must fit entirely inside the right rail at the actual app-container width.
+- **Actual:** `Daneel / Correspondence` truncates at the right edge, while other rail controls feel squeezed; the lower composer and top control bar reinforce the sense that the desktop layout was designed for a wider viewport than the game receives.
+- **Capture:** `docs/playtest-captures/mission-2-fresh-map-visual-gap.png`
+- **Fix:** Give the rail a container-aware desktop breakpoint and compact heading treatment; protect its fixed width/inner padding so text, tabs, packet timeline, and composer never escape the visible shell.
+
+### 25. The active lower command deck remains too small and dense for a real-time strategy read
+
+- **Role / moment:** Earth, same fresh Mission 2 desk before Daneel connects.
+- **Expected:** A player should be able to parse the current mode, selection, next action, cost, and time control at a glance—the operational rhythm should feel RTS-like rather than like a tiny dashboard.
+- **Actual:** The lower deck compresses next action, build selection, resource impact, queue buttons, and simulation controls into small mono copy. The key `Enter Build Mode` affordance is present but competes with several secondary lines and is visually weaker than the surrounding instrumentation.
+- **Capture:** `docs/playtest-captures/mission-2-fresh-map-visual-gap.png`
+- **Fix:** Establish a stronger lower-deck hierarchy: one primary next-action card, larger mode/build controls, abbreviated secondary copy behind selection/hover, and a compact speed cluster that remains readable without shrinking essential decisions.
