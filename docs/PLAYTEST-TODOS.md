@@ -41,3 +41,10 @@
 2. Run a Daneel survey and observe a new safe area / resource signal become visible.
 3. Launch cargo and watch the hauler animate through its job, then return idle.
 4. Receive the outcome as Earth and confirm that the relay hero shows mission result rather than bootstrap copy.
+
+### 5. Command desk clips at the active browser width
+
+- **Role / moment:** Earth, live in-app browser at a 1600px-wide desktop viewport after a received telemetry packet.
+- **Expected:** The top time controls, Earth date, correspondence heading, and relay card remain completely legible without relying on page scrollbars.
+- **Actual:** Horizontal content is clipped: the top-right command controls/date and `Daneel / Correspondence` heading lose their right edges. The no-scrollbar rule currently hides rather than resolves the overflow.
+- **Fix:** Make the command-shell columns and top controls adapt at constrained desktop widths: preserve a readable correspondence rail, compact/reflow time controls, and avoid clipping any interactive control or receipt label.
