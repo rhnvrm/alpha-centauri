@@ -909,22 +909,16 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   text-align: right;
 }
 .timeline-scroll {
-  max-height: 172px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #907248 #18201e;
-}
-.timeline-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-.timeline-scroll::-webkit-scrollbar-track {
-  background: #18201e;
-}
-.timeline-scroll::-webkit-scrollbar-thumb {
-  background: #907248;
+  overflow: hidden;
 }
 .debrief .timeline-row {
   padding: 5px 0;
+}
+.timeline-summary {
+  display: block;
+  color: #778277;
+  font: 8px/1.35 'DM Mono', monospace;
+  margin-top: 7px;
 }
 .debrief > .primary {
   margin-top: 0;

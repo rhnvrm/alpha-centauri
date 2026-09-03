@@ -643,7 +643,11 @@ export default function App({ store }) {
     const refBits = bitsForPayload({
       text: `adopt ${RESILIENCE_24.reference}`,
     });
-    const timelineEvents = state.events.slice(-14);
+    // The desktop report intentionally has no document or nested scrollbar. Keep the
+    // decisive end-of-mission events in-frame and disclose how much earlier history
+    // was compacted into the packet ledger rather than making it unreachable.
+    const timelineEvents = state.events.slice(-7);
+    const hiddenTimelineEventCount = Math.max(0, state.events.length - timelineEvents.length);
     return (
       <main className="debrief">
         <p className="eyebrow">MISSION COMPLETE · CONFIRMED DOWNLINK</p>
@@ -745,7 +749,7 @@ export default function App({ store }) {
         <div className="debrief-timeline">
           <div className="section-label">
             <span>RECEIVED TIMELINE</span>
-            <span>{timelineEvents.length} events · scroll within panel</span>
+            <span>{timelineEvents.length} final events</span>
           </div>
           <div className="timeline-scroll" aria-label="All received mission events">
             {timelineEvents.map((e) => (
@@ -756,6 +760,9 @@ export default function App({ store }) {
               </div>
             ))}
           </div>
+          {hiddenTimelineEventCount > 0 && (
+            <small className="timeline-summary">{hiddenTimelineEventCount} earlier events compacted into the received packet ledger.</small>
+          )}
         </div>
         <button className="primary" onClick={() => setScreen("title")}>
           Choose another mission <ChevronRight size={17} />
