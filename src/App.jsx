@@ -230,6 +230,7 @@ export default function App({ store }) {
   const selectedRobotJob = selectedRobot?.assignedJob ? state.jobs.find((job) => job.id === selectedRobot.assignedJob) : null;
   const projectImpact = buildingImpact(buildType, state);
   const goal = missionTarget(state.missionId, projection.resources);
+  const observedConstraint = projection.constraints[0];
   const selectedImpact = selectedBuilding ? buildingImpact(selectedBuilding.type, state) : null;
   const selectedFacilityStatus = selectedBuilding ? receivedFacilityStatus(state, selectedBuilding) : null;
   const placement = useMemo(() => receivedPlacement(state, selectedTile ? selected : null, buildType), [state, selected, selectedTile, buildType]);
@@ -1042,15 +1043,15 @@ export default function App({ store }) {
             </div>
           ) : (
             <div className="mission-next" aria-label="Recommended next action">
-              <div className="section-label">NEXT EARTH ACTION</div>
-              <strong>{demoGuide.title}</strong>
-              <p>{demoGuide.detail}</p>
-              {demoGuide.action !== "wait" && demoGuide.action !== "answer" && demoGuide.action !== "debrief" && (
+              <div className="section-label">{observedConstraint ? "RECEIVED CONSTRAINT · NEXT ACTION" : "NEXT EARTH ACTION"}</div>
+              <strong>{observedConstraint ? observedConstraint.symptom : demoGuide.title}</strong>
+              <p>{observedConstraint ? `${observedConstraint.cause} Remedy: ${observedConstraint.remedy}` : demoGuide.detail}</p>
+              {(!observedConstraint && demoGuide.action !== "wait" && demoGuide.action !== "answer" && demoGuide.action !== "debrief") && (
                 <button onClick={takeGuideAction}>
                   {demoGuide.action === "daneel" ? "OPEN DANEEL BRIEF" : demoGuide.action === "pace" ? "START 1× CLOCK" : "WRITE AN INTENT"}
                 </button>
               )}
-              <small>Select a received tile whenever you want to send a literal Earth construction order.</small>
+              <small>{observedConstraint ? `OBSERVED ${projection.observationLabel.toUpperCase()} · ${observedConstraint.severity.toUpperCase()}` : "Select a received tile whenever you want to send a literal Earth construction order."}</small>
             </div>
           )}
         </div>

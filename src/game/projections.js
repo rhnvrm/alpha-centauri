@@ -9,6 +9,7 @@ export const earthProjection = (state) => ({
   observedDay: state.telemetry.captureDay,
   observationLabel: state.telemetry.label,
   resources: state.observedResources,
+  constraints: state.observedConstraints || [],
   reports: state.reports.filter((r) => r.receivedDay <= state.localDay),
   // Earth knows its own uplinks immediately. A local downlink is not visible until
   // it has physically arrived, even if the simulation has already scheduled it.

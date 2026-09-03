@@ -1,6 +1,7 @@
 import { LIGHT_DELAY_DAYS, SAVE_VERSION, clamp } from './constants.js';
 import { SCENARIOS, scenarioTiles, seededRoads, scenarioFloodKeys, initialSurveyKnowledge } from './scenarios.js';
 import { powerSources } from './networks.js';
+import { diagnoseConstraints } from './constraints.js';
 
 const id = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -48,6 +49,7 @@ export function createGame(missionId = 'firstLight', sessionId = id('session')) 
       deadlineDay: scenario.deadlineDay ?? null, sustainDays: scenario.sustainDays ?? null,
       powerZeroStreak: 0, collapsedAt: null, protectionLost: 0, interruption: { startedAt: null, endAt: null, minPower: Infinity, sustained: null },
     },
+    observedConstraints: [],
     telemetry: { captureDay: 0, arrivalDay: LIGHT_DELAY_DAYS, label: 'Bootstrap observation' },
     // Browser-local diagnostic budget: never advances or mutates the colony simulation.
     superposition: { passes: 2, activations: 0, lastActivatedAtMs: 0, activeUntilMs: 0 },
@@ -68,6 +70,7 @@ export function telemetryFor(state) {
       roads: state.roads.map((r) => ({ x: Array.isArray(r) ? r[0] : r.x, y: Array.isArray(r) ? r[1] : r.y })),
     },
     observedKnowledge: structuredClone(state.localKnowledge || { surveyedTiles: [], regions: [] }),
+    observedConstraints: diagnoseConstraints(state),
   };
 }
 export function validateGame(state) {
@@ -95,6 +98,8 @@ export function updateProgress(state) {
   const foodMonths = r.food / Math.max(1, r.population * 0.02);
   const powerReserve = r.powerCapacity ? clamp(r.power / r.powerCapacity, 0, 1) : 0;
   const m = state.mission;
+  const binding = diagnoseConstraints(state)[0];
+  m.bindingConstraint = binding?.id || null;
   let label = 'Awaiting confirmation';
   if (state.missionId === 'firstLight') {
     const capacityOK = r.capacity >= 100; const sourcesOK = powerSources(state).length >= 2;
@@ -114,7 +119,7 @@ export function updateProgress(state) {
   }
   if (state.missionId === 'rightToDecide') {
     const exported = (m.exported || 0) / 1000;
-    m.progress = clamp(Math.min(exported, 1) * 0.7 + (m.protectionLost === 0 ? 0.3 : 0), 0, 100); label = `Exported ${Math.round(m.exported || 0)} / 1000 t`;
+    m.progress = clamp(Math.min(exported, 1) * 0.7 + (m.protectionLost === 0 ? 0.3 : 0), 0, 100); label = m.bindingConstraint === 'export-deadline' ? `Export constraint: ${Math.round(m.exported || 0)} / 1000 t` : `Exported ${Math.round(m.exported || 0)} / 1000 t`;
     if (m.deadlineDay && state.localDay >= m.deadlineDay) m.readyToConfirm = true;
   }
   return Object.assign(state, { _metrics: { foodMonths, powerReserve } });

@@ -15,7 +15,7 @@ export function saveSize(state) { try { return new TextEncoder().encode(JSON.str
 function migrateGame(raw) {
   const state = validateGame(raw);
   const defaults = createGame(state.missionId, state.sessionId);
-  for (const key of ['pendingQuestions', 'pendingEvents', 'floodKeys', 'flows', 'productionRates', 'earthCoast', 'demoPace', 'timeScale', 'superposition', 'localKnowledge', 'observedKnowledge']) {
+  for (const key of ['pendingQuestions', 'pendingEvents', 'floodKeys', 'flows', 'productionRates', 'earthCoast', 'demoPace', 'timeScale', 'superposition', 'localKnowledge', 'observedKnowledge', 'observedConstraints']) {
     if (state[key] === undefined) state[key] = defaults[key];
   }
   // A pre-existing save has already been launched, even if it is still at day zero.
