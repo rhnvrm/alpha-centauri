@@ -463,42 +463,54 @@ export default function App({ store }) {
     const started = Boolean(state.launched);
     return (
       <main className="title-screen">
-        <div className="title-mark">◉</div>
-        <p className="eyebrow">EARTH COMMAND · ALPHA CENTAURI</p>
-        <h1>
-          The Intent
-          <br />
-          <em>Horizon</em>
-        </h1>
-        <p className="lede">
-          You govern from Earth.
-          <br />
-          Daneel lives with the consequences.
-        </p>
-        {started && (
-          <button
-            className="continue-card"
-            onClick={() => {
-              if (state.mission.earthOutcome) setScreen("debrief");
-              else {
-                setScreen("play");
-                store.resume();
-              }
-            }}
-          >
-            <span>CONTINUE</span>
-            <strong>{SCENARIOS[state.missionId].title}</strong>
-            <small>
-              Day {state.localDay} ·{" "}
-              {state.mission.earthOutcome
-                ? "confirmed outcome ready for review"
-                : "resume correspondence"}{" "}
-              · session {state.sessionId.slice(0, 8)}
-            </small>
-            <ChevronRight size={16} />
-          </button>
-        )}
-        <div className="mission-grid">
+        <section className="title-intro">
+          <div className="title-mark">◉</div>
+          <p className="eyebrow">EARTH COMMAND · ALPHA CENTAURI</p>
+          <h1>
+            The Intent
+            <br />
+            <em>Horizon</em>
+          </h1>
+          <p className="lede">
+            You govern from Earth.
+            <br />
+            Daneel lives with the consequences.
+          </p>
+          <div className="title-rule" />
+          <p className="title-caption">A correspondence game about distance, agency, and what survives the wait.</p>
+        </section>
+        <aside className="title-signal" aria-label="Mission telemetry">
+          <span className="eyebrow">LONG-RANGE RELAY / 01</span>
+          <strong>Nothing arrives<br />in real time.</strong>
+          <p>Every instruction crosses the gap. Every consequence belongs to the colony.</p>
+          <div className="signal-line"><i /><span>4.37 LY</span><i /></div>
+          <small>EARTH ◉ · · · · · ◉ ASTERIA</small>
+        </aside>
+        <section className="title-missions">
+          <div className="title-section-head">
+            <div>
+              <span className="eyebrow">SELECT A MISSION</span>
+              <p>Choose the world whose future you are willing to answer for.</p>
+            </div>
+            {started && (
+              <button
+                className="continue-card"
+                onClick={() => {
+                  if (state.mission.earthOutcome) setScreen("debrief");
+                  else {
+                    setScreen("play");
+                    store.resume();
+                  }
+                }}
+              >
+                <span>CONTINUE · DAY {state.localDay}</span>
+                <strong>{SCENARIOS[state.missionId].title}</strong>
+                <small>{state.mission.earthOutcome ? "Confirmed outcome ready for review" : "Resume correspondence"}</small>
+                <ChevronRight size={18} />
+              </button>
+            )}
+          </div>
+          <div className="mission-grid">
           {Object.values(SCENARIOS).map((s, i) => (
             <button
               className="mission-card"
@@ -512,7 +524,8 @@ export default function App({ store }) {
               <ChevronRight size={16} />
             </button>
           ))}
-        </div>
+          </div>
+        </section>
         <p className="title-foot">
           A static browser simulation · localStorage save · {LIGHT_DELAY_YEARS}{" "}
           years one way · {WINDOW_BITS} bits per transmission window

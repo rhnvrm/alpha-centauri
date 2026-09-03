@@ -733,3 +733,64 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .time-controls > button:nth-of-type(5),
   .time-controls > button:nth-of-type(6) { max-width: 220px; }
 }
+
+/* Title screen: compose the hero, relay fiction, and mission choices as one
+   landing surface so the panorama earns the right side of the viewport. */
+.title-screen {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  padding: clamp(34px, 6vh, 76px) clamp(24px, 7vw, 112px) 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  column-gap: clamp(34px, 6vw, 110px);
+  align-content: stretch;
+  background: linear-gradient(90deg, rgba(12, 18, 16, .9), rgba(12, 18, 16, .25) 58%, rgba(12, 18, 16, .02));
+}
+.title-screen::before {
+  right: 0;
+  width: 78vw;
+  height: 100dvh;
+  opacity: .84;
+  background: linear-gradient(90deg, #111715 0%, rgba(17, 23, 21, .7) 22%, rgba(17, 23, 21, .08) 70%), url('../docs/concepts/title-hero-v2.png') center right / cover no-repeat;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 100%);
+}
+.title-intro { align-self: center; max-width: 700px; }
+.title-intro .title-mark { margin-bottom: 27px; }
+.title-screen h1 { font-size: clamp(64px, 8.4vw, 132px); margin: 14px 0 24px; }
+.title-screen .lede { font-size: clamp(17px, 1.45vw, 22px); color: #b6b19d; }
+.title-rule { width: min(390px, 80%); height: 1px; margin-top: 30px; background: linear-gradient(90deg, var(--copper), transparent); }
+.title-caption { max-width: 390px; margin: 13px 0 0; color: #928e7c; font-size: 12px; line-height: 1.55; }
+.title-signal { align-self: center; justify-self: end; width: min(340px, 100%); padding: 23px 24px 21px; border: 1px solid rgba(190, 153, 89, .7); border-left: 3px solid var(--copper); background: rgba(13, 19, 16, .74); box-shadow: 0 20px 55px rgba(0,0,0,.22); }
+.title-signal .eyebrow { color: var(--copper); font-size: 9px; }
+.title-signal strong { display: block; margin-top: 34px; color: #e1d7b8; font: 400 clamp(24px, 2.5vw, 35px)/1.05 Georgia, serif; }
+.title-signal p { margin: 16px 0 27px; color: #ada995; font-size: 13px; line-height: 1.55; }
+.signal-line { display: flex; align-items: center; gap: 8px; color: var(--ochre); font: 10px 'DM Mono'; letter-spacing: .12em; }
+.signal-line i { flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--copper) 0 4px, transparent 4px 8px); }
+.title-signal > small { display: block; margin-top: 11px; color: #777e73; font-size: 8px; letter-spacing: .12em; }
+.title-missions { grid-column: 1 / -1; align-self: end; }
+.title-section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 14px; }
+.title-section-head > div > .eyebrow { color: var(--ochre); }
+.title-section-head p { margin: 7px 0 0; color: #9c9988; font-size: 12px; }
+.mission-grid { margin-top: 0; gap: 14px; }
+.mission-card { min-height: 164px; padding: 19px 21px 18px; background: rgba(18, 26, 22, .82); border-color: rgba(117, 125, 106, .55); }
+.mission-card strong { margin-top: 25px; font-size: 19px; color: #e0d7b9; }
+.mission-card p { color: #aba795; font-size: 13px; max-width: 250px; }
+.continue-card { flex: 0 1 330px; width: 330px; min-width: 0; margin: 0; padding: 13px 18px; background: rgba(183, 131, 85, .15); }
+.continue-card strong { font-size: 16px; }
+.continue-card small { color: #b8b19a; font-size: 10px; text-transform: none; letter-spacing: .03em; }
+.title-foot { grid-column: 1 / -1; margin: 14px 0 0; color: #8c8c7d; font-size: 10px; }
+@media (max-width: 820px) {
+  .title-screen { display: block; min-height: 100dvh; padding: 34px 22px 20px; overflow: auto; }
+  .title-screen::before { width: 100%; height: 68%; opacity: .3; }
+  .title-intro { max-width: 620px; }
+  .title-screen h1 { font-size: clamp(56px, 15vw, 86px); }
+  .title-signal { display: none; }
+  .title-missions { margin-top: 42px; }
+  .title-section-head { align-items: start; flex-direction: column; gap: 18px; }
+  .continue-card { width: 100%; max-width: 430px; }
+  .mission-grid { grid-template-columns: 1fr; }
+  .mission-card { min-height: 142px; }
+  .title-foot { margin-top: 22px; line-height: 1.5; }
+}
