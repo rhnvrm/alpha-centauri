@@ -1139,7 +1139,7 @@ export default function App({ store }) {
           </>}
         </aside>
         <section className="bottom-deck">
-        <div className="selection">
+        <div className={`selection ${selected ? "selection-inspector" : "selection-next"}`}>
           <div className="section-label">
             SELECTED {selected ? selected.kind.toUpperCase() : "OBJECT"}
           </div>
@@ -1209,26 +1209,48 @@ export default function App({ store }) {
           <strong>Confirmed missions are sealed.</strong>
           <small>Orders, construction, and authority changes are unavailable after confirmation. Review and mission selection remain available in the confirmation banner above.</small>
         </div> : <div className="build-tools">
-          <div className="section-label">
-            EARTH ORDER · MODE: {interactionMode.toUpperCase()}
+          <div className="command-header">
+            <div className="section-label">
+              <span>EARTH ORDER</span>
+              <b>MODE: {interactionMode.toUpperCase()}</b>
+            </div>
+            <small>{interactionMode === "build" ? "Choose a received tile to preview." : "Select a mode to issue an order."}</small>
           </div>
-          {interactionMode === "build" ? (
-            <button className="command-active" onClick={() => { setInteractionMode("select"); setSelected(null); }}><Eye size={15} /> CANCEL BUILD MODE <kbd>ESC</kbd></button>
-          ) : (
-            <button onClick={() => { setInteractionMode("build"); setRoadStart(null); setMoveRobotId(null); setToast("BUILD MODE ARMED · choose a received tile to preview."); }}>
-              <Hammer size={15} /> ENTER BUILD MODE
+          <div className="mode-actions">
+            {interactionMode === "build" ? (
+              <button className="command-active primary-command" onClick={() => { setInteractionMode("select"); setSelected(null); }}><Eye size={15} /> CANCEL BUILD MODE <kbd>ESC</kbd></button>
+            ) : (
+              <button className="primary-command" onClick={() => { setInteractionMode("build"); setRoadStart(null); setMoveRobotId(null); setToast("BUILD MODE ARMED · choose a received tile to preview."); }}>
+                <Hammer size={15} /> ENTER BUILD MODE
+              </button>
+            )}
+            <button
+              className={`secondary-command ${interactionMode === "road" ? "road-active" : ""}`}
+              onClick={() => {
+                const activating = interactionMode !== "road";
+                setInteractionMode(activating ? "road" : "select");
+                setRoadStart(null);
+                setMoveRobotId(null);
+              }}
+              title={interactionMode === "road" ? "Cancel road mode" : "Queue a contiguous road corridor"}
+            >
+              <Hammer size={15} /> {interactionMode === "road" ? "CANCEL ROAD" : "ROAD CORRIDOR"}
             </button>
-          )}
-          <select
-            value={buildType}
-            onChange={(e) => setBuildType(e.target.value)}
-          >
-            {Object.entries(BUILDINGS).map(([key, value]) => (
-              <option key={key} value={key}>
-                {value.label} · {value.cost} mat · {value.days}d
-              </option>
-            ))}
-          </select>
+          </div>
+          <label className="build-picker">
+            <span>STRUCTURE PLAN</span>
+            <select
+              value={buildType}
+              onChange={(e) => setBuildType(e.target.value)}
+              aria-label="Structure plan"
+            >
+              {Object.entries(BUILDINGS).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value.label} · {value.cost} mat · {value.days}d
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="project-impact" aria-live="polite">
             <div className="impact-head"><span>PROJECTED AFTER COMPLETION</span><b>−{BUILDINGS[buildType].cost} MAT · {BUILDINGS[buildType].days}D LOCAL BUILD</b></div>
             <strong>{projectImpact.production}</strong>
@@ -1237,7 +1259,7 @@ export default function App({ store }) {
             <em className={interactionMode === "build" ? (placement.valid ? "site-valid" : "site-blocked") : "site-blocked"}>{interactionMode === "build" ? placement.reason : "SELECT MODE · ENTER BUILD MODE TO ASSESS A SITE."}</em>
           </div>
           <button
-            className="queue-build"
+            className="queue-build primary-command"
             disabled={interactionMode !== "build" || !selectedTile || !placement.valid}
             onClick={sendBuild}
             title={
@@ -1251,32 +1273,22 @@ export default function App({ store }) {
               ? `${selected.x},${selected.y}`
               : "SELECTED TILE"}
           </button>
-          <button
-            className={interactionMode === "road" ? "road-active" : ""}
-            onClick={() => {
-              const activating = interactionMode !== "road";
-              setInteractionMode(activating ? "road" : "select");
-              setRoadStart(null);
-              setMoveRobotId(null);
-            }}
-          >
-            <Hammer size={15} />{" "}
-            {interactionMode === "road" ? "CANCEL ROAD MODE" : "QUEUE ROAD CORRIDOR"}
-          </button>
+          <div className="secondary-actions" aria-label="Secondary command actions">
           {state.missionId === "rightToDecide" &&
             !state.doctrine.authority.exports && (
               <>
-                <button onClick={authorizeExport}>
+                <button className="secondary-command" onClick={authorizeExport} title={`Authorize export for ${LIGHT_DELAY_YEARS} years`}>
                   AUTHORIZE EXPORT · {LIGHT_DELAY_YEARS}Y
                 </button>
               </>
             )}
-          <button onClick={() => setShowDoctrine(true)}>
+          <button className="secondary-command" onClick={() => setShowDoctrine(true)} title="Review authority doctrine">
             <ShieldCheck size={15} /> DOCTRINE
           </button>
-          <button onClick={() => setShowDaneelPrompt(true)}>
+          <button className="secondary-command" onClick={() => setShowDaneelPrompt(true)} title="Open the Daneel startup prompt">
             <Eye size={15} /> DANEEL PROMPT
           </button>
+          </div>
         </div>}
         {missionConfirmed ? <div className="terminal-deck-panel terminal-time-panel" aria-label="Simulation terminal state">
           <div className="section-label">SIMULATION TERMINAL</div>
@@ -1287,17 +1299,22 @@ export default function App({ store }) {
             <span>SIMULATION CONTROLS</span>
             <span>{state.paused ? "PAUSED" : state.demoPace ? `${timeScale}× AUTO` : "READY"}</span>
           </div>
-          <button
-            className={state.paused ? "road-active" : ""}
-            onClick={() => (state.paused ? store.resume() : store.pause())}
-            title={state.paused ? "Resume simulation" : "Pause simulation"}
-            aria-label={state.paused ? "Resume simulation" : "Pause simulation"}
-          >
-            {state.paused ? <Play size={15} /> : <Pause size={15} />}
-            {state.paused ? "RESUME" : "PAUSE"}
-          </button>
-          <button onClick={() => store.advance(1)}>+1 DAY</button>
-          <button onClick={() => store.advance(30)}>+30 DAYS</button>
+          <div className="time-cluster clock-cluster" aria-label="Clock controls">
+            <span className="time-cluster-label">CLOCK</span>
+            <button
+              className={state.paused ? "road-active" : ""}
+              onClick={() => (state.paused ? store.resume() : store.pause())}
+              title={state.paused ? "Resume simulation" : "Pause simulation"}
+              aria-label={state.paused ? "Resume simulation" : "Pause simulation"}
+            >
+              {state.paused ? <Play size={15} /> : <Pause size={15} />}
+              {state.paused ? "RESUME" : "PAUSE"}
+            </button>
+            <button onClick={() => store.advance(1)}>+1 DAY</button>
+            <button onClick={() => store.advance(30)}>+30 DAYS</button>
+          </div>
+          <div className="time-cluster speed-cluster" role="group" aria-label="Simulation speed">
+            <span className="time-cluster-label">PACE</span>
           <div className="speed-controls" role="group" aria-label="Simulation speed">
             {[1, 2, 5, 10].map((speed) => (
               <button
@@ -1311,22 +1328,26 @@ export default function App({ store }) {
               </button>
             ))}
           </div>
-          <button onClick={() => store.nextEvent()}>
-            <FastForward size={15} /> {nextEventButton}
-          </button>
-          <button
-            onClick={() => store.nextEarthEvent()}
-            title="Advance to the next Earth-visible arrival"
-          >
-            <Radio size={15} /> {earthEventButton} <kbd>N</kbd>
-          </button>
-          <button
-            className={state.earthCoast ? "road-active" : ""}
-            onClick={() => store.toggleCoast()}
-            title="Stop time at the next Earth-visible arrival"
-          >
-            COAST
-          </button>
+          </div>
+          <div className="time-cluster event-cluster" aria-label="Event controls">
+            <span className="time-cluster-label">EVENTS</span>
+            <button onClick={() => store.nextEvent()}>
+              <FastForward size={15} /> {nextEventButton}
+            </button>
+            <button
+              onClick={() => store.nextEarthEvent()}
+              title="Advance to the next Earth-visible arrival"
+            >
+              <Radio size={15} /> {earthEventButton} <kbd>N</kbd>
+            </button>
+            <button
+              className={state.earthCoast ? "road-active" : ""}
+              onClick={() => store.toggleCoast()}
+              title="Stop time at the next Earth-visible arrival"
+            >
+              COAST
+            </button>
+          </div>
           <button
             onClick={() => {
               store.pause();

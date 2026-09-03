@@ -5,6 +5,16 @@ test('rendered command-desk layout is covered by the browser smoke test', () => 
   assert.match(fs.readFileSync(new URL('../scripts/e2e.mjs', import.meta.url), 'utf8'), /command desk fits the viewport/);
 });
 
+test('command desk keeps decisions ahead of secondary controls', () => {
+  const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  assert.match(app, /selection-next/);
+  assert.match(app, /primary-command/);
+  assert.match(app, /secondary-actions/);
+  assert.match(app, /time-cluster clock-cluster/);
+  assert.match(app, /time-cluster speed-cluster/);
+  assert.match(app, /time-cluster event-cluster/);
+});
+
 test('confirmed command desk switches to a terminal read-only state', () => {
   const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
   assert.match(app, /const missionConfirmed = missionStatus\.complete/);
