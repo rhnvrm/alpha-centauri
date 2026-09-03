@@ -108,6 +108,26 @@ The thesis is simple:
 
 > **Intelligence at the receiver is semantic leverage over a constrained channel.**
 
+## The science under the hood
+
+The game separates two limits that are easy to confuse:
+
+- **Propagation:** every message takes 1,595 simulation days, or 4.37 years, to cross the distance.
+- **Serialization:** each direction gets a 2,800-bit application window per local simulation day. Larger messages wait across consecutive windows before they can arrive.
+
+The radio does not become faster when Daneel is available. The bit rate stays fixed. His advantage is that he receives the instruction beside the colony's current local state and can choose a feasible policy instead of executing a stale list of coordinates.
+
+```text
+Earth sends:       G + C + P
+                   goal, constraints, preferences
+
+Daneel computes:   π(action | current state, G, C, P)
+```
+
+That is related to goal-oriented and task-oriented communication research. It is different from ordinary compression, which tries to reconstruct the same data with fewer bits. Here, Earth does not know the future action sequence well enough to transmit it. Earth sends the conditions that matter, and Daneel works out the local response.
+
+The game calls this **semantic bandwidth**, but the term has a strict limit: Shannon capacity does not increase. The game measures useful progress per transmitted bit as a diagnostic of the player's instruction, not as a universal measure of intelligence. See the full [science notes](docs/SCIENCE.md).
+
 ## Built for the demo
 
 - Fully client-side static app; game state persists in versioned `localStorage`.
