@@ -48,3 +48,11 @@ test('persistent decision HUD does not regress to decorative microtype', () => {
   assert.match(css, /\.metrics small \{ font-size: 9px/);
   assert.match(css, /\.footer-strip \{ font-size: 9px/);
 });
+
+test('desktop time controls occupy the reserved command-deck column instead of covering the map', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  const desktopDock = css.slice(css.lastIndexOf('@media (min-width: 1101px)'));
+  assert.match(desktopDock, /\.bottom-deck \{ grid-template-columns: minmax\(280px, 1fr\) minmax\(390px, 1\.25fr\) minmax\(330px, \.9fr\); \}/);
+  assert.match(desktopDock, /\.time-controls \{[\s\S]*?position: static;/);
+  assert.match(desktopDock, /\.time-controls \{[\s\S]*?border-left: 1px solid #5e5035;/);
+});

@@ -1423,9 +1423,22 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 @media (min-width: 1101px) {
   .bottom-deck { grid-template-columns: minmax(280px, 1fr) minmax(390px, 1.25fr) minmax(330px, .9fr); }
   .time-controls {
+    /* Earlier presentation experiments floated this cluster over the map.
+       The desktop deck already reserves a third command column, so keep time
+       controls there and return the entire colony frame to the player. */
+    position: static;
+    z-index: auto;
+    top: auto;
+    right: auto;
+    width: auto;
+    height: auto;
     min-height: 92px;
+    padding: 14px 15px;
+    border-left: 1px solid #5e5035;
+    background: #11130e;
     align-content: center;
     align-items: center;
+    justify-content: flex-start;
     gap: 8px;
   }
   .time-controls .time-label { display: none; }
