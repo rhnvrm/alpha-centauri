@@ -237,6 +237,10 @@ export default function App({ store }) {
   const selectedTile = selected?.kind === "tile";
   const receivedBuildings = state.observedWorld?.buildings || [];
   const receivedRobots = state.observedWorld?.robots || [];
+  // This is deliberately calculated from the received survey ledger, not the
+  // live local ledger. It gives Earth a readable reason for fog receding
+  // without turning scout motion into a hidden live feed.
+  const receivedSurveyCoverage = Math.round(100 * (state.observedKnowledge?.surveyedTiles?.length || 0) / Math.max(1, state.tiles.length));
   const selectedBuilding = selected?.kind === "building" ? receivedBuildings.find((building) => building.id === selected.id) : null;
   // Outside a deliberate local diagnostic, the selected unit is the last
   // received rover snapshot. Do not let the desk narrate an unreceived job.
@@ -1148,6 +1152,11 @@ export default function App({ store }) {
             <div className="section-label">
               RECEIVED TELEMETRY <span>{relayHero ? `LATEST: ${relayHero.kind.replaceAll("-", " ").toUpperCase()}` : projection.observationLabel}</span>
             </div>
+            <div className="survey-readout" aria-label={`${receivedSurveyCoverage}% of the received map has been surveyed`}>
+              <span>RECEIVED MAP</span>
+              <b>{receivedSurveyCoverage}% SURVEYED</b>
+              <small>SCOUT RECONNAISSANCE CLEARS FOG LOCALLY; EARTH SEES IT ON A DOWNLINK.</small>
+            </div>
             {relayHero ? (
               [relayHero, ...projection.reports.filter((report) => report.id !== relayHero.id).slice(-2).reverse()].map((r, index) => (
                 <article className="letter" key={r.id}>
@@ -1168,7 +1177,8 @@ export default function App({ store }) {
               <article className="letter empty">
                 <p>
                   No downlink has arrived. The last world you can honestly see
-                  is dated day {projection.observedDay}.
+                  is dated day {projection.observedDay}. Scout reconnaissance is
+                  local until a telemetry packet crosses the gap.
                 </p>
               </article>
             )}
