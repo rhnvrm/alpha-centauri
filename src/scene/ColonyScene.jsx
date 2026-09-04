@@ -43,6 +43,7 @@ const spriteUrls = {
   battery: 'sprites/architecture/battery-bank-v1.png',
   terrainRock: 'sprites/terrain/rocky-outcrop-v1.png',
   terrainWetland: 'sprites/terrain/wetland-pond-reeds-v1.png',
+  terrainRoadSurface: 'sprites/terrain/service-road-surface-v1.png',
   terrainRoadSignal: 'sprites/terrain/road-signal-post-v1.png',
   terrainScaffold: 'sprites/terrain/amber-construction-scaffold-v1.png',
   terrainCrates: 'sprites/terrain/supply-crates-v1.png',
@@ -143,6 +144,20 @@ function meshRoad(r, roadKeys, live, textures) {
   // A soft central node lets the lanes join naturally at bends and intersections.
   const surface = live ? 0x454c46 : 0x5b4934;
   const shoulder = live ? 0x5e8b7e : 0x8f6e42;
+  // The painted road strip gives a transmitted corridor physical character
+  // without replacing its discrete simulation cells or their click targets.
+  // Each tile overlaps its neighbours slightly, so a route reads as a service
+  // road instead of a sequence of isolated decals.
+  if (textures.terrainRoadSurface) {
+    const strip = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.08, 1.3),
+      new THREE.MeshBasicMaterial({ map: textures.terrainRoadSurface, transparent: true, opacity: live ? .78 : .62, depthWrite: false, side: THREE.DoubleSide }),
+    );
+    strip.rotation.x = -Math.PI / 2;
+    strip.position.y = .151;
+    strip.renderOrder = 2;
+    group.add(strip);
+  }
   const node = new THREE.Mesh(new THREE.CircleGeometry(.4, 12), material(0x282720, { roughness: 1, transparent: true, opacity: .8 }));
   node.rotation.x = -Math.PI / 2; node.position.y = .105; node.scale.set(1.18, .92, 1); node.receiveShadow = true; group.add(node);
   const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => roadKeys.has(`${r.x + dx},${r.y + dy}`));
@@ -527,6 +542,7 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
       const obs = observed();
       const surveyedTiles = surveyed();
       const neededSprites = new Set(['terrainRock', 'terrainWetland', 'terrainRoadSignal']);
+      if ((obs.roads || []).length) neededSprites.add('terrainRoadSurface');
       for (const b of (obs.buildings || [])) neededSprites.add(b.type);
       for (const r of (obs.robots || [])) neededSprites.add(robotSpriteKey(r));
       if (latest.current.viewMode === 'earth' && latest.current.previewBuild?.type) neededSprites.add(latest.current.previewBuild.type);
