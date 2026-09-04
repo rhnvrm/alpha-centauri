@@ -5,6 +5,7 @@ import { integrate, sendReport, nextEarthArrivalDay, queueHumanIntent, construct
 import { loadGame, saveGame } from '../src/game/storage.js';
 import { createStore } from '../src/game/store.js';
 import { earthDemoGuide, earthMissionStatus, earthProjection, eventControlCopy } from '../src/game/projections.js';
+import { LIGHT_DELAY_DAYS } from '../src/game/constants.js';
 import { buildLocal } from './helpers.js';
 
 function fakeStorage(initial = {}) {
@@ -128,6 +129,18 @@ test('reports carry the observed world and Earth projection exposes it only afte
   assert.ok(proj.packets[0].status === 'delivered');
   assert.equal(s.observedWorld.roads.length >= 1, true);
   assert.equal(s.reports.length, 1);
+});
+
+test('Daneel reports preserve the compact reference to the Earth directive they answer', () => {
+  let s = createGame('firstLight');
+  s = queueHumanIntent(s, 'Keep life support safe and add redundant power.');
+  s = integrate(s, LIGHT_DELAY_DAYS);
+  const directive = s.inbox.find((message) => message.kind === 'intent');
+  directive.handled = true;
+  s = sendReport(s, 'Plan: add a second solar source.', 'plan', 'Build redundant power without risking life support.');
+  const payload = s.packets.at(-1).payload;
+  assert.deepEqual(payload.responseToDirective, { id: directive.id, deliveredDay: directive.deliveredDay });
+  assert.equal(payload.declaredFocus, 'Build redundant power without risking life support.');
 });
 
 test('Earth UI cannot infer an unreceived mission result from the local simulation', () => {

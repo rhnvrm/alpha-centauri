@@ -1152,6 +1152,11 @@ export default function App({ store }) {
               [relayHero, ...projection.reports.filter((report) => report.id !== relayHero.id).slice(-2).reverse()].map((r, index) => (
                 <article className="letter" key={r.id}>
                   <div className="report-kind">{index === 0 ? "NEWEST RECEIVED · " : ""}{r.kind === "mission-result" ? "MISSION RESULT" : r.kind === "telemetry" ? "AUTONOMY TELEMETRY" : "DANEEL REPORT"}</div>
+                  {r.payload?.responseToDirective && (
+                    <div className="directive-receipt">
+                      IN RESPONSE TO EARTH DIRECTIVE · COLONY DAY {r.payload.responseToDirective.deliveredDay}
+                    </div>
+                  )}
                   <p>{reportSummary(r)}</p>
                   <small>
                     CAPTURED ON COLONY · DAY {reportTiming(r).captured} · RECEIVED ON EARTH · DAY {reportTiming(r).received}

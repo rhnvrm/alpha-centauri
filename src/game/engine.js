@@ -455,9 +455,16 @@ export function scheduleMaintenance(state, facilityId) {
 }
 export function sendReport(state, text, kind = 'status', declaredFocus = null) {
   const next = copyGame(state);
+  // A local report is more than narration: it is the delayed evidence of which
+  // Earth instruction Daneel accepted. Keep the reference compact so the radio
+  // channel carries causality without echoing an entire expensive intent payload.
+  const directive = [...(next.inbox || [])]
+    .filter((message) => message.handled && message.kind === 'intent')
+    .sort((a, b) => (b.deliveredDay || 0) - (a.deliveredDay || 0))[0];
   packet(next, kind, {
     text,
     ...(declaredFocus ? { declaredFocus } : {}),
+    ...(directive ? { responseToDirective: { id: directive.id, deliveredDay: directive.deliveredDay } } : {}),
     ...telemetryFor(next),
   }, 'downlink', next.localDay, 'daneel');
   event(next, 'report_queued', { kind });
