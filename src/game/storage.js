@@ -24,6 +24,22 @@ function migrateGame(raw) {
     interruption: { ...defaults.mission.interruption, ...state.mission?.interruption } };
   state.doctrine = { ...defaults.doctrine, ...state.doctrine,
     authority: { ...defaults.doctrine.authority, ...state.doctrine?.authority } };
+  // The colony service fleet grew after the first saves shipped. Preserve all
+  // player progress, jobs, and specialist positions, but add newly authored
+  // autonomous crews on load so an old save is not permanently locked into an
+  // empty-looking world. Their patrol position is projected to the saved local
+  // day instead of spawning every new crew at the landing point.
+  const existingRobotIds = new Set((state.robots || []).map((robot) => robot.id));
+  const addedCrew = defaults.robots.filter((robot) => robot.status === 'patrolling' && !existingRobotIds.has(robot.id));
+  for (const crew of addedCrew) {
+    const cadence = Math.max(1, Math.floor(crew.patrolCadence || 1));
+    const phase = Math.floor(crew.patrolPhase || 0);
+    const patrol = crew.patrol || [];
+    const advances = patrol.length ? Math.floor((state.localDay + phase) / cadence) - Math.floor(phase / cadence) : 0;
+    const patrolIndex = patrol.length ? advances % patrol.length : 0;
+    const point = patrol[patrolIndex];
+    state.robots.push({ ...crew, patrolIndex, x: point?.x ?? crew.x, y: point?.y ?? crew.y, path: patrol.slice(patrolIndex + 1).concat(patrol.slice(0, patrolIndex)) });
+  }
   // Keep the existing v1 observation migration shared by load and import.
   if (!state.observedWorld) state.observedWorld = {
     buildings: state.buildings.filter((b) => b.status === 'complete').map(({ id, type, x, y, health }) => ({ id, type, x, y, status: 'complete', health })),

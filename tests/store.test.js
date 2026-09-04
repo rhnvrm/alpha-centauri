@@ -68,6 +68,20 @@ test('legacy simulation extensions are filled in without overwriting saved field
   assert.equal(loaded.getState().mission.status, 'active');
 });
 
+test('older saves gain the authored local service fleet without rewriting received telemetry', () => {
+  const legacy = createGame('firstLight', 'legacy-service-fleet');
+  legacy.localDay = 30;
+  // This represents the earlier landing roster before the operational crews
+  // and long-range scouts were authored.
+  legacy.robots = legacy.robots.filter((robot) => ['rover-1', 'builder-1', 'hauler-1', 'logistics-1', 'habitat-service-1', 'scout-1'].includes(robot.id));
+  const originalObservedIds = legacy.observedWorld.robots.map((robot) => robot.id);
+  const loaded = loadGame(fakeStorage({ 'intent-horizon-save-v1': JSON.stringify(legacy) }));
+  const newScout = loaded.robots.find((robot) => robot.id === 'range-scout-1');
+  assert.ok(newScout, 'a later-authored scout joins the local colony');
+  assert.notDeepEqual({ x: newScout.x, y: newScout.y }, { x: 17, y: 16 }, 'the crew is projected to its saved patrol position');
+  assert.deepEqual(loaded.observedWorld.robots.map((robot) => robot.id), originalObservedIds, 'Earth does not receive the new local crew before a downlink');
+});
+
 test('imports use the same legacy migration and preserve existing questions', () => {
   const legacy = createGame('rightToDecide');
   delete legacy.pendingQuestions;
