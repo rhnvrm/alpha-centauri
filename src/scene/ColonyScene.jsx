@@ -193,7 +193,11 @@ function meshTerrainDetail(t, userData, textures) {
         reed.rotation.z = (i ? 1 : -1) * .14;
       }
     }
-  } else if (seed % 4 === 0) {
+  } else if (seed % 17 === 0) {
+    // Sparse outcrops interrupt the perfectly smooth regolith without
+    // introducing a new terrain fact beyond the surveyed tile itself.
+    addSprite(group, textures.terrainRock, 'terrainRock', { x: ((seed >> 3) % 31 - 15) / 100, z: ((seed >> 7) % 31 - 15) / 100, y: .11, centerY: .1, order: 1, scale: .42 + (seed % 4) * .05, rotation: (seed % 9 - 4) * .05, color: seed % 2 ? 0xd5c6a7 : 0xffffff });
+  } else if (seed % 3 === 0) {
     for (let i = 0; i < 2; i += 1) {
       const pebble = addMesh(group, new THREE.DodecahedronGeometry(.055 + i * .025, 0), 0x756d55, [-.22 + i * .36, .15, .12 - i * .22], { roughness: .98 });
       pebble.rotation.y = i * 1.8;
