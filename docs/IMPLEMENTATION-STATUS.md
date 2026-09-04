@@ -48,11 +48,21 @@ Reviewed the game as a *playable loop* rather than a mechanic list; fixed the fi
 
 ## Native integration status
 
-Unverified/blocked on the current host — unchanged from the previous check. Browser setup reproduced the same compatibility error:
+Verified in the in-app Browser on 2026-09-04: a controlled Earth Command tab
+registered and exposed all 19 native WebMCP tools. Daneel successfully called
+`connect_steward`, `read_doctrine`, `read_inbox`, `inspect_colony`,
+`inspect_resource_network`, `send_report`, and `wait_for_event` against the
+same browser-local session. The empty delivered inbox correctly prevented local
+construction or exploration; the only write was a concise connection/risk
+report, which was re-inspected after commit.
 
-`Cannot find module '/home/rhnvrm/.codex/plugins/cache/openai-bundled/browser/26.831.21537/scripts/browser-service.mjs'`
-
-The installed Browser skill directory is `26.825.31414`. No plugin files were changed and no alternate browser was used. A supported host must still prove discovery, `connect_steward`, delivered-mail omission before arrival, local construction, delayed downlink, bounded wait/resume, and cleanup. Passing the local JavaScript suite is not evidence of a live Daneel connection.
+The host's 20-second browser evaluation ceiling interrupted a full-length page
+wait, while a 10-second wait completed normally. Treat that as a host transport
+constraint, not a simulation event. This establishes native registration,
+discovery, connection, empty-inbox authority gating, inspection, report
+queueing, and bounded waits. It does **not** yet establish a full mission's
+authorized construction, delayed Earth receipt, end-of-mission debrief, or
+unattended continuous monitoring. See [the native runbook](NATIVE-PLAYTHROUGH-RUNBOOK.md).
 
 ## Verification commands
 

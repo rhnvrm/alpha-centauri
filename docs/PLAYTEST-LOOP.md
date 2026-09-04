@@ -4,6 +4,8 @@ Every gameplay change begins with a complete, real playthrough in the in-app
 browser. The test must use the same localStorage session and native WebMCP tools
 that a player and Daneel use; unit tests are supporting evidence, not a substitute.
 
+Before the first run, follow the [native Browser and Daneel runbook](NATIVE-PLAYTHROUGH-RUNBOOK.md) to claim the exact tab and complete the first-turn authority gate.
+
 ## Roles
 
 - **Earth player:** reads only received telemetry, sets time speed, sends intent

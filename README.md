@@ -2,11 +2,13 @@
 
 ### A city builder where distance forces intelligence.
 
-[Play the live demo →](https://rhnvrm.github.io/alpha-centauri/)
+[Play the live demo →](https://rhnvrm.github.io/alpha-centauri/) · [Watch the 3-minute demo →](https://www.youtube.com/watch?v=6y38e-7NxSM) · [View the Devpost submission →](https://devpost.com/software/the-intent-horizon)
 
-You are Earth. A colony is growing four light-years away. Every command you send takes **1,595 simulation days** to arrive.
+You are Earth. A colony is growing 4.37 light-years away. Every command you send takes **1,595 simulation days** to arrive.
 
 By the time Earth learns what happened, another 4.37 years have passed.
+
+The player cannot solve that with faster clicking. Earth sends Daneel goals, constraints, and authority; the local steward uses WebMCP tools to work from the colony's present reality.
 
 ![The Intent Horizon live command desk](docs/playtest-captures/command-desk-docked-live.png)
 
@@ -130,13 +132,15 @@ The game calls this **semantic bandwidth**, but the term has a strict limit: Sha
 
 ## Built for the demo
 
+The project is published for the [WebMCP Challenge on Devpost](https://devpost.com/software/the-intent-horizon). The [demo video](https://www.youtube.com/watch?v=6y38e-7NxSM) follows the Earth-to-colony loop and the role Daneel plays in it.
+
 - Fully client-side static app; game state persists in versioned `localStorage`.
 - Deterministic simulation with delayed packets, transmission windows, seeded events, construction jobs, robot labor, networks, authority, and authored outcomes.
 - Real Three.js isometric colony with selectable geometry, moving robots, minimap, planned-order ghosts, ecology, and Earth-only observed-world rendering.
 - Native `document.modelContext.registerTool` detection and a structured Daneel tool surface.
 - No game backend, database, cloud save, independent MCP server, or game-owned model API.
 
-Local tests and the production build pass. Native Daneel gameplay remains an explicit compatibility gate in the target Desktop/browser environment; see [implementation status](docs/IMPLEMENTATION-STATUS.md).
+Local tests and the production build pass. Native tool discovery, connection, empty-inbox authority gating, inspection, reporting, and bounded waits have been verified in the target Desktop/browser environment; a complete authorized mission remains an explicit compatibility gate. See [implementation status](docs/IMPLEMENTATION-STATUS.md).
 
 ## See the thinking behind it
 
@@ -148,6 +152,7 @@ This repository is both a game and a design argument:
 - [WebMCP contract](docs/WEBMCP.md): the tool surface, authority model, message accounting, and integration boundary.
 - [Browser-only state](docs/LOCAL-STATE.md): persistence, one owning tab, recovery, and save guarantees.
 - [Daneel startup/resume prompt](docs/DANEEL-START-PROMPT.md): intended human-agent onboarding.
+- [Native Browser and Daneel runbook](docs/NATIVE-PLAYTHROUGH-RUNBOOK.md): exact tab claiming, first-turn authority gate, and full delayed-play loop.
 - [Implementation status](docs/IMPLEMENTATION-STATUS.md): what is locally verified and what still needs native evidence.
 - [Art direction](docs/ART-DIRECTION.md) and [asset provenance](docs/ASSET-PROMPTS.md): visual language and concept-art boundaries.
 - [Implementation handoff](docs/IMPLEMENTATION-HANDOFF.md): the original execution plan.

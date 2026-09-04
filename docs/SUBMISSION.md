@@ -1,12 +1,17 @@
-# WebMCP Challenge submission kit
+# WebMCP Challenge submission
+
+- Devpost: [The Intent Horizon](https://devpost.com/software/the-intent-horizon)
+- Demo video: [The Intent Horizon, YouTube](https://www.youtube.com/watch?v=6y38e-7NxSM)
+- Live app: [rhnvrm.github.io/alpha-centauri](https://rhnvrm.github.io/alpha-centauri/)
+- Source: [rhnvrm/alpha-centauri](https://github.com/rhnvrm/alpha-centauri)
 
 ## Submission title
 
 **The Intent Horizon — a city builder where distance forces intelligence**
 
-## One-line pitch
+## Elevator pitch
 
-At Alpha Centauri, a command arrives 4.37 years late, so the player sends intent and constraints while a local AI steward uses WebMCP to make accountable decisions in the colony's present.
+An Asimov-inspired WebMCP strategy game about why agentic instruction matters: bits take years to reach Alpha Centauri and Earth’s view is already old, so Daneel needs intent, not clicks.
 
 ## Devpost description
 
@@ -31,29 +36,30 @@ The project is a fully client-side static Vite application. It has no game backe
 
 - Live app: https://rhnvrm.github.io/alpha-centauri/
 - Source: https://github.com/rhnvrm/alpha-centauri
-- Demo video: upload the final three-minute cut (see below) and place its public URL here before submitting.
+- Demo video: https://www.youtube.com/watch?v=6y38e-7NxSM
 
 ## Three-minute video structure
 
-1. **0:00–0:25 — Hook.** “A city builder where every Earth command is already 4.37 years old.” Show the Earth command desk, delayed map, and packet timeline.
+1. **0:00–0:25 — Hook.** “A city builder where every Earth order takes 4.37 years to reach the colony.” Show the Earth command desk, delayed map, and packet timeline.
 2. **0:25–0:55 — Human role.** Send a compact intent with food, power, and habitat constraints. Point out the bit budget and delivery date.
 3. **0:55–1:45 — Agent role.** In a supported in-app-browser session, show tool discovery, `connect_steward`, inbox/colony inspection, one valid local action, a report, and a bounded wait. Keep the tool results visible; do not stage DOM clicks as agent work.
 4. **1:45–2:25 — Consequence.** Show Earth receiving the delayed report and the difference between captured colony date and receipt date. Use the mission confirmation/debrief.
 5. **2:25–3:00 — Why WebMCP.** State the division of authority and the three-mission arc. End on the live URL and repository.
 
-Existing recordings are useful B-roll, but the final cut needs the native tool-use segment above. Do not claim that segment was captured until it is visibly verified in a supported browser/model.
+The published video is the challenge demo. The native tool-use segment remains the strongest supporting evidence and should be recaptured if the video is revised.
 
-## Final pre-submit checklist
+## Submission status
 
 - [x] Public live application URL
 - [x] Public source repository URL
 - [x] Project description and demo narrative
+- [x] Published Devpost submission
+- [x] Published demo video
 - [x] Deterministic tests pass
 - [x] Production build passes
 - [x] Browser smoke test covers the visible session flow
-- [ ] Record and upload a ≤3-minute demo with genuine native WebMCP tool use
 - [ ] Verify tool registration, connection, read, local action, delayed report, bounded wait, and reconnect/resume in the supported target client
-- [ ] Paste final video URL and complete all Devpost fields/rules acknowledgements
+- [x] Complete Devpost fields and rules acknowledgements
 
 ## Evidence to retain
 
