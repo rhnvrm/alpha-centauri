@@ -325,7 +325,10 @@ export default function App({ store }) {
   }, [superpositionActive, superpositionCooldown]);
   useEffect(() => {
     const controller = new AbortController();
-    registerNativeTools(createToolSet(store), { signal: controller.signal })
+    registerNativeTools(createToolSet(store), {
+      signal: controller.signal,
+      discoveryTimeoutMs: 10_000,
+    })
       .then(setNative)
       .catch((error) =>
         setNative({ supported: false, registered: [], reason: error.message }),
