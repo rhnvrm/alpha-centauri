@@ -667,7 +667,16 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
       for (const t of state.tiles) { mctx.fillStyle = surveyedTiles.has(`${t.x},${t.y}`) && palette[t.terrain] != null ? `#${palette[t.terrain].toString(16).padStart(6, '0')}` : '#101716'; mctx.fillRect(t.x * s, t.y * s, s + .4, s + .4); }
       for (const r of (obs.roads || [])) { mctx.fillStyle = '#8a7f66'; mctx.fillRect(r.x * s, r.y * s, s + .4, s + .4); }
       for (const b of (obs.buildings || [])) { mctx.fillStyle = '#e8e2c8'; mctx.fillRect(b.x * s, b.y * s, (s + .4) * (b.type === 'greenhouse' || b.type === 'launch' ? 3 : 2), (s + .4) * 2); }
-      for (const r of (obs.robots || [])) { mctx.fillStyle = '#d98f4e'; mctx.beginPath(); mctx.arc((r.x + .5) * s, (r.y + .5) * s, 2.2, 0, Math.PI * 2); mctx.fill(); }
+      // Minimap color is role information, not cosmetic variety. In particular,
+      // cyan dots let Earth follow the last received scout coverage without
+      // confusing them with cargo or maintenance traffic.
+      for (const r of (obs.robots || [])) {
+        mctx.fillStyle = r.type === 'scout' || r.type === 'survey' ? '#62d9e0'
+          : r.type === 'construction' ? '#e0b35a'
+            : r.type === 'cargo' || r.type === 'logistics' ? '#d98f4e'
+              : '#91bc72';
+        mctx.beginPath(); mctx.arc((r.x + .5) * s, (r.y + .5) * s, r.type === 'scout' ? 2.7 : 2.2, 0, Math.PI * 2); mctx.fill();
+      }
       if (latest.current.viewMode === 'earth') for (const p of state.packets.filter((x) => x.direction === 'uplink' && x.status === 'in-transit' && x.kind === 'build-order')) { const spec = BUILDINGS[p.payload.type]; if (!spec) continue; mctx.strokeStyle = '#d9b46b'; mctx.strokeRect(p.payload.x * s, p.payload.y * s, (s + .4) * spec.footprint[0], (s + .4) * spec.footprint[1]); }
     };
     drawMinimap();

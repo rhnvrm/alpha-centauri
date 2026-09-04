@@ -83,6 +83,18 @@ test('local scene data is rendered only by the explicit read-only superposition 
   assert.equal(world.children.filter((object) => object.userData.kind === 'building').length, 1, 'Earth boundary is restored when the mode closes');
 });
 
+test('scouts show a visible reconnaissance sweep without changing the Earth data boundary', async (t) => {
+  const { root, renderers, factory } = await setup(t);
+  const state = createGame();
+  await act(async () => root.render(React.createElement(ColonyScene, { state, onSelect() {}, rendererFactory: factory })));
+  const world = renderers[0].scene.children.find((object) => object.isGroup);
+  const scout = world.children.find((object) => object.userData.id === 'scout-1');
+  assert.ok(scout, 'received scout remains a selectable world unit');
+  assert.equal(scout.children.filter((child) => child.name === 'scout-scan').length, 2, 'scout carries two readable scan rings');
+  const cargo = world.children.find((object) => object.userData.id === 'logistics-1');
+  assert.equal(cargo.children.some((child) => child.name === 'scout-scan'), false, 'scan sweeps remain scout-specific');
+});
+
 test('Earth masks received structures, roads, robots, and their selection targets by survey', async (t) => {
   const { root, renderers, factory } = await setup(t);
   const base = createGame();
