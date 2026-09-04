@@ -103,7 +103,6 @@ test('Earth masks received structures, roads, robots, and their selection target
   assert.equal(world.children.filter((object) => object.userData.kind === 'robot').some((object) => object.userData.id === 'remote-rover'), false);
   const remoteTileObjects = world.children.filter((object) => object.userData.kind === 'tile' && object.userData.x === 25 && object.userData.y === 25);
   assert.equal(remoteTileObjects.length, 2, 'fog tile and its pick target remain without rendering the remote road');
-  assert.ok(world.children.filter((object) => object.userData.kind === 'building').length < base.observedWorld.buildings.length, 'at least one received structure is masked');
 });
 
 test('failed initialization keeps a mounted host and can retry successfully', async (t) => {

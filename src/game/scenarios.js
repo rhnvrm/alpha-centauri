@@ -189,7 +189,15 @@ export function surveyRegion(region) {
 
 export function initialSurveyKnowledge(scenario) {
   const relay = scenario.buildings.find((building) => building.type === 'relay') || { x: 15, y: 15 };
-  return scenarioTiles(scenario).filter((tile) => Math.abs(tile.x - relay.x) + Math.abs(tile.y - relay.y) <= 6)
+  // The old Manhattan-radius mask made the founding observation look like a
+  // literal board-game diamond. An irregular radial footprint reads as a
+  // photographed landing survey while staying entirely deterministic and just
+  // as bounded for the fog-of-war rules.
+  return scenarioTiles(scenario).filter((tile) => {
+    const dx = tile.x - relay.x; const dy = tile.y - relay.y;
+    const boundaryNoise = ((tile.x * 37 + tile.y * 61 + scenario.seed * 17) % 13) - 6;
+    return dx * dx + dy * dy <= 48 + boundaryNoise;
+  })
     .map(({ x, y }) => `${x},${y}`);
 }
 export function scenarioFor(state) { return SCENARIOS[state.missionId] || SCENARIOS.firstLight; }

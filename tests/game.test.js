@@ -4,6 +4,7 @@ import { createGame, telemetryFor } from '../src/game/state.js';
 import { advanceToNextEvent, constructBuilding, integrate, queueHumanIntent, sendReport, cancelJob, queueLocalRoad } from '../src/game/engine.js';
 import { createToolSet } from '../src/webmcp/tools.js';
 import { placeBuildingNearRoad } from './helpers.js';
+import { initialSurveyKnowledge, SCENARIOS } from '../src/game/scenarios.js';
 
 // Tool-contract tests start at an already-delivered packet rather than advancing
 // a whole light-delay through a scenario that is intentionally unsafe without a
@@ -71,6 +72,16 @@ test('scout patrols reveal terrain locally while Earth stays behind the light-de
   s = integrate(s, 335);
   const telemetry = s.packets.find((packet) => packet.kind === 'telemetry');
   assert.ok(telemetry.payload.observedKnowledge.surveyedTiles.length > initiallyObserved, 'the next telemetry snapshot carries the broadened scout survey');
+});
+
+test('the founding survey is an irregular landing footprint rather than a hard Manhattan diamond', () => {
+  const scenario = SCENARIOS.firstLight;
+  const surveyed = new Set(initialSurveyKnowledge(scenario));
+  const relay = scenario.buildings.find((building) => building.type === 'relay');
+  assert.ok(surveyed.has(`${relay.x + 6},${relay.y}`), 'the received landing survey reaches its cardinal edge');
+  assert.ok(surveyed.has(`${relay.x + 4},${relay.y + 4}`), 'the survey includes rounded diagonal terrain');
+  assert.equal(surveyed.has(`${relay.x + 7},${relay.y + 2}`), false, 'the irregular boundary does not recreate a square or diamond board edge');
+  for (const building of scenario.buildings) assert.ok(surveyed.has(`${building.x},${building.y}`), `${building.id} remains inside the founding observation`);
 });
 
 test('cancellation is recoverable and refunds most reserved material', () => { let s = createGame(); s = constructBuilding(s, 'battery', 5, 5); const j = s.jobs.at(-1); s = cancelJob(s, j.id); assert.equal(s.jobs.at(-1).status, 'cancelled'); assert.equal(s.buildings.at(-1).status, 'cancelled'); assert.equal(s.resources.material, 118); });
