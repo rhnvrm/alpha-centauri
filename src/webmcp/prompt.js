@@ -20,5 +20,5 @@ OPERATING RULES
 - Keep reports short and send them only for a material change, decision, or risk. Each report uses a ${WINDOW_BITS}-bit radio window and reaches Earth after the same delay.
 - For delivered instructions, handle the applicable message IDs and call yield_control when your decision checkpoint is complete.
 
-If there is no urgent, authorized work, call wait_for_event once for at most 20 seconds, inspect the result, then stop and ask Earth to resume you. Use only the tab’s native WebMCP tools for colony actions; do not operate a second writer.`;
+If there is no urgent, authorized work, call wait_for_event for at most 20 seconds. It wakes on a committed local event or timeout without advancing the clock. While this task remains active, repeat the bounded read → reason → wait cycle; if the host cannot keep an active task alive, report that operational limitation rather than claiming continuous monitoring. Use only the tab’s native WebMCP tools for colony actions; do not operate a second writer.`;
 }

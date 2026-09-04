@@ -49,7 +49,31 @@ export function createToolSet(store) {
     { name: 'construct_building', description: 'Schedule a costed local construction job on a surveyed safe tile after an acknowledged Earth intent.', inputSchema: schema({ sessionId: { type: 'string' }, leaseId: { type: 'string' }, expectedRevision: { type: 'integer' }, operationId: { type: 'string' }, type: { type: 'string', enum: Object.keys(BUILDINGS) }, x: { type: 'integer' }, y: { type: 'integer' } }, ['sessionId', 'leaseId', 'expectedRevision', 'operationId', 'type', 'x', 'y']), annotations: { readOnlyHint: false, destructiveHint: false }, execute: async (args) => write(args, (state) => constructBuilding(state, args.type, args.x, args.y, 'daneel'), { requiresDirective: true }) },
     { name: 'send_report', description: 'Queue a concise downlink report; Earth receives it after the one-way delay. Include declaredFocus only when you want Earth to learn the bounded focus you chose after an acknowledged directive.', inputSchema: schema({ sessionId: { type: 'string' }, leaseId: { type: 'string' }, expectedRevision: { type: 'integer' }, operationId: { type: 'string' }, text: { type: 'string', maxLength: 1200 }, kind: { type: 'string' }, declaredFocus: { type: 'string', maxLength: 180 } }, ['sessionId', 'leaseId', 'expectedRevision', 'operationId', 'text']), annotations: { readOnlyHint: false }, execute: async (args) => write(args, (state) => sendReport(state, args.text, args.kind || 'status', args.declaredFocus || null)) },
     { name: 'yield_control', description: 'Commit handled delivered messages and release Daneel’s decision checkpoint.', inputSchema: schema({ sessionId: { type: 'string' }, leaseId: { type: 'string' }, expectedRevision: { type: 'integer' }, operationId: { type: 'string' }, eventCursor: { type: 'integer' }, handledMessageIds: { type: 'array', items: { type: 'string' } } }, ['sessionId', 'leaseId', 'expectedRevision', 'operationId']), annotations: { readOnlyHint: false }, execute: async (args) => write(args, (state) => { const next = copyGame(state); for (const m of next.inbox) if ((args.handledMessageIds || []).includes(m.id)) m.handled = true; next.pendingDecision = null; next.cursors.event = args.eventCursor || next.cursors.event; return markRevision(next); }) },
-    { name: 'wait_for_event', description: 'Wait for a bounded event cursor update; does not advance simulation time.', inputSchema: schema({ sessionId: { type: 'string' }, leaseId: { type: 'string' }, cursor: { type: 'integer' }, timeoutMs: { type: 'integer', minimum: 0, maximum: 20000 } }, ['sessionId', 'leaseId']), annotations: { readOnlyHint: true }, execute: async (args) => { const g = guard(args); if (g.error) return g.error; const { state } = g; const cursor = args.cursor || 0; const events = state.events.filter((e) => e.id > cursor); return ok(state, { events: events.slice(0, 20), cursor: events.length ? events[events.length - 1].id : cursor, timedOut: events.length === 0, timeoutMs: Math.min(20000, args.timeoutMs || 0) }); } },
+    { name: 'wait_for_event', description: 'Wait for a bounded event cursor update; does not advance simulation time.', inputSchema: schema({ sessionId: { type: 'string' }, leaseId: { type: 'string' }, cursor: { type: 'integer' }, timeoutMs: { type: 'integer', minimum: 0, maximum: 20000 } }, ['sessionId', 'leaseId']), annotations: { readOnlyHint: true }, execute: async (args) => {
+      const g = guard(args); if (g.error) return g.error;
+      const cursor = args.cursor || 0; const timeoutMs = Math.min(20000, Math.max(0, args.timeoutMs || 0));
+      const since = (state) => (state.events || []).filter((event) => event.id > cursor).slice(0, 20);
+      const available = since(g.state);
+      if (available.length || timeoutMs === 0 || typeof store.subscribe !== 'function') {
+        return ok(g.state, { events: available, cursor: available.length ? available.at(-1).id : cursor, timedOut: available.length === 0, timeoutMs });
+      }
+      // The local store is the sole clock owner. Subscribe instead of polling or
+      // advancing it so a Daneel loop wakes on an actual committed arrival,
+      // job completion, or local incident and cannot manufacture simulation time.
+      return new Promise((resolve) => {
+        let finished = false; let unsubscribe = null; let timer = null;
+        const finish = () => {
+          if (finished) return; finished = true;
+          if (unsubscribe) unsubscribe(); clearTimeout(timer);
+          const fresh = get();
+          if (fresh.sessionId !== args.sessionId) { resolve(fail(fresh, 'STALE_SESSION', 'The game was reset while waiting. Reconnect to the current session.')); return; }
+          const events = since(fresh);
+          resolve(ok(fresh, { events, cursor: events.length ? events.at(-1).id : cursor, timedOut: events.length === 0, timeoutMs }));
+        };
+        unsubscribe = store.subscribe((next) => { if (next.sessionId !== args.sessionId || since(next).length) finish(); });
+        timer = setTimeout(finish, timeoutMs);
+      });
+    } },
   ];
   const sessionFields = { sessionId: { type: 'string' }, leaseId: { type: 'string' } };
   const writeFields = { ...sessionFields, expectedRevision: { type: 'integer' }, operationId: { type: 'string' } };

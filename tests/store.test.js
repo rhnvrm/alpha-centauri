@@ -214,6 +214,24 @@ test('wait_for_event uses distinct cursors and reports an empty wait honestly', 
   assert.equal(after.result.events.length, 0);
 });
 
+test('wait_for_event subscribes to a committed local event instead of polling or advancing time', async () => {
+  let state = createGame(); const listeners = new Set();
+  const store = {
+    getState: () => state,
+    commit: (next) => { state = next; listeners.forEach((listener) => listener(state)); },
+    subscribe: (listener) => (listeners.add(listener), () => listeners.delete(listener)),
+  };
+  const tools = createToolSet(store);
+  await tools.find((tool) => tool.name === 'connect_steward').execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
+  const wait = tools.find((tool) => tool.name === 'wait_for_event');
+  const pending = wait.execute({ sessionId: state.sessionId, leaseId: state.connection.leaseId, cursor: 0, timeoutMs: 100 });
+  store.commit({ ...state, events: [...state.events, { id: 1, type: 'inbox-arrival' }] });
+  const result = await pending;
+  assert.equal(result.result.timedOut, false);
+  assert.equal(result.result.events[0].type, 'inbox-arrival');
+  assert.equal(state.localDay, 0, 'waiting observes the store but never advances simulation time');
+});
+
 test('register_policy requires a delivered instruction reference', async () => {
   let state = createGame(); const store = { getState: () => state, commit: (n) => { state = n; } };
   const tools = createToolSet(store);
