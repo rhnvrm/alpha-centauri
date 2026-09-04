@@ -1395,6 +1395,11 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .survey-readout b { color: #e4d2a6; font-size: 10px; font-weight: 500; text-align: right; }
 .survey-readout small { grid-column: 1 / -1; color: #969783; font-size: 7px; line-height: 1.35; }
 
+/* Decision-bearing HUD metadata must remain readable at desktop distance. */
+.metrics small { font-size: 9px; line-height: 1.25; }
+.metrics .metric-detail { font-size: 9px; line-height: 1.3; }
+.footer-strip { font-size: 9px; }
+
 /* Playback is the primary time interaction. Deliberate jumps stay available to
    keyboard/power users in the DOM, but no longer invite a first-time player to
    spam days or events to make the game progress. */

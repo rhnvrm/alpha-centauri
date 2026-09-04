@@ -41,3 +41,9 @@ test('confirmed command desk switches to a terminal read-only state', () => {
   const simulationTerminal = app.slice(simulationStart, simulationEnd);
   assert.doesNotMatch(simulationTerminal, /<button/);
 });
+
+test('persistent decision HUD does not regress to decorative microtype', () => {
+  const css = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.metrics small \{ font-size: 9px/);
+  assert.match(css, /\.footer-strip \{ font-size: 9px/);
+});
