@@ -19,6 +19,7 @@ import { SCENARIOS } from "./game/scenarios.js";
 import {
   LIGHT_DELAY_DAYS,
   LIGHT_DELAY_YEARS,
+  MAP_SIZE,
   SOLAR_OUTPUT_PER_DAY,
   BUILDINGS,
   bitsForPayload,
@@ -64,7 +65,9 @@ const reportSummary = (report) => {
   const food = reserveLabel(resources.food || 0, (resources.population || 1) * .02);
   const water = reserveLabel(resources.water || 0, (resources.population || 1) * .03);
   const facilities = report.payload?.observedWorld?.buildings?.length ?? 0;
-  return `Routine autonomy telemetry: ${resources.population ?? "—"} colonists; food reserve ${food}; water endurance ${water}; power ${Math.round(resources.power || 0)}/${Math.round(resources.powerCapacity || 0)}; ${facilities} completed facilities observed.`;
+  const surveyedTiles = report.payload?.observedKnowledge?.surveyedTiles?.length;
+  const surveyNote = Number.isFinite(surveyedTiles) ? ` Scouts mapped ${Math.round(100 * surveyedTiles / (MAP_SIZE * MAP_SIZE))}% of terrain at capture.` : "";
+  return `Routine autonomy telemetry: ${resources.population ?? "—"} colonists; food reserve ${food}; water endurance ${water}; power ${Math.round(resources.power || 0)}/${Math.round(resources.powerCapacity || 0)}; ${facilities} completed facilities observed.${surveyNote}`;
 };
 const reportTiming = (report) => {
   const captured = report.payload?.capturedDay;
