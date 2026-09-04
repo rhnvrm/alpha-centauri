@@ -318,11 +318,11 @@ export default function App({ store }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [showDoctrine]);
   // Playback compresses calendar time, never skips simulation boundaries. At 1× the
-  // desk remains readable; higher speeds make the lightspeed wait watchable without
-  // turning normal play into a sequence of +30-day clicks.
+  // desk remains readable; 10× crosses one light-delay in roughly 16 seconds so a
+  // complete Earth → Daneel → Earth demo stays within a watchable minute.
   useEffect(() => {
     if (screen !== "play" || missionConfirmed || !state.demoPace || state.paused || superpositionActive) return undefined;
-    const timer = window.setInterval(() => store.demoStep(3 * timeScale), 1000);
+    const timer = window.setInterval(() => store.demoStep(5 * timeScale), 500);
     return () => window.clearInterval(timer);
   }, [screen, missionConfirmed, state.demoPace, state.paused, store, superpositionActive, timeScale]);
   // Escape is the reliable, non-destructive route from an active correspondence desk
@@ -1492,7 +1492,7 @@ export default function App({ store }) {
                 key={speed}
                 className={state.demoPace && !state.paused && timeScale === speed ? "road-active" : ""}
                 onClick={() => store.setTimeScale(speed)}
-                title={`Run the adaptive simulation at ${speed}× UI speed`}
+                title={`Run the adaptive simulation at ${speed}× · ${speed * 10} local days per second`}
                 aria-pressed={state.demoPace && !state.paused && timeScale === speed}
               >
                 {speed}×

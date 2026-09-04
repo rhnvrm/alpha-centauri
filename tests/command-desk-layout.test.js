@@ -16,6 +16,7 @@ test('command desk keeps decisions ahead of secondary controls', () => {
   assert.match(app, /RECOMMENDED FIRST DIRECTIVE/);
   assert.match(app, /USE AS DRAFT/);
   assert.match(app, /Scouts mapped/);
+  assert.match(app, /store\.demoStep\(5 \* timeScale\)/);
 });
 
 test('confirmed command desk switches to a terminal read-only state', () => {
