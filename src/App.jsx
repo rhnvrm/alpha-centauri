@@ -1341,7 +1341,11 @@ export default function App({ store }) {
                   <div className="service-duty" aria-label={`Autonomous service duty: ${selectedRobot.workstream}`}>
                     <span>AUTONOMOUS DUTY</span>
                     <b>{selectedRobot.workstream}</b>
-                    <small>LOCAL CREW · NOT ASSIGNABLE TO EARTH</small>
+                    <small>{selectedRobot.type === "scout"
+                      ? superpositionActive
+                        ? "SCAN SWEEP · REVEALS NEARBY TILES FOR DANEEL"
+                        : "LAST RECEIVED SCAN · NEW TERRAIN ARRIVES BY DOWNLINK"
+                      : "LOCAL CREW · NOT ASSIGNABLE TO EARTH"}</small>
                   </div>
                 )}
                 {selected.kind === "robot" && (

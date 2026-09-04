@@ -316,6 +316,19 @@ function meshRobot(r, textures) {
   // as interchangeable decoration when the player is choosing a target.
   const halo = new THREE.Mesh(new THREE.RingGeometry(.33, .39, 16), new THREE.MeshBasicMaterial({ color: role, transparent: true, opacity: .82, side: THREE.DoubleSide }));
   halo.rotation.x = -Math.PI / 2; halo.position.y = .18; halo.renderOrder = 3; g.add(halo);
+  // Scouts should read as active instruments rather than another idle rover
+  // silhouette. These rings are a visual-only scan sweep: knowledge is still
+  // changed exclusively by revealScoutTerrain and reaches Earth by telemetry.
+  if (r.type === 'scout') {
+    for (const [radius, opacity, phase] of [[.58, .48, 0], [.94, .2, Math.PI]]) {
+      const sweep = new THREE.Mesh(
+        new THREE.RingGeometry(radius - .018, radius + .018, 28),
+        new THREE.MeshBasicMaterial({ color: 0x62d9e0, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide }),
+      );
+      sweep.name = 'scout-scan'; sweep.userData.phase = phase;
+      sweep.rotation.x = -Math.PI / 2; sweep.position.y = .15; sweep.renderOrder = 2; g.add(sweep);
+    }
+  }
   const beacon = addMesh(g, new THREE.CylinderGeometry(.025, .045, .22, 7), role, [0, .49, 0], { emissive: role, emissiveIntensity: 1.8, roughness: .35 });
   beacon.castShadow = false;
   if (r.type === 'cargo' && lifecycle === 'working') addSprite(g, textures.vehiclePallet, 'vehiclePallet', { y: .52, centerY: .12, order: 5, scale: .62 });
@@ -722,6 +735,12 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
           group.position.set(motion.x, .025 + Math.sin(now * .008 + motion.targetX) * .018, motion.z);
           const dx = motion.targetX - motion.x; const dz = motion.targetZ - motion.z;
           if (Math.hypot(dx, dz) > .025) group.rotation.y = Math.atan2(dx, dz) * .08;
+          for (const sweep of group.children.filter((child) => child.name === 'scout-scan')) {
+            const phase = now * .003 + (sweep.userData.phase || 0);
+            const pulse = 1 + Math.sin(phase) * .12;
+            sweep.scale.setScalar(pulse);
+            sweep.material.opacity = sweep.userData.phase ? .16 + (Math.sin(phase) + 1) * .05 : .36 + (Math.sin(phase) + 1) * .09;
+          }
         }
         const marker = world.getObjectByName('tactical-selection');
         if (marker) { const phase = performance.now() * .003; marker.children[0].scale.setScalar(1 + Math.sin(phase) * .08); marker.children[1].rotation.z -= .03; }
