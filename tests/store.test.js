@@ -195,6 +195,15 @@ test('an old runtime lease cannot mutate a reset session', async () => {
   assert.equal(res.ok, false); assert.equal(res.error.code, 'LEASE_EXPIRED');
 });
 
+test('an expired Daneel lease cannot keep reading the local colony', async () => {
+  let state = createGame(); const store = { getState: () => state, commit: (n) => { state = n; } };
+  const tools = createToolSet(store);
+  const c = await tools.find((tool) => tool.name === 'connect_steward').execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
+  state = { ...state, connection: { ...state.connection, expiresAt: Date.now() - 1 } };
+  const inspection = await tools.find((tool) => tool.name === 'inspect_colony').execute({ sessionId: state.sessionId, leaseId: c.result.leaseId });
+  assert.equal(inspection.ok, false); assert.equal(inspection.error.code, 'LEASE_EXPIRED');
+});
+
 test('wait_for_event uses distinct cursors and reports an empty wait honestly', async () => {
   let state = createGame('rightToDecide'); const store = { getState: () => state, commit: (n) => { state = n; } };
   const tools = createToolSet(store);

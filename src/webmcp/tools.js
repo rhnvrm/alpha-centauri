@@ -26,8 +26,12 @@ export function createToolSet(store) {
     const state = get();
     if (!state) return fail({ sessionId: 'none', revision: 0, localDay: 0 }, 'STALE_SESSION', 'No committed world.');
     if (args.sessionId !== state.sessionId) return { error: fail(state, 'STALE_SESSION', 'This URL names a different session; reconnect to the current one.') };
-    if (write && (!args.leaseId || args.leaseId !== state.connection.leaseId || Date.now() > state.connection.expiresAt)) return { error: fail(state, 'LEASE_EXPIRED', 'The writer lease is missing, expired, or belongs to a reset session.', ['connect_steward']) };
-    if (write && state.connection.status !== 'connected') return { error: fail(state, 'NOT_CONNECTED', 'No active steward lease.', ['connect_steward']) };
+    // All native steward tools that name a lease—including reads—need a live
+    // owner. Otherwise an expired Daneel could still observe local state and
+    // appear to monitor the colony after its stewardship ended.
+    if (args.leaseId && (args.leaseId !== state.connection.leaseId || Date.now() > state.connection.expiresAt)) return { error: fail(state, 'LEASE_EXPIRED', 'The steward lease is missing, expired, or belongs to a reset session.', ['connect_steward']) };
+    if (args.leaseId && state.connection.status !== 'connected') return { error: fail(state, 'NOT_CONNECTED', 'No active steward lease.', ['connect_steward']) };
+    if (write && !args.leaseId) return { error: fail(state, 'LEASE_EXPIRED', 'A writer lease is required for this action.', ['connect_steward']) };
     return { state };
   };
   const write = (args, fn, { requiresDirective = false } = {}) => {
@@ -67,6 +71,7 @@ export function createToolSet(store) {
           if (unsubscribe) unsubscribe(); clearTimeout(timer);
           const fresh = get();
           if (fresh.sessionId !== args.sessionId) { resolve(fail(fresh, 'STALE_SESSION', 'The game was reset while waiting. Reconnect to the current session.')); return; }
+          if (args.leaseId !== fresh.connection.leaseId || Date.now() > fresh.connection.expiresAt) { resolve(fail(fresh, 'LEASE_EXPIRED', 'The steward lease ended while waiting. Reconnect before reading further.', ['connect_steward'])); return; }
           const events = since(fresh);
           resolve(ok(fresh, { events, cursor: events.length ? events.at(-1).id : cursor, timedOut: events.length === 0, timeoutMs }));
         };
