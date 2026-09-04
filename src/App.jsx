@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   Copy,
   Radio,
@@ -32,10 +32,14 @@ import { nextSimulationBoundaryDay, nextEarthArrivalDay } from "./game/engine.js
 import { createStartupPrompt } from "./webmcp/prompt.js";
 import { createToolSet } from "./webmcp/tools.js";
 import { registerNativeTools } from "./webmcp/register.js";
-import { ColonyScene } from "./scene/ColonyScene.jsx";
 import { isGridConnected } from "./game/networks.js";
 import { transmitChirp, arrivalChime } from "./ui/sound.js";
 import { monotonicNow, runtimeDeadlines } from "./game/superposition.js";
+
+// The title screen is part of the game, not a loading mask for WebGL. Keep the
+// renderer and Three.js out of the initial entry chunk; mission selection stays
+// responsive and the scene is fetched only when the command desk is opened.
+const ColonyScene = lazy(() => import("./scene/ColonyScene.jsx").then((module) => ({ default: module.ColonyScene })));
 
 const dayLabel = (day) =>
   `${Math.floor(day / 365) + 2280}.${String(Math.floor((day % 365) / 30) + 1).padStart(2, "0")}`;
@@ -1027,14 +1031,16 @@ export default function App({ store }) {
       )}
       <div className="play-body">
         <section className="map-panel">
-          <ColonyScene
-            state={state}
-            onSelect={missionConfirmed ? undefined : onSelectTile}
-            onHover={setHoveredMapEntity}
-            viewMode={superpositionActive ? "local" : "earth"}
-            readOnly={superpositionActive || missionConfirmed}
-            previewBuild={interactionMode === "build" && selectedTile && !superpositionActive && !missionConfirmed ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
-          />
+          <Suspense fallback={<div className="scene-loading" role="status"><span className="status-dot amber" /> PREPARING ISOMETRIC RECONSTRUCTION…</div>}>
+            <ColonyScene
+              state={state}
+              onSelect={missionConfirmed ? undefined : onSelectTile}
+              onHover={setHoveredMapEntity}
+              viewMode={superpositionActive ? "local" : "earth"}
+              readOnly={superpositionActive || missionConfirmed}
+              previewBuild={interactionMode === "build" && selectedTile && !superpositionActive && !missionConfirmed ? { x: selected.x, y: selected.y, type: buildType, valid: placement.valid } : null}
+            />
+          </Suspense>
           {hoveredMapTooltip && <div className="map-entity-tooltip" role="tooltip" aria-live="polite">{hoveredMapTooltip}</div>}
           {missionConfirmed ? (
             <div className="map-status terminal-map-status" role="status" style={{ top: 54 }}>
