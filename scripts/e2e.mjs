@@ -79,17 +79,23 @@ await (async () => {
   check('command desk fits the viewport', fitsShell && layout.dateTextFits && layout.headingTextFits && layout.documentWidth <= layout.viewportWidth,
     JSON.stringify(layout));
 
-  // A player must deliberately choose an Earth-visible map tile before the
-  // construction control unlocks. Try several unobstructed terrain positions
-  // because the rendered colony itself occupies part of the canvas.
+  // Construction is deliberately two-step: arm Build mode, then choose an
+  // Earth-visible map tile. Try several unobstructed terrain positions because
+  // the rendered colony itself occupies part of the canvas.
   const canvas = page.locator('.colony-canvas');
   const queueBuild = page.locator('.queue-build');
   check('build stays locked without a target', !(await queueBuild.isEnabled()));
+  await page.locator('.mode-actions button', { hasText: 'ENTER BUILD MODE' }).click();
+  await page.waitForTimeout(100);
   const box = await canvas.boundingBox();
-  for (const point of [[.18, .7], [.78, .3], [.2, .32], [.7, .7]]) {
-    if (await queueBuild.isEnabled()) break;
-    await canvas.click({ position: { x: Math.round(box.width * point[0]), y: Math.round(box.height * point[1]) }, force: true });
-    await page.waitForTimeout(100);
+  // The received terrain is irregular and the camera can be reframed. Sweep
+  // a bounded grid with raw pointer input: locator clicks repeatedly wait for
+  // actionability and turn this simple smoke-test fallback into a long run.
+  for (let row = 1; row < 10 && !(await queueBuild.isEnabled()); row += 1) {
+    for (let column = 1; column < 12 && !(await queueBuild.isEnabled()); column += 1) {
+      await page.mouse.click(box.x + box.width * column / 12, box.y + box.height * row / 10);
+      await page.waitForTimeout(40);
+    }
   }
   check('received map tile unlocks construction', await queueBuild.isEnabled());
   await queueBuild.click();
@@ -100,6 +106,7 @@ await (async () => {
   check('packet timeline visible', (await page.locator('.packet').count()) >= 1);
 
   // Compose and transmit an intent; the label must show the exact window math.
+  await page.locator('.relay-tabs button', { hasText: 'ORDERS' }).click();
   await page.fill('.composer textarea', 'Keep the first habitat safe and connected.');
   const arrivalLabel = await page.locator('.composer .arrival').innerText();
   check('arrival label shows 4.37y', arrivalLabel.includes('1595') && arrivalLabel.includes('4.37'));
