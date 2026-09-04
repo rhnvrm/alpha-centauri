@@ -58,10 +58,34 @@ function routeTravelDays(route, roads) {
 function advanceServicePatrols(state) {
   for (const robot of state.robots) {
     if (robot.status !== 'patrolling' || !Array.isArray(robot.patrol) || robot.patrol.length < 2) continue;
+    const cadence = Math.max(1, Math.floor(robot.patrolCadence || 1));
+    const phase = Math.floor(robot.patrolPhase || 0);
+    if ((state.localDay + phase) % cadence !== 0) continue;
     robot.patrolIndex = ((robot.patrolIndex ?? 0) + 1) % robot.patrol.length;
     const waypoint = robot.patrol[robot.patrolIndex];
     robot.x = waypoint.x; robot.y = waypoint.y;
     robot.lifecycle = 'patrolling'; robot.path = robot.patrol.slice(robot.patrolIndex + 1).concat(robot.patrol.slice(0, robot.patrolIndex));
+  }
+}
+// Scouts turn their physical routes into local knowledge. This deliberately
+// changes only Daneel's map: Earth sees the broader terrain at the next
+// downlink, never as a live leak through the correspondence interface.
+function revealScoutTerrain(state) {
+  const known = new Set(state.localKnowledge?.surveyedTiles || []);
+  let revealed = 0;
+  for (const scout of state.robots) {
+    if (scout.type !== 'scout' || scout.status !== 'patrolling') continue;
+    for (let dy = -2; dy <= 2; dy += 1) for (let dx = -2; dx <= 2; dx += 1) {
+      if (Math.abs(dx) + Math.abs(dy) > 2) continue;
+      const x = scout.x + dx; const y = scout.y + dy;
+      if (tileAt(state, x, y) && !known.has(`${x},${y}`)) { known.add(`${x},${y}`); revealed += 1; }
+    }
+  }
+  if (revealed) {
+    state.localKnowledge = { ...state.localKnowledge, surveyedTiles: [...known] };
+    // A compact cadence avoids flooding the simulation event history while still
+    // giving superposition a legible record of where the new fog boundary came from.
+    if (state.localDay % 30 === 0) event(state, 'scout_terrain_revealed', { cells: revealed });
   }
 }
 /** Deterministic role-specific labor gate. Jobs keep their target and route so the
@@ -159,6 +183,7 @@ export function integrate(state, days = 0) {
   while (next.localDay < end) {
     next.localDay += 1;
     advanceServicePatrols(next);
+    revealScoutTerrain(next);
     for (const j of next.jobs) {
       if (j.status === 'awaiting-labor') assignFreeRobot(next, j);
       if (j.status === 'queued' && next.localDay >= j.startDay) j.status = 'active';

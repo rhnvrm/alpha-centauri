@@ -23,11 +23,13 @@ function floodKeys(seed) {
 
 const building = (id, type, x, y, level = 0) => ({ id, type, x, y, level, status: 'complete', health: 100 });
 const robot = (id, type, x, y) => ({ id, type, x, y, status: 'idle', path: [] });
-// Service units are authored scenery with a local operational purpose. They are
-// never eligible for labor assignment; their small loops keep the settlement
-// visibly inhabited while specialist robots remain available for real work.
-const serviceRobot = (id, type, x, y, purpose, patrol) => ({
-  id, type, x, y, purpose, patrol, patrolIndex: 0, status: 'patrolling', lifecycle: 'patrolling', path: [],
+// Service units are local operations crews, rather than decorative walkers. They
+// hold recurring logistics, inspection, and perimeter duties while the scarce
+// specialists remain assignable to Daneel's deliberate jobs. Different cadences
+// keep a fast playback from collapsing every unit into one synchronized loop.
+const serviceRobot = (id, type, x, y, purpose, patrol, { cadence = 1, phase = 0, workstream = 'local operations' } = {}) => ({
+  id, type, x, y, purpose, patrol, patrolIndex: 0, patrolCadence: cadence, patrolPhase: phase, workstream,
+  status: 'patrolling', lifecycle: 'patrolling', path: [],
 });
 
 /** Manhattan corridor between two anchors, bending around blocked tiles. */
@@ -84,7 +86,12 @@ export const SCENARIOS = {
       robot('rover-1', 'survey', 10, 12), robot('builder-1', 'construction', 15, 19), robot('hauler-1', 'cargo', 20, 18),
       serviceRobot('logistics-1', 'logistics', 14, 17, 'Moving stores between relay and landing habitat', [{ x: 14, y: 17 }, { x: 15, y: 17 }, { x: 16, y: 17 }, { x: 16, y: 16 }]),
       serviceRobot('habitat-service-1', 'habitat-service', 12, 17, 'Inspecting habitat seals and life-support couplings', [{ x: 12, y: 17 }, { x: 13, y: 17 }, { x: 13, y: 16 }, { x: 12, y: 16 }]),
-      serviceRobot('scout-1', 'scout', 17, 16, 'Perimeter sweep of the received landing corridor', [{ x: 17, y: 16 }, { x: 18, y: 16 }, { x: 18, y: 15 }, { x: 17, y: 15 }]),
+      serviceRobot('scout-1', 'scout', 17, 16, 'Perimeter sweep of the received landing corridor', [{ x: 17, y: 16 }, { x: 18, y: 16 }, { x: 18, y: 15 }, { x: 17, y: 15 }], { cadence: 2, phase: 1, workstream: 'terrain reconnaissance' }),
+      serviceRobot('range-scout-1', 'scout', 17, 16, 'Extending a northern terrain scan along the ridge approach', [{ x: 17, y: 16 }, { x: 18, y: 16 }, { x: 19, y: 16 }, { x: 20, y: 16 }, { x: 21, y: 16 }, { x: 22, y: 16 }, { x: 23, y: 16 }, { x: 24, y: 16 }, { x: 24, y: 15 }, { x: 24, y: 14 }, { x: 23, y: 14 }, { x: 22, y: 14 }, { x: 21, y: 14 }, { x: 20, y: 14 }, { x: 19, y: 14 }, { x: 18, y: 14 }, { x: 17, y: 15 }], { cadence: 2, phase: 0, workstream: 'terrain reconnaissance' }),
+      serviceRobot('range-scout-2', 'scout', 16, 17, 'Charting the southern lowland and aquifer approach', [{ x: 16, y: 17 }, { x: 16, y: 18 }, { x: 16, y: 19 }, { x: 17, y: 19 }, { x: 18, y: 19 }, { x: 19, y: 19 }, { x: 20, y: 19 }, { x: 21, y: 19 }, { x: 22, y: 19 }, { x: 23, y: 19 }, { x: 24, y: 19 }, { x: 24, y: 20 }, { x: 24, y: 21 }, { x: 23, y: 21 }, { x: 22, y: 21 }, { x: 21, y: 21 }, { x: 20, y: 21 }, { x: 19, y: 21 }, { x: 18, y: 21 }, { x: 17, y: 21 }, { x: 16, y: 20 }], { cadence: 3, phase: 1, workstream: 'terrain reconnaissance' }),
+      serviceRobot('solar-tech-1', 'maintenance', 18, 14, 'Cleaning solar concentrators and checking power conduits', [{ x: 18, y: 14 }, { x: 19, y: 14 }, { x: 19, y: 13 }, { x: 18, y: 12 }, { x: 17, y: 13 }], { cadence: 2, phase: 0, workstream: 'power upkeep' }),
+      serviceRobot('relay-tech-1', 'maintenance', 16, 15, 'Tending relay cooling loops and uplink alignment hardware', [{ x: 16, y: 15 }, { x: 16, y: 16 }, { x: 15, y: 17 }, { x: 14, y: 16 }, { x: 14, y: 15 }], { cadence: 4, phase: 1, workstream: 'communications upkeep' }),
+      serviceRobot('yard-hauler-1', 'logistics', 13, 18, 'Shuttling construction pallets through the landing yard', [{ x: 13, y: 18 }, { x: 14, y: 18 }, { x: 15, y: 18 }, { x: 16, y: 18 }], { cadence: 5, phase: 2, workstream: 'construction logistics' }),
     ],
     // Earth cannot correct a bad landing plan for 4.37 years. These stocks provide
     // roughly fifty-two years of food and water even if no local production is added.
@@ -114,7 +121,14 @@ export const SCENARIOS = {
       robot('rover-1', 'survey', 8, 12), robot('builder-1', 'construction', 17, 18), robot('hauler-1', 'cargo', 20, 17),
       serviceRobot('logistics-1', 'logistics', 16, 17, 'Balancing stores between workshops and the relay', [{ x: 16, y: 17 }, { x: 17, y: 17 }, { x: 18, y: 17 }, { x: 18, y: 16 }]),
       serviceRobot('habitat-service-1', 'habitat-service', 13, 17, 'Inspecting habitat seals and water couplings', [{ x: 13, y: 17 }, { x: 14, y: 17 }, { x: 14, y: 16 }, { x: 13, y: 16 }]),
-      serviceRobot('scout-1', 'scout', 19, 15, 'Perimeter sweep of the civic service corridor', [{ x: 19, y: 15 }, { x: 20, y: 15 }, { x: 20, y: 16 }, { x: 19, y: 16 }]),
+      serviceRobot('scout-1', 'scout', 19, 15, 'Perimeter sweep of the civic service corridor', [{ x: 19, y: 15 }, { x: 20, y: 15 }, { x: 20, y: 16 }, { x: 19, y: 16 }], { cadence: 2, phase: 1, workstream: 'terrain reconnaissance' }),
+      serviceRobot('range-scout-1', 'scout', 19, 15, 'Extending a northern terrain scan beyond the civic district', [{ x: 19, y: 15 }, { x: 20, y: 15 }, { x: 21, y: 15 }, { x: 22, y: 15 }, { x: 23, y: 15 }, { x: 24, y: 15 }, { x: 24, y: 14 }, { x: 24, y: 13 }, { x: 23, y: 13 }, { x: 22, y: 13 }, { x: 21, y: 13 }, { x: 20, y: 13 }, { x: 19, y: 14 }], { cadence: 2, phase: 0, workstream: 'terrain reconnaissance' }),
+      serviceRobot('range-scout-2', 'scout', 16, 18, 'Charting the southern lowland and protected wetland edge', [{ x: 16, y: 18 }, { x: 16, y: 19 }, { x: 17, y: 19 }, { x: 18, y: 19 }, { x: 19, y: 19 }, { x: 20, y: 19 }, { x: 21, y: 19 }, { x: 22, y: 19 }, { x: 23, y: 19 }, { x: 24, y: 19 }, { x: 24, y: 20 }, { x: 24, y: 21 }, { x: 23, y: 21 }, { x: 22, y: 21 }, { x: 21, y: 21 }, { x: 20, y: 21 }, { x: 19, y: 21 }, { x: 18, y: 21 }, { x: 17, y: 20 }], { cadence: 3, phase: 1, workstream: 'terrain reconnaissance' }),
+      serviceRobot('solar-tech-1', 'maintenance', 18, 14, 'Cleaning solar concentrators and checking grid junctions', [{ x: 18, y: 14 }, { x: 19, y: 14 }, { x: 19, y: 13 }, { x: 18, y: 12 }, { x: 17, y: 13 }], { cadence: 2, phase: 0, workstream: 'power upkeep' }),
+      serviceRobot('relay-tech-1', 'maintenance', 16, 15, 'Servicing relay coolant and long-range alignment assemblies', [{ x: 16, y: 15 }, { x: 16, y: 16 }, { x: 15, y: 17 }, { x: 14, y: 16 }, { x: 14, y: 15 }], { cadence: 4, phase: 1, workstream: 'communications upkeep' }),
+      serviceRobot('water-runner-1', 'logistics', 20, 19, 'Hauling water-control cartridges between reservoir and greenhouse', [{ x: 20, y: 19 }, { x: 21, y: 19 }, { x: 22, y: 19 }, { x: 22, y: 18 }, { x: 21, y: 18 }], { cadence: 3, phase: 1, workstream: 'water delivery' }),
+      serviceRobot('greenhouse-tender-1', 'habitat-service', 9, 18, 'Tending greenhouse nutrient lines and harvest racks', [{ x: 9, y: 18 }, { x: 8, y: 18 }, { x: 7, y: 17 }, { x: 8, y: 17 }, { x: 9, y: 17 }], { cadence: 5, phase: 2, workstream: 'food production' }),
+      serviceRobot('yard-hauler-1', 'logistics', 14, 19, 'Moving components from the workshop yard to active work sites', [{ x: 14, y: 19 }, { x: 15, y: 19 }, { x: 16, y: 19 }, { x: 17, y: 18 }], { cadence: 2, phase: 1, workstream: 'construction logistics' }),
     ],
     // Earth needs 4.37 years to deliver the first directive. Reserves therefore
     // cover the silence, while the post-directive drought/fault and required
@@ -139,7 +153,14 @@ export const SCENARIOS = {
       robot('rover-1', 'survey', 9, 13), robot('builder-1', 'construction', 19, 18), robot('hauler-1', 'cargo', 22, 16), robot('maintenance-1', 'maintenance', 18, 17),
       serviceRobot('logistics-1', 'logistics', 15, 17, 'Moving sealed export stores through the relay yard', [{ x: 15, y: 17 }, { x: 16, y: 17 }, { x: 17, y: 17 }, { x: 17, y: 16 }]),
       serviceRobot('habitat-service-1', 'habitat-service', 13, 16, 'Inspecting life-support seals around the habitat', [{ x: 13, y: 16 }, { x: 14, y: 16 }, { x: 14, y: 15 }, { x: 13, y: 15 }]),
-      serviceRobot('scout-1', 'scout', 20, 15, 'Watching the surveyed approach to the mine corridor', [{ x: 20, y: 15 }, { x: 21, y: 15 }, { x: 21, y: 16 }, { x: 20, y: 16 }]),
+      serviceRobot('scout-1', 'scout', 20, 15, 'Watching the surveyed approach to the mine corridor', [{ x: 20, y: 15 }, { x: 21, y: 15 }, { x: 21, y: 16 }, { x: 20, y: 16 }], { cadence: 2, phase: 1, workstream: 'terrain reconnaissance' }),
+      serviceRobot('range-scout-1', 'scout', 20, 15, 'Extending a terrain scan along the safe northern ridge', [{ x: 20, y: 15 }, { x: 21, y: 15 }, { x: 22, y: 15 }, { x: 23, y: 15 }, { x: 24, y: 15 }, { x: 25, y: 15 }, { x: 25, y: 14 }, { x: 25, y: 13 }, { x: 24, y: 13 }, { x: 23, y: 13 }, { x: 22, y: 13 }, { x: 21, y: 13 }, { x: 20, y: 14 }], { cadence: 2, phase: 0, workstream: 'terrain reconnaissance' }),
+      serviceRobot('range-scout-2', 'scout', 16, 17, 'Charting the southern approach before heavy export traffic uses it', [{ x: 16, y: 17 }, { x: 16, y: 18 }, { x: 17, y: 18 }, { x: 18, y: 18 }, { x: 19, y: 18 }, { x: 20, y: 18 }, { x: 21, y: 18 }, { x: 22, y: 18 }, { x: 23, y: 18 }, { x: 24, y: 18 }, { x: 24, y: 19 }, { x: 24, y: 20 }, { x: 23, y: 20 }, { x: 22, y: 20 }, { x: 21, y: 20 }, { x: 20, y: 20 }, { x: 19, y: 20 }, { x: 18, y: 20 }, { x: 17, y: 19 }], { cadence: 3, phase: 1, workstream: 'terrain reconnaissance' }),
+      serviceRobot('solar-tech-1', 'maintenance', 18, 15, 'Cleaning solar field reflectors and checking grid feeds', [{ x: 18, y: 15 }, { x: 19, y: 15 }, { x: 19, y: 14 }, { x: 18, y: 13 }, { x: 17, y: 14 }], { cadence: 2, phase: 0, workstream: 'power upkeep' }),
+      serviceRobot('relay-tech-1', 'maintenance', 16, 14, 'Servicing relay cooling and deep-space antenna alignment', [{ x: 16, y: 14 }, { x: 16, y: 15 }, { x: 15, y: 16 }, { x: 14, y: 15 }, { x: 15, y: 14 }], { cadence: 4, phase: 1, workstream: 'communications upkeep' }),
+      serviceRobot('ore-hauler-1', 'logistics', 21, 14, 'Moving sealed ore bins from mine corridor to launch staging', [{ x: 21, y: 14 }, { x: 22, y: 14 }, { x: 23, y: 13 }, { x: 24, y: 12 }, { x: 23, y: 12 }], { cadence: 3, phase: 1, workstream: 'export logistics' }),
+      serviceRobot('launch-crew-1', 'logistics', 9, 21, 'Inspecting launch-pad clamps and propellant transfer lines', [{ x: 9, y: 21 }, { x: 8, y: 21 }, { x: 7, y: 20 }, { x: 8, y: 20 }], { cadence: 5, phase: 2, workstream: 'launch readiness' }),
+      serviceRobot('ridge-scout-1', 'scout', 22, 16, 'Surveying the safe ridge approach beyond the mine corridor', [{ x: 22, y: 16 }, { x: 23, y: 16 }, { x: 23, y: 15 }, { x: 24, y: 15 }, { x: 24, y: 16 }], { cadence: 2, phase: 1, workstream: 'route reconnaissance' }),
     ],
     resources: { material: 240, food: 125000, water: 185000, power: 340, powerCapacity: 480, population: 330, capacity: 420, iridium: 320 },
   },

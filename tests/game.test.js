@@ -48,15 +48,29 @@ test('road work assigns the construction unit, preserves its work path, and beco
 test('authored service fleet patrols locally without consuming specialist labor', () => {
   let s = createGame('rightToDecide');
   const service = s.robots.filter((robot) => robot.status === 'patrolling');
-  assert.equal(service.length, 3);
+  assert.equal(service.length, 10);
   const before = service.map((robot) => ({ id: robot.id, x: robot.x, y: robot.y }));
   s = integrate(s, 1);
-  assert.equal(s.robots.filter((robot) => robot.status === 'patrolling').length, 3);
+  assert.equal(s.robots.filter((robot) => robot.status === 'patrolling').length, 10);
   assert.ok(s.robots.some((robot) => before.some((start) => start.id === robot.id && (start.x !== robot.x || start.y !== robot.y))), 'a service unit advances along its authored patrol');
   assert.equal(s.robots.filter((robot) => robot.status === 'idle').length, 4, 'service units do not join the available labor pool');
   const received = telemetryFor(s).observedWorld.robots.find((robot) => robot.id === 'logistics-1');
   assert.equal(received.lifecycle, 'patrolling');
   assert.match(received.purpose, /stores/i);
+  const oreHauler = telemetryFor(s).observedWorld.robots.find((robot) => robot.id === 'ore-hauler-1');
+  assert.equal(oreHauler.workstream, 'export logistics');
+});
+
+test('scout patrols reveal terrain locally while Earth stays behind the light-delay boundary', () => {
+  let s = createGame('firstLight');
+  const initiallyKnown = s.localKnowledge.surveyedTiles.length;
+  const initiallyObserved = s.observedKnowledge.surveyedTiles.length;
+  s = integrate(s, 30);
+  assert.ok(s.localKnowledge.surveyedTiles.length > initiallyKnown, 'scout routes widen Daneel’s local map');
+  assert.equal(s.observedKnowledge.surveyedTiles.length, initiallyObserved, 'Earth does not receive a live scouting leak');
+  s = integrate(s, 335);
+  const telemetry = s.packets.find((packet) => packet.kind === 'telemetry');
+  assert.ok(telemetry.payload.observedKnowledge.surveyedTiles.length > initiallyObserved, 'the next telemetry snapshot carries the broadened scout survey');
 });
 
 test('cancellation is recoverable and refunds most reserved material', () => { let s = createGame(); s = constructBuilding(s, 'battery', 5, 5); const j = s.jobs.at(-1); s = cancelJob(s, j.id); assert.equal(s.jobs.at(-1).status, 'cancelled'); assert.equal(s.buildings.at(-1).status, 'cancelled'); assert.equal(s.resources.material, 118); });

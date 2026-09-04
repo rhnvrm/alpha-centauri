@@ -1312,10 +1312,17 @@ export default function App({ store }) {
                     <span className={selectedFacilityStatus.includes("ISOLATED") ? "facility-warning" : "facility-live"}>{selectedFacilityStatus}</span>
                   </div>
                 )}
+                {selected.kind === "robot" && selectedRobot?.workstream && (
+                  <div className="service-duty" aria-label={`Autonomous service duty: ${selectedRobot.workstream}`}>
+                    <span>AUTONOMOUS DUTY</span>
+                    <b>{selectedRobot.workstream}</b>
+                    <small>LOCAL CREW · NOT ASSIGNABLE TO EARTH</small>
+                  </div>
+                )}
                 {selected.kind === "robot" && (
                   <button
                     className={moveRobotId === selected.id ? "command-active" : ""}
-                    disabled={!superpositionActive && selectedRobot && selectedRobot.status !== "idle"}
+                    disabled={Boolean(selectedRobot?.workstream) || (!superpositionActive && selectedRobot && selectedRobot.status !== "idle")}
                     onClick={() => {
                       setRoadStart(null);
                       const cancelling = moveRobotId === selected.id;
@@ -1324,7 +1331,7 @@ export default function App({ store }) {
                       setToast(moveRobotId === selected.id ? "ROVER MOVE CANCELLED." : `MOVE ORDER ARMED · choose a received destination for ${selected.id}.`);
                     }}
                   >
-                    <MapPin size={13} /> {moveRobotId === selected.id ? "CANCEL MOVE" : "MOVE ROVER · 4.37Y"}
+                    <MapPin size={13} /> {selectedRobot?.workstream ? "AUTONOMOUS SERVICE CREW" : moveRobotId === selected.id ? "CANCEL MOVE" : "MOVE ROVER · 4.37Y"}
                   </button>
                 )}
               </div>

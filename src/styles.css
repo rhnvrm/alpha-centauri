@@ -635,6 +635,10 @@ body { background: #0c0d0b url('/textures/alien-regolith-v1.png') center / 680px
 .project-impact .site-blocked { color: #e28373; }
 .facility-readout .facility-live { color: #8cc7b5; }
 .facility-readout .facility-warning { color: #e28373; }
+.service-duty { display: grid; gap: 2px; margin-top: 7px; padding: 5px 7px; border-left: 2px solid #5ea49a; color: #9cae9f; font: 8px/1.25 'DM Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.service-duty span { color: #72bdb0; font-size: 7px; }
+.service-duty b { color: #d5c490; font-size: 9px; font-weight: 500; }
+.service-duty small { margin: 0; color: #8f947f; font-size: 7px; }
 .aside-head h2 { font-size: 24px; }
 .mission-charter p, .demo-guide p { font-size: 13px; }
 .mission-charter small, .demo-guide strong, .demo-guide button { font-size: 11px; }
