@@ -13,6 +13,8 @@ test('command desk keeps decisions ahead of secondary controls', () => {
   assert.match(app, /time-cluster clock-cluster/);
   assert.match(app, /time-cluster speed-cluster/);
   assert.match(app, /time-cluster event-cluster/);
+  assert.match(app, /RECOMMENDED FIRST DIRECTIVE/);
+  assert.match(app, /USE AS DRAFT/);
 });
 
 test('confirmed command desk switches to a terminal read-only state', () => {

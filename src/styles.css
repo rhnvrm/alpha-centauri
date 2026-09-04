@@ -1385,6 +1385,11 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .directive-slate p { margin: 0; color: #e2d4b4; font: 13px/1.5 Manrope, system-ui, sans-serif; }
 .directive-slate small { display: block; margin-top: 9px; color: #9b947f; font: 9px/1.4 'DM Mono', monospace; }
 .directive-receipt { margin: -1px 0 8px; color: #4e665d; font: 8px/1.35 'DM Mono', monospace; letter-spacing: .07em; }
+.intent-starter { display: grid; gap: 5px; margin: 10px 0; padding: 8px 9px; border-left: 2px solid #9d7d48; background: #151710; }
+.intent-starter > span { color: #bf9d62; font: 8px 'DM Mono', monospace; letter-spacing: .1em; }
+.intent-starter p { margin: 0; color: #c8c2aa; font: 10px/1.4 Manrope, system-ui, sans-serif; }
+.intent-starter button { justify-self: start; border: 1px solid #625238; background: transparent; color: #d9bb80; padding: 5px 7px; font: 8px 'DM Mono', monospace; letter-spacing: .08em; }
+.intent-starter button:hover, .intent-starter button:focus-visible { border-color: #c39350; background: #2a2113; }
 .survey-readout { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; margin: 0 0 12px; padding: 8px 9px; border: 1px solid #4e594e; border-left: 3px solid #6fa496; background: #151b16; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .075em; }
 .survey-readout span { color: #8bb9ad; font-size: 8px; }
 .survey-readout b { color: #e4d2a6; font-size: 10px; font-weight: 500; text-align: right; }

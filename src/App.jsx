@@ -82,6 +82,11 @@ const missionTarget = (missionId, resources) => {
   if (missionId === "enough") return { title: "MAKE ENOUGH LAST", detail: `Food ≥ 24 months · power ≥ 20% · preserve every wetland` };
   return { title: "THE RIGHT TO DECIDE", detail: `Export 1,000 t by day 730 · keep life support on · preserve habitat` };
 };
+const suggestedIntent = (missionId) => {
+  if (missionId === "firstLight") return "Protect life support first. Build toward 100-person capacity and redundant power; have the scout teams identify safe expansion terrain. Send a short plan before acting.";
+  if (missionId === "enough") return "Keep food above 24 months and power above 20%. Preserve every wetland; use scouts to identify safe sites and report the most binding risk before acting.";
+  return "Meet the export goal only without compromising life support or protected habitat. Survey the safe ridge route first, then report the tradeoff and your proposed plan.";
+};
 const receivedPlacement = (state, target, type) => {
   if (!target) return { valid: false, reason: "SELECT A RECEIVED TILE TO ASSESS A SITE." };
   const spec = BUILDINGS[type];
@@ -1258,6 +1263,13 @@ export default function App({ store }) {
                   → arrives {LIGHT_DELAY_YEARS}Y
                 </button>
               )}
+            <div className="intent-starter">
+              <span>RECOMMENDED FIRST DIRECTIVE</span>
+              <p>{suggestedIntent(state.missionId)}</p>
+              <button type="button" onClick={() => setDraft(suggestedIntent(state.missionId))}>
+                {draft.trim() ? "REPLACE DRAFT" : "USE AS DRAFT"}
+              </button>
+            </div>
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
