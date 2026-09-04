@@ -91,20 +91,20 @@ test('store coast advance caps at the arrival and nextEarthEvent jumps exactly t
   assert.ok(earth.packets.find((p) => p.kind === 'intent')?.status === 'delivered');
 });
 
-test('demo pace advances exactly one local day per 1× tick', () => {
+test('demo pace advances the requested bounded calendar interval without skipping authored events', () => {
   const store = createStore({ storage: fakeStorage() });
   const outage = store.getState().pendingEvents.find((event) => event.type === 'power-outage');
   store.advance(outage.day - 2);
   store.toggleDemoPace();
-  const after = store.demoStep();
+  const after = store.demoStep(1);
   assert.equal(after.demoPace, true);
   assert.equal(after.localDay, outage.day - 1, 'one 1× tick advances one local day');
-  const next = store.demoStep();
+  const next = store.demoStep(1);
   assert.equal(next.localDay, outage.day, 'the authored event still lands on its exact day');
   assert.equal(next.mission.interruption.startedAt, outage.day);
   store.advance(outage.days);
-  const steady = store.demoStep();
-  assert.equal(steady.localDay, outage.day + outage.days + 1, 'uneventful time does not silently jump ahead');
+  const steady = store.demoStep(3);
+  assert.equal(steady.localDay, outage.day + outage.days + 3, 'a playback interval advances exactly the days the visible pace requests');
 });
 
 test('old saves without observedWorld migrate to the founding observation', () => {
@@ -148,7 +148,7 @@ test('demo guide only advances from Earth-known connection and received relay fa
   let s = createGame('firstLight');
   assert.equal(earthDemoGuide(s).action, 'daneel');
   s.connection.status = 'connected';
-  assert.equal(earthDemoGuide(s).action, 'pace');
+  assert.equal(earthDemoGuide(s).action, 'wait');
   s.demoPace = true;
   // The local mission can already be resolved, but Earth cannot call it complete
   // or offer a new instruction until a downlink has arrived.

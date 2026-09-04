@@ -511,8 +511,8 @@ export default function App({ store }) {
             done: state.connection?.status === "connected",
           },
           {
-            label: "Choose a simulation speed and let the colony clock advance",
-            done: state.demoPace,
+            label: "Daneel starts continuous playback on connection",
+            done: state.connection?.status === "connected" && state.demoPace,
           },
           {
             label: "Wait for the first downlink to reach Earth",

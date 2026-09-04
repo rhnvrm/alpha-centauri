@@ -174,7 +174,7 @@ export function earthDemoGuide(state) {
     return { phase: '01 / 04', index: 1, action: 'daneel', title: 'Deploy Daneel with the day-zero charter', detail: 'Copy the startup prompt into a supported ChatGPT Desktop task. Daneel acts locally through WebMCP; Earth does not receive a live feed.' };
   }
   if (!state.demoPace) {
-    return { phase: '02 / 04', index: 2, action: 'pace', title: 'Start the simulation clock', detail: 'Choose 1×, 2×, 5×, or 10×. Local work slows into visible beats; quiet light-speed transit cruises. It never chooses for Daneel.' };
+    return { phase: '02 / 04', index: 2, action: 'wait', title: 'Daneel starts the local clock on connection', detail: 'The relay begins continuous playback at 1× as soon as Daneel connects. Use pace only to watch the same simulation faster or slower; do not advance days by hand.' };
   }
   if (!reports.length) {
     return { phase: '03 / 04', index: 3, action: 'wait', title: 'Let the first downlink cross the gap', detail: 'Keep the simulation clock running. The desk announces a transmission only when it physically reaches Earth; do not treat silence as a colony report.' };
