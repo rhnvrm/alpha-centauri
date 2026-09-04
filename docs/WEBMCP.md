@@ -28,7 +28,7 @@ The renderer must use an Earth-projection selector, not expose current state in 
 
 ## Session and connection lifecycle
 
-1. New Game creates a random session ID in this browser origin's localStorage and starts paused. The player receives a session-specific fragment URL and startup prompt. Session IDs identify games, not secret credentials; the URL does not transfer a save to another browser/profile/device. Reuse the existing owning game tab rather than opening another writer.
+1. New Game creates a random session ID in this browser origin's localStorage with the local clock ready. Visible automatic playback begins when Daneel connects or Earth deliberately selects a pace; this is not an in-world pause. The player receives a session-specific fragment URL and startup prompt. Session IDs identify games, not secret credentials; the URL does not transfer a save to another browser/profile/device. Reuse the existing owning game tab rather than opening another writer.
 2. The copied prompt asks the parent to start exactly one Daneel coordinator and sole gameplay writer. Daneel may use up to two bounded read-only planning helpers, fed only delivered instructions and local tool results. They receive no writer lease, do not connect independently, create no competing inbox waiters, and do not recursively delegate. No software-building agents.
 3. `connect_steward` validates protocol version and selected session, acquires an exclusive expiring writer lease, and returns the current public mission charter, local date, delivered inbox cursor, valid tools, and resource/authority schema.
 4. The first successful handshake—not opening the prompt—sets **Daneel connected**.
