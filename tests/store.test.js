@@ -82,6 +82,15 @@ test('older saves gain the authored local service fleet without rewriting receiv
   assert.deepEqual(loaded.observedWorld.robots.map((robot) => robot.id), originalObservedIds, 'Earth does not receive the new local crew before a downlink');
 });
 
+test('loaded saves normalize duplicate road cells to prevent overlapping road render surfaces', () => {
+  const legacy = createGame('enough', 'legacy-roads');
+  legacy.roads.push({ ...legacy.roads[0] });
+  legacy.observedWorld.roads.push({ ...legacy.observedWorld.roads[0] });
+  const loaded = loadGame(fakeStorage({ 'intent-horizon-save-v1': JSON.stringify(legacy) }));
+  assert.equal(loaded.roads.length, new Set(loaded.roads.map((road) => `${road.x},${road.y}`)).size);
+  assert.equal(loaded.observedWorld.roads.length, new Set(loaded.observedWorld.roads.map((road) => `${road.x},${road.y}`)).size);
+});
+
 test('imports use the same legacy migration and preserve existing questions', () => {
   const legacy = createGame('rightToDecide');
   delete legacy.pendingQuestions;

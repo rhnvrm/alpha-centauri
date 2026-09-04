@@ -4,12 +4,20 @@ import { createGame } from '../src/game/state.js';
 import { integrate, constructBuilding, queueLocalRoad } from '../src/game/engine.js';
 import { isGridConnected, powerSources, gridConsumers, roadKeys } from '../src/game/networks.js';
 import { buildLocal, placeBuildingNearRoad } from './helpers.js';
+import { SCENARIOS, seededRoads } from '../src/game/scenarios.js';
 
 test('seed roads connect the starting settlement to the relay', () => {
   const s = createGame('firstLight');
   assert.ok(s.roads.length >= 4, 'seeded roads exist');
   assert.ok(isGridConnected(s, s.buildings.find((b) => b.type === 'habitat')));
   assert.ok(isGridConnected(s, s.buildings.find((b) => b.type === 'solar')), 'solar-1 is on the grid');
+});
+
+test('seeded road cells are unique even when colony anchors share a corridor', () => {
+  for (const scenario of Object.values(SCENARIOS)) {
+    const roads = seededRoads(scenario);
+    assert.equal(new Set(roads.map((road) => `${road.x},${road.y}`)).size, roads.length, `${scenario.id} has no overlapping road meshes`);
+  }
 });
 
 test('an isolated solar array contributes no power until a road reaches it', () => {

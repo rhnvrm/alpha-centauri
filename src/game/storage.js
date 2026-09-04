@@ -11,6 +11,17 @@ export function storageProbe(storage = globalThis.localStorage) {
 
 export function saveSize(state) { try { return new TextEncoder().encode(JSON.stringify(state)).length; } catch { return 0; } }
 
+const uniqueRoadCells = (roads = []) => {
+  const seen = new Set();
+  return roads.filter((road) => {
+    const x = Array.isArray(road) ? road[0] : road?.x;
+    const y = Array.isArray(road) ? road[1] : road?.y;
+    const key = `${x},${y}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+};
+
 /** Add fields introduced during the v1 demo without resetting the saved colony. */
 function migrateGame(raw) {
   const state = validateGame(raw);
@@ -20,6 +31,7 @@ function migrateGame(raw) {
   }
   // A pre-existing save has already been launched, even if it is still at day zero.
   if (state.launched === undefined) state.launched = true;
+  state.roads = uniqueRoadCells(state.roads);
   state.mission = { ...defaults.mission, ...state.mission,
     interruption: { ...defaults.mission.interruption, ...state.mission?.interruption } };
   state.doctrine = { ...defaults.doctrine, ...state.doctrine,
@@ -46,6 +58,7 @@ function migrateGame(raw) {
     robots: state.robots.map(({ id, type, x, y, status }) => ({ id, type, x, y, status })),
     roads: state.roads.map((r) => ({ x: Array.isArray(r) ? r[0] : r.x, y: Array.isArray(r) ? r[1] : r.y })),
   };
+  else state.observedWorld.roads = uniqueRoadCells(state.observedWorld.roads || []);
   return state;
 }
 

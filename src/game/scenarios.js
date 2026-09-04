@@ -170,7 +170,14 @@ export const SCENARIOS = {
 export function seededRoads(scenario) {
   const anchors = [scenario.buildings.find((b) => b.type === 'relay')].concat(scenario.buildings.filter((b) => b.type !== 'relay'));
   const cells = anchors.filter(Boolean).map((b) => [b.x, b.y]);
-  return colonyRoads(scenario.seed, cells);
+  // Several anchor routes share their first corridor out of the relay. Keep one
+  // canonical cell per road so the renderer never z-fights identical surfaces.
+  const seen = new Set();
+  return colonyRoads(scenario.seed, cells).filter((road) => {
+    const key = `${road.x},${road.y}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
 }
 
 export function scenarioTiles(scenario) { return baseTiles(scenario.seed); }
