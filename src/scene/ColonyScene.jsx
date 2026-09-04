@@ -417,7 +417,9 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
     // Frame the known settlement, not the logical board origin. Earth must also avoid
     // centering on structures outside its received survey, since even camera framing
     // can disclose where an unreceived installation exists.
-    const camera = new THREE.OrthographicCamera(-19, 19, 14, -14, .1, 100); camera.zoom = viewMode === 'earth' ? 1.52 : 2.04;
+    // Default closer than the whole logical map: the received settlement is the
+    // visual protagonist, while scroll still exposes the wider fog boundary.
+    const camera = new THREE.OrthographicCamera(-19, 19, 14, -14, .1, 100); camera.zoom = viewMode === 'earth' ? 1.72 : 2.04;
     const initialSurveyedTiles = new Set((viewMode === 'local' ? state.localKnowledge : state.observedKnowledge)?.surveyedTiles || []);
     const initialWorld = state.observedWorld || { buildings: [], robots: [], roads: [] };
     const initialObserved = (viewMode === 'local' ? state.buildings : (initialWorld.buildings || []))

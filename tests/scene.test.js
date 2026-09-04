@@ -46,6 +46,7 @@ test('one WebGL renderer survives callback, state, and reduced-motion changes', 
   const render = (reducedMotion = false) => act(async () => root.render(React.createElement(ColonyScene, { state, onSelect: () => {}, reducedMotion, rendererFactory: factory })));
   await render();
   const renderer = renderers[0]; const canvas = renderer.domElement;
+  assert.equal(renderer.camera.zoom, 1.72, 'Earth begins framed around the received settlement rather than the whole logical map');
   const world = renderer.scene.children.find((object) => object.isGroup);
   let disposed = 0; world.children[0].geometry.addEventListener('dispose', () => disposed++);
   renderer.camera.zoom = 1.4;
