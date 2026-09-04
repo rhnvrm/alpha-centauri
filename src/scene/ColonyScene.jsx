@@ -583,7 +583,10 @@ export function ColonyScene({ state, onSelect, onHover, reducedMotion = false, r
           // A soft, overlapping veil keeps the unknown readable as atmosphere instead
           // of a tiny hard-edged board diamond. It carries no terrain, structure, or
           // resource detail; the transparent box above remains the sole pick target.
-          const fog = new THREE.Mesh(new THREE.CircleGeometry(.76, 10), new THREE.MeshBasicMaterial({ color: 0x182522, transparent: true, opacity: latest.current.viewMode === 'earth' ? .5 : .38, depthWrite: false }));
+          // Let the authored, non-informational coast read through the unknown
+          // veil. Earth still gets no tile terrain, deposits, structures, roads,
+          // or units outside telemetry; this only avoids a hard black board edge.
+          const fog = new THREE.Mesh(new THREE.CircleGeometry(.76, 10), new THREE.MeshBasicMaterial({ color: 0x182522, transparent: true, opacity: latest.current.viewMode === 'earth' ? .38 : .32, depthWrite: false }));
           fog.rotation.x = -Math.PI / 2;
           const fogSeed = Math.abs((t.x * 83492791) ^ (t.y * 2971215073));
           fog.rotation.z = (fogSeed % 12) * .26;
