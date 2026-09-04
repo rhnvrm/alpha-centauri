@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, telemetryFor } from '../src/game/state.js';
 import { advanceToNextEvent, constructBuilding, integrate, queueHumanIntent, sendReport, cancelJob, queueLocalRoad } from '../src/game/engine.js';
-import { createToolSet } from '../src/webmcp/tools.js';
+import { createToolSet, STEWARD_LEASE_MS } from '../src/webmcp/tools.js';
 import { placeBuildingNearRoad } from './helpers.js';
 import { initialSurveyKnowledge, SCENARIOS } from '../src/game/scenarios.js';
 
@@ -90,6 +90,14 @@ test('reports use the serialized downlink delay and preserve capture day', () =>
 
 test('native work requires an acknowledged Earth directive and then retries with one operation receipt', async () => {
   let state = createGame(); const store = { getState: () => state, commit: (next) => { state = next; } }; const tools = createToolSet(store); const connect = tools.find((t) => t.name === 'connect_steward'); const connected = await connect.execute({ sessionId: state.sessionId, protocolVersion: 'v1', agentLabel: 'test' }); assert.equal(connected.ok, true); const leaseId = connected.result.leaseId; state = store.getState(); const construct = tools.find((t) => t.name === 'construct_building'); const args = { sessionId: state.sessionId, leaseId, expectedRevision: state.revision, operationId: 'op-1', type: 'battery', x: 5, y: 5 }; const blocked = await construct.execute(args); assert.equal(blocked.ok, false); assert.equal(blocked.error.code, 'AWAITING_EARTH_DIRECTIVE'); state = await acknowledgeEarthDirective(store, tools, leaseId); const authorizedArgs = { ...args, expectedRevision: state.revision }; const first = await construct.execute(authorizedArgs); const second = await construct.execute({ ...authorizedArgs, expectedRevision: state.revision }); assert.equal(first.ok, true); assert.deepEqual(second, first); assert.equal(state.jobs.filter((j) => j.type === 'construct').length, 1);
+});
+
+test('the Daneel lease outlasts the first Earth-to-colony courier at readable playback', async () => {
+  let state = createGame(); const store = { getState: () => state, commit: (next) => { state = next; } }; const tools = createToolSet(store);
+  const before = Date.now(); const connected = await tools.find((tool) => tool.name === 'connect_steward').execute({ sessionId: state.sessionId, protocolVersion: 'v1' });
+  assert.equal(connected.ok, true);
+  assert.ok(store.getState().connection.expiresAt - before >= STEWARD_LEASE_MS - 25, 'lease covers the 160-second 1× first directive transit with room for a response');
+  assert.ok(STEWARD_LEASE_MS > 160_000, 'lease is longer than the visible first courier at 1×');
 });
 
 test('Daneel receives a concrete day-zero charter through the WebMCP doctrine read', async () => {
