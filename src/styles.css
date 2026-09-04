@@ -1362,6 +1362,16 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 /* Correspondence is three separate jobs, not one permanently cramped scroll area.
    Telemetry gets the rail's full height; composition gets its own calm workspace. */
 .relay-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.briefing-panel { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: none; }
+.briefing-panel::-webkit-scrollbar { display: none; }
+.objective-checklist { padding: 14px 19px 13px; border-bottom: 1px solid #665538; background: rgba(20, 21, 16, .9); }
+.objective-checklist > .section-label { color: #d5ae6d; }
+.goal-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: baseline; gap: 7px; padding: 7px 0; border-top: 1px solid rgba(129, 108, 70, .3); color: #9e9885; }
+.goal-row span { color: #c19a57; font: 12px/1 'DM Mono', monospace; }
+.goal-row b { min-width: 0; color: #d8c9a6; font: 10px/1.25 'DM Mono', monospace; letter-spacing: .05em; }
+.goal-row small { color: #b6a77f; font: 10px/1.25 'DM Mono', monospace; text-align: right; }
+.goal-row.ready span, .goal-row.ready small { color: #81c8b4; }
+.objective-checklist > p { margin: 8px 0 0; color: #8f8d7b; font: 10px/1.4 Manrope, system-ui, sans-serif; }
 .correspondence > .composer-orders {
   flex: 1 1 auto;
   min-height: 0;

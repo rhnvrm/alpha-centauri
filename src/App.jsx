@@ -89,6 +89,32 @@ const missionTarget = (missionId, resources) => {
   if (missionId === "enough") return { title: "MAKE ENOUGH LAST", detail: `Food ≥ 24 months · power ≥ 20% · preserve every wetland` };
   return { title: "THE RIGHT TO DECIDE", detail: `Export 1,000 t by day 730 · keep life support on · preserve habitat` };
 };
+// Earth gets a decision checklist from received telemetry, never a shortcut to
+// Daneel's live progress. Values are deliberately concrete so the objective is
+// playable without translating the charter into hidden game math.
+const missionChecklist = (missionId, resources, observedWorld = {}) => {
+  const foodMonths = resources.food / Math.max(1, resources.population * .02) / 30;
+  const powerPercent = observedPowerPercent(resources);
+  const buildings = observedWorld.buildings || [];
+  if (missionId === "firstLight") {
+    const powerSources = buildings.filter((building) => ["solar", "battery"].includes(building.type)).length;
+    return [
+      { label: "LIFE-SUPPORT CAPACITY", value: `${resources.capacity} / 100`, ready: resources.capacity >= 100 },
+      { label: "OBSERVED POWER SOURCES", value: `${powerSources} / 2`, ready: powerSources >= 2 },
+      { label: "INTERRUPTION", value: "AFTER FIRST DIRECTIVE", ready: false },
+    ];
+  }
+  if (missionId === "enough") return [
+    { label: "FOOD FLOOR", value: `${foodMonths.toFixed(1)} / 24 MO`, ready: foodMonths >= 24 },
+    { label: "POWER RESERVE", value: `${powerPercent}% / 20%`, ready: powerPercent >= 20 },
+    { label: "WETLANDS", value: "NO RECEIVED LOSS", ready: true },
+  ];
+  return [
+    { label: "EXPORT PROOF", value: "1,000 T REQUIRED", ready: false },
+    { label: "LIFE SUPPORT", value: `${powerPercent}% POWER RESERVE`, ready: powerPercent >= 20 },
+    { label: "PROTECTED HABITAT", value: "NO RECEIVED LOSS", ready: true },
+  ];
+};
 const suggestedIntent = (missionId) => {
   if (missionId === "firstLight") return "Protect life support first. Build toward 100-person capacity and redundant power; have the scout teams identify safe expansion terrain. Send a short plan before acting.";
   if (missionId === "enough") return "Keep food above 24 months and power above 20%. Preserve every wetland; use scouts to identify safe sites and report the most binding risk before acting.";
@@ -262,6 +288,7 @@ export default function App({ store }) {
   const selectedRobotJob = selectedRobot?.assignedJob ? state.jobs.find((job) => job.id === selectedRobot.assignedJob) : null;
   const projectImpact = buildingImpact(buildType, state);
   const goal = missionTarget(state.missionId, projection.resources);
+  const goalChecklist = useMemo(() => missionChecklist(state.missionId, projection.resources, state.observedWorld), [state.missionId, projection.resources, state.observedWorld]);
   const observedConstraint = projection.constraints[0];
   const selectedImpact = selectedBuilding ? buildingImpact(selectedBuilding.type, state) : null;
   const selectedFacilityStatus = selectedBuilding ? receivedFacilityStatus(state, selectedBuilding) : null;
@@ -1140,7 +1167,7 @@ export default function App({ store }) {
             <button className={relayTab === "orders" ? "active" : ""} onClick={() => setRelayTab("orders")}>ORDERS</button>
             <button className={relayTab === "briefing" ? "active" : ""} onClick={() => setRelayTab("briefing")}>BRIEFING</button>
           </nav>
-          {relayTab === "briefing" && <>
+          {relayTab === "briefing" && <div className="briefing-panel">
           <section className="mission-charter" aria-label="Earth mission charter">
             <div className="section-label">EARTH CHARTER · DAY ZERO</div>
             <p>{scenario.objective}</p>
@@ -1148,6 +1175,15 @@ export default function App({ store }) {
               This mandate is known on Earth and at the colony. Everything else
               on this desk is limited to received observation.
             </small>
+          </section>
+          <section className="objective-checklist" aria-label="Received mission objective checklist">
+            <div className="section-label">OBJECTIVE CHECKLIST · RECEIVED</div>
+            {goalChecklist.map((item) => (
+              <div className={item.ready ? "goal-row ready" : "goal-row"} key={item.label}>
+                <span>{item.ready ? "✓" : "○"}</span><b>{item.label}</b><small>{item.value}</small>
+              </div>
+            ))}
+            <p>These values are Earth’s last received evidence. Daneel’s current work remains delayed until a report crosses the gap.</p>
           </section>
           <section className="demo-guide" aria-label="One-minute demo guide">
             <div className="section-label">ONE-MINUTE DEMO · {demoGuide.phase}</div>
@@ -1160,7 +1196,7 @@ export default function App({ store }) {
             )}
             {demoGuide.action === "answer" && <small>Use the authority controls at the top of this desk.</small>}
           </section>
-          </>}
+          </div>}
           {(relayTab === "relay" || relayTab === "orders") && <>
           <div className="letters" hidden={relayTab !== "relay"}>
             <div className="section-label">
